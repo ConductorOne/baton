@@ -1,0 +1,85 @@
+project_name: baton
+builds:
+  - binary: baton
+    env:
+      - CGO_ENABLED=0
+    id: linux
+    main: ./cmd
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+  - binary: baton
+    env:
+      - CGO_ENABLED=0
+    id: macos-amd64
+    main: ./cmd
+    goos:
+      - darwin
+    goarch:
+      - amd64
+    hooks:
+      post:
+        - gon .gon-amd64.json
+        - mv dist/baton-darwin-amd64.signed.zip dist/macos-amd64_darwin_amd64_v1/baton
+  - binary: baton
+    env:
+      - CGO_ENABLED=0
+    id: macos-arm64
+    main: ./cmd
+    goos:
+      - darwin
+    goarch:
+      - arm64
+    hooks:
+      post:
+        - gon .gon-arm64.json
+        - mv dist/baton-darwin-arm64.signed.zip dist/macos-arm64_darwin_arm64/baton
+archives:
+  - id: linux-archive
+    builds:
+      - linux
+    format: tar.gz
+    name_template: "{{ .ProjectName }}-v{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+    files:
+      - none*
+  - id: darwin-archive
+    builds:
+      - macos-amd64
+      - macos-arm64
+    format: binary
+    name_template: "{{ .ProjectName }}-v{{ .Version }}-{{ .Os }}-{{ .Arch }}.zip"
+    files:
+      - none*
+release:
+  ids:
+    - linux-archive
+    - darwin-archive
+snapshot:
+  name_template: '{{ incpatch .Version }}-dev'
+checksum:
+  ids:
+    - linux-archive
+  extra_files:
+    - glob: ./dist/*-darwin-amd64.zip
+    - glob: ./dist/*-darwin-arm64.zip
+brews:
+  - tap:
+      owner: conductorone
+      name: homebrew-baton
+    folder: Formula
+    download_strategy: GitHubPrivateRepositoryReleaseDownloadStrategy
+    custom_require: "lib/custom_download_strategy"
+    homepage: https://conductorone.com
+    test: |
+      system "#{bin}/baton -v"
+    install: |-
+      bin.install "baton"
+changelog:
+  filters:
+    exclude:
+      - '^docs:'
+      - typo
+      - lint
+      - Merge pull request
