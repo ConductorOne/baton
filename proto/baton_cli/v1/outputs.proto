@@ -31,3 +31,7 @@ message C1ZDiffOutput {
   EntitlementDiff entitlements = 2;
   GrantDiff grants = 3;
 }
+
+message ResourceTypeOutput {
+  repeated c1.connector.v2.ResourceType resource_types = 1;
+}

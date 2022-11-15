@@ -825,3 +825,139 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = C1ZDiffOutputValidationError{}
+
+// Validate checks the field values on ResourceTypeOutput with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ResourceTypeOutput) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ResourceTypeOutput with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ResourceTypeOutputMultiError, or nil if none found.
+func (m *ResourceTypeOutput) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ResourceTypeOutput) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetResourceTypes() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ResourceTypeOutputValidationError{
+						field:  fmt.Sprintf("ResourceTypes[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ResourceTypeOutputValidationError{
+						field:  fmt.Sprintf("ResourceTypes[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ResourceTypeOutputValidationError{
+					field:  fmt.Sprintf("ResourceTypes[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ResourceTypeOutputMultiError(errors)
+	}
+
+	return nil
+}
+
+// ResourceTypeOutputMultiError is an error wrapping multiple validation errors
+// returned by ResourceTypeOutput.ValidateAll() if the designated constraints
+// aren't met.
+type ResourceTypeOutputMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ResourceTypeOutputMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ResourceTypeOutputMultiError) AllErrors() []error { return m }
+
+// ResourceTypeOutputValidationError is the validation error returned by
+// ResourceTypeOutput.Validate if the designated constraints aren't met.
+type ResourceTypeOutputValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ResourceTypeOutputValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ResourceTypeOutputValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ResourceTypeOutputValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ResourceTypeOutputValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ResourceTypeOutputValidationError) ErrorName() string {
+	return "ResourceTypeOutputValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ResourceTypeOutputValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sResourceTypeOutput.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ResourceTypeOutputValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ResourceTypeOutputValidationError{}
