@@ -16,7 +16,7 @@ import (
 func resourcesCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "resources",
-		Short: "List resources for the latest (or current) sync",
+		Short: "List resources for the latest sync",
 		RunE:  runResources,
 	}
 
