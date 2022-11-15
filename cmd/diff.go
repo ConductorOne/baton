@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os"
 
-	v1 "github.com/conductorone/baton-sdk/pb/c1/c1z/v1"
+	v1 "github.com/conductorone/baton-cli/pb/baton_cli/v1"
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	"github.com/conductorone/baton-sdk/pkg/connectorstore"
 	"github.com/conductorone/baton-sdk/pkg/dotc1z/manager"

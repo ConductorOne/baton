@@ -1,0 +1,150 @@
+syntax = "proto3";
+
+package c1.connector.v2;
+
+option go_package = "github.com/conductorone/baton-sdk/pb/c1/connector/v2";
+
+import "google/protobuf/any.proto";
+import "validate/validate.proto";
+
+service ResourceTypesService {
+  rpc ListResourceTypes(ResourceTypesServiceListResourceTypesRequest) returns (ResourceTypesServiceListResourceTypesResponse);
+}
+
+message ResourceType {
+  string id = 1 [
+    (validate.rules).string = {
+      min_bytes: 1
+      max_bytes: 1024
+    }
+  ];
+  string display_name = 2 [
+    (validate.rules).string = {
+      min_bytes: 1
+      max_bytes: 1024
+      ignore_empty: true
+    }
+  ];
+
+  enum Trait {
+    TRAIT_UNSPECIFIED = 0;
+    TRAIT_USER = 1;
+    TRAIT_GROUP = 2;
+    TRAIT_ROLE = 3;
+    TRAIT_APP = 4;
+  }
+  repeated Trait traits = 3 [
+    (validate.rules).repeated = {
+      unique: true
+      items: {
+        enum: {
+          defined_only: true
+        }
+      }
+    }
+  ];
+  repeated google.protobuf.Any annotations = 4;
+}
+
+
+message ResourceTypesServiceListResourceTypesRequest {
+  Resource parent = 1;
+  uint32 page_size = 2 [
+    (validate.rules).uint32 = {
+      ignore_empty: true
+      lte: 250
+    }
+  ];
+  string page_token = 3 [
+    (validate.rules).string = {
+      ignore_empty: true
+      min_bytes: 1
+      max_bytes: 2048
+    }
+  ];
+  repeated google.protobuf.Any annotations = 4;
+}
+
+message ResourceTypesServiceListResourceTypesResponse {
+  repeated ResourceType list = 1;
+  string next_page_token = 2 [
+    (validate.rules).string = {
+      ignore_empty: true
+      min_bytes: 1
+      max_bytes: 2048
+    }
+  ];
+  repeated google.protobuf.Any annotations = 3;
+}
+
+service ResourcesService {
+  rpc ListResources(ResourcesServiceListResourcesRequest) returns (ResourcesServiceListResourcesResponse);
+}
+
+message ResourceId {
+  string resource_type = 1 [
+    (validate.rules).string = {
+      min_bytes: 1
+      max_bytes: 1024
+    }
+  ];
+  string resource = 2 [
+    (validate.rules).string = {
+      min_bytes: 1
+      max_bytes: 1024
+    }
+  ];
+}
+
+message Resource {
+  ResourceId id = 1;
+  ResourceId parent_resource_id = 2;
+  string display_name = 3 [
+    (validate.rules).string = {
+      min_bytes: 1
+      max_bytes: 1024
+      ignore_empty: true
+    }
+  ];
+  repeated google.protobuf.Any annotations = 4;
+}
+
+message ResourcesServiceListResourcesRequest {
+  string resource_type_id = 1 [
+    (validate.rules).string = {
+      min_bytes: 1
+      max_bytes: 1024
+    }
+  ];
+  ResourceId parent_resource_id = 2 [
+    (validate.rules).message = {
+      required: false
+    }
+  ];
+  uint32 page_size = 3 [
+    (validate.rules).uint32 = {
+      ignore_empty: true
+      lte: 250
+    }
+  ];
+  string page_token = 4 [
+    (validate.rules).string = {
+      ignore_empty: true
+      min_bytes: 1
+      max_bytes: 2048
+    }
+  ];
+  repeated google.protobuf.Any annotations = 5;
+}
+
+message ResourcesServiceListResourcesResponse {
+  repeated Resource list = 1;
+  string next_page_token = 2 [
+    (validate.rules).string = {
+      ignore_empty: true
+      min_bytes: 1
+      max_bytes: 2048
+    }
+  ];
+  repeated google.protobuf.Any annotations = 3;
+}

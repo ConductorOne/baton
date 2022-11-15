@@ -1,3 +1,8 @@
+GOOS = $(shell go env GOOS)
+GOARCH = $(shell go env GOARCH)
+BUILD_DIR = dist/${GOOS}_${GOARCH}
+OUTPUT_PATH = ${BUILD_DIR}/$(notdir $(CURDIR))
+
 .PHONY: build
 build:
 	rm -f ${OUTPUT_PATH}
@@ -19,7 +24,6 @@ add-dep:
 lint:
 	golangci-lint run
 
-GOOS = $(shell go env GOOS)
-GOARCH = $(shell go env GOARCH)
-BUILD_DIR = dist/${GOOS}_${GOARCH}
-OUTPUT_PATH = ${BUILD_DIR}/$(notdir $(CURDIR))
+.PHONY: proto-gen
+proto-gen:
+	buf generate

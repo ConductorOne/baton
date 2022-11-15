@@ -1,0 +1,104 @@
+syntax = "proto3";
+
+package c1.connector.v2;
+
+option go_package = "github.com/conductorone/baton-sdk/pb/c1/connector/v2";
+
+import "c1/connector/v2/entitlement.proto";
+import "c1/connector/v2/resource.proto";
+import "google/protobuf/any.proto";
+import "validate/validate.proto";
+
+service GrantsService {
+  rpc ListGrants(GrantsServiceListGrantsRequest) returns (GrantsServiceListGrantsResponse);
+}
+
+message Grant {
+  c1.connector.v2.Entitlement entitlement = 1 [
+    (validate.rules).message = {
+      required: true
+    }
+  ];
+  c1.connector.v2.Resource principal = 2 [
+    (validate.rules).message = {
+      required: true
+    }
+  ];
+  string id = 3 [
+    (validate.rules).string = {
+      min_bytes: 1
+      max_bytes: 1024
+    }
+  ];
+  repeated google.protobuf.Any annotations = 4;
+}
+
+message GrantsServiceListGrantsRequest {
+  c1.connector.v2.Resource resource = 1 [
+    (validate.rules).message = {
+      required: true
+    }
+  ];
+  uint32 page_size = 2 [
+    (validate.rules).uint32 = {
+      ignore_empty: true
+      lte: 250
+    }
+  ];
+  string page_token = 3 [
+    (validate.rules).string = {
+      ignore_empty: true
+      min_bytes: 1
+      max_bytes: 2048
+    }
+  ];
+  repeated google.protobuf.Any annotations = 4;
+}
+
+message GrantsServiceListGrantsResponse {
+  repeated Grant list = 1;
+  string next_page_token = 2 [
+    (validate.rules).string = {
+      ignore_empty: true
+      min_bytes: 1
+      max_bytes: 2048
+    }
+  ];
+  repeated google.protobuf.Any annotations = 3;
+}
+
+service GrantManagerService {
+  rpc Grant(GrantManagerServiceGrantRequest) returns (GrantManagerServiceGrantResponse);
+  rpc Revoke(GrantManagerServiceRevokeRequest) returns (GrantManagerServiceRevokeResponse);
+}
+
+message GrantManagerServiceGrantRequest {
+  c1.connector.v2.Entitlement entitlement = 1 [
+    (validate.rules).message = {
+      required: true
+    }
+  ];
+  c1.connector.v2.Resource principal = 2 [
+    (validate.rules).message = {
+      required: true
+    }
+  ];
+  repeated google.protobuf.Any annotations = 3;
+}
+
+message GrantManagerServiceGrantResponse {
+  repeated google.protobuf.Any annotations = 1;
+}
+
+message GrantManagerServiceRevokeRequest {
+  Grant grant = 1 [
+    (validate.rules).message = {
+      required: true
+    }
+  ];
+  repeated google.protobuf.Any annotations = 2;
+}
+
+message GrantManagerServiceRevokeResponse {
+  repeated google.protobuf.Any annotations = 1;
+}

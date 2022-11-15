@@ -125,7 +125,6 @@ github.com/aws/smithy-go/waiter
 # github.com/conductorone/baton-sdk v0.0.2 => /Users/jirwin/projects/baton-sdk
 ## explicit; go 1.19
 github.com/conductorone/baton-sdk/internal/dotc1z
-github.com/conductorone/baton-sdk/pb/c1/c1z/v1
 github.com/conductorone/baton-sdk/pb/c1/connector/v2
 github.com/conductorone/baton-sdk/pb/c1/reader/v2
 github.com/conductorone/baton-sdk/pkg/annotations
