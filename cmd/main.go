@@ -11,7 +11,7 @@ import (
 var version = "dev"
 
 func main() {
-	_ = context.Background()
+	ctx := context.Background()
 
 	cliCmd := &cobra.Command{
 		Use:     "baton",
@@ -20,6 +20,7 @@ func main() {
 	}
 
 	cliCmd.PersistentFlags().StringP("file", "f", "sync.c1z", "The path to the c1z file to work with.")
+	cliCmd.PersistentFlags().StringP("output-format", "o", "console", "The format to output results in: (console, json)")
 
 	cliCmd.AddCommand(resourcesCmd())
 	cliCmd.AddCommand(resourceTypesCmd())
@@ -30,7 +31,7 @@ func main() {
 	cliCmd.AddCommand(diffCmd())
 	cliCmd.AddCommand(export())
 
-	err := cliCmd.Execute()
+	err := cliCmd.ExecuteContext(ctx)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)

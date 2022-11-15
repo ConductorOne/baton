@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
-	"strings"
 
+	v1 "github.com/conductorone/baton-cli/pb/baton_cli/v1"
+	"github.com/conductorone/baton-cli/pkg/output"
 	"github.com/conductorone/baton-sdk/pkg/dotc1z/manager"
 	"github.com/conductorone/baton-sdk/pkg/logging"
-	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
@@ -31,6 +31,12 @@ func runResourceTypes(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
+	outputFormat, err := cmd.Flags().GetString("output-format")
+	if err != nil {
+		return err
+	}
+	outputManager := output.NewManager(ctx, outputFormat)
 
 	m, err := manager.New(ctx, c1zPath)
 	if err != nil {
@@ -60,24 +66,9 @@ func runResourceTypes(cmd *cobra.Command, args []string) error {
 		pageToken = resp.NextPageToken
 	}
 
-	resourceTypesTable := pterm.TableData{
-		{"ID", "Display Name", "Traits"},
-	}
-
-	for _, rt := range resourceTypes {
-		var traits []string
-		for _, t := range rt.Traits {
-			traits = append(traits, t.String())
-		}
-
-		resourceTypesTable = append(resourceTypesTable, []string{
-			rt.Id,
-			rt.DisplayName,
-			strings.Join(traits, ", "),
-		})
-	}
-
-	err = pterm.DefaultTable.WithHasHeader().WithData(resourceTypesTable).Render()
+	err = outputManager.Output(ctx, &v1.ResourceTypeOutput{
+		ResourceTypes: resourceTypes,
+	})
 	if err != nil {
 		return err
 	}
