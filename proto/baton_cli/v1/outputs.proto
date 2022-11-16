@@ -7,6 +7,7 @@ option go_package = "github.com/conductorone/baton/pb/baton_cli/v1";
 import "c1/connector/v2/resource.proto";
 import "c1/connector/v2/entitlement.proto";
 import "c1/connector/v2/grant.proto";
+import "google/protobuf/timestamp.proto";
 
 message ResourceDiff {
   repeated c1.connector.v2.Resource created = 1;
@@ -33,5 +34,40 @@ message C1ZDiffOutput {
 }
 
 message ResourceTypeOutput {
-  repeated c1.connector.v2.ResourceType resource_types = 1;
+  c1.connector.v2.ResourceType resource_type = 1;
+}
+
+message ResourceOutput {
+  c1.connector.v2.Resource resource = 1;
+  c1.connector.v2.ResourceType resource_type = 2;
+  c1.connector.v2.Resource parent = 3;
+}
+
+message EntitlementOutput {
+  c1.connector.v2.Entitlement entitlement = 1;
+  c1.connector.v2.Resource resource = 2;
+  c1.connector.v2.ResourceType resource_type = 3;
+}
+
+message GrantOutput {
+  c1.connector.v2.Grant grant = 1;
+  c1.connector.v2.Entitlement entitlement = 2;
+  c1.connector.v2.Resource resource = 3;
+  c1.connector.v2.ResourceType resource_type = 4;
+}
+
+message ResourceTypeListOutput {
+  repeated ResourceTypeOutput resource_types = 1;
+}
+
+message ResourceListOutput {
+  repeated ResourceOutput resources = 1;
+}
+
+message EntitlementListOutput {
+  repeated EntitlementOutput entitlements = 1;
+}
+
+message GrantListOutput {
+  repeated GrantOutput grants = 1;
 }

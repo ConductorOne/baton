@@ -2,15 +2,15 @@ package main
 
 import (
 	"context"
-	"fmt"
 
+	v1 "github.com/conductorone/baton-cli/pb/baton_cli/v1"
+	"github.com/conductorone/baton-cli/pkg/output"
+	"github.com/conductorone/baton-cli/pkg/storecache"
 	"github.com/conductorone/baton-sdk/pkg/dotc1z/manager"
 	"github.com/conductorone/baton-sdk/pkg/logging"
-	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
-	reader_v2 "github.com/conductorone/baton-sdk/pb/c1/reader/v2"
 )
 
 func resourcesCmd() *cobra.Command {
@@ -40,6 +40,12 @@ func runResources(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	outputFormat, err := cmd.Flags().GetString("output-format")
+	if err != nil {
+		return err
+	}
+	outputManager := output.NewManager(ctx, outputFormat)
+
 	m, err := manager.New(ctx, c1zPath)
 	if err != nil {
 		return err
@@ -51,15 +57,36 @@ func runResources(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var resources []*v2.Resource
+	sc := storecache.NewStoreCache(ctx, store)
+
+	var resources []*v1.ResourceOutput
 	pageToken := ""
 	for {
-		resp, err := store.ListResources(ctx, &v2.ResourcesServiceListResourcesRequest{ResourceTypeId: resourceType, PageToken: pageToken})
+		resp, err := store.ListResources(ctx, &v2.ResourcesServiceListResourcesRequest{
+			ResourceTypeId: resourceType,
+			PageToken:      pageToken,
+		})
 		if err != nil {
 			return err
 		}
 
-		resources = append(resources, resp.List...)
+		for _, r := range resp.List {
+			rt, err := sc.GetResourceType(ctx, r.Id.ResourceType)
+			if err != nil {
+				return err
+			}
+
+			parent, err := sc.GetResource(ctx, r.ParentResourceId)
+			if err != nil {
+				return err
+			}
+
+			resources = append(resources, &v1.ResourceOutput{
+				Resource:     r,
+				ResourceType: rt,
+				Parent:       parent,
+			})
+		}
 
 		if resp.NextPageToken == "" {
 			break
@@ -68,42 +95,9 @@ func runResources(cmd *cobra.Command, args []string) error {
 		pageToken = resp.NextPageToken
 	}
 
-	resourcesTable := pterm.TableData{
-		{"ID", "Display Name", "Resource Type", "Parent Resource"},
-	}
-	for _, u := range resources {
-		rType, err := store.GetResourceType(ctx, &reader_v2.ResourceTypesReaderServiceGetResourceTypeRequest{
-			ResourceTypeId: u.Id.ResourceType,
-		})
-		if err != nil {
-			return err
-		}
-
-		parentResourceText := "-"
-		if u.ParentResourceId != nil {
-			parentResource, err := store.GetResource(ctx, &reader_v2.ResourceTypesReaderServiceGetResourceRequest{
-				ResourceId: u.ParentResourceId,
-			})
-			if err != nil {
-				return err
-			}
-			parentResourceText = fmt.Sprintf(
-				"%s (%s - %s)",
-				parentResource.DisplayName,
-				parentResource.Id.ResourceType,
-				parentResource.Id.Resource,
-			)
-		}
-
-		resourcesTable = append(resourcesTable, []string{
-			u.Id.Resource,
-			u.DisplayName,
-			rType.DisplayName,
-			parentResourceText,
-		})
-	}
-
-	err = pterm.DefaultTable.WithHasHeader().WithData(resourcesTable).Render()
+	err = outputManager.Output(ctx, &v1.ResourceListOutput{
+		Resources: resources,
+	})
 	if err != nil {
 		return err
 	}

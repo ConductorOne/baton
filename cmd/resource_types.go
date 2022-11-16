@@ -49,7 +49,7 @@ func runResourceTypes(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var resourceTypes []*v2.ResourceType
+	var resourceTypes []*v1.ResourceTypeOutput
 	pageToken := ""
 	for {
 		resp, err := store.ListResourceTypes(ctx, &v2.ResourceTypesServiceListResourceTypesRequest{PageToken: pageToken})
@@ -57,7 +57,9 @@ func runResourceTypes(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		resourceTypes = append(resourceTypes, resp.List...)
+		for _, rt := range resp.List {
+			resourceTypes = append(resourceTypes, &v1.ResourceTypeOutput{ResourceType: rt})
+		}
 
 		if resp.NextPageToken == "" {
 			break
@@ -66,7 +68,7 @@ func runResourceTypes(cmd *cobra.Command, args []string) error {
 		pageToken = resp.NextPageToken
 	}
 
-	err = outputManager.Output(ctx, &v1.ResourceTypeOutput{
+	err = outputManager.Output(ctx, &v1.ResourceTypeListOutput{
 		ResourceTypes: resourceTypes,
 	})
 	if err != nil {
