@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package baton_cli.v1;
+package baton.v1;
 
 option go_package = "github.com/conductorone/baton/pb/baton_cli/v1";
 

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	v1 "github.com/conductorone/baton-cli/pb/baton_cli/v1"
+	v1 "github.com/conductorone/baton/pb/baton/v1"
 	"github.com/pterm/pterm"
 )
 

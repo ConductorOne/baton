@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 
-	v1 "github.com/conductorone/baton-cli/pb/baton_cli/v1"
-	"github.com/conductorone/baton-cli/pkg/output"
-	"github.com/conductorone/baton-cli/pkg/storecache"
 	"github.com/conductorone/baton-sdk/pkg/connectorstore"
 	"github.com/conductorone/baton-sdk/pkg/dotc1z/manager"
 	"github.com/conductorone/baton-sdk/pkg/logging"
+	v1 "github.com/conductorone/baton/pb/baton/v1"
+	"github.com/conductorone/baton/pkg/output"
+	"github.com/conductorone/baton/pkg/storecache"
 	"github.com/spf13/cobra"
 
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
