@@ -7,7 +7,7 @@ The Baton toolkit gives developers the ability to extract, normalize, and intera
 
 # Trying it out: Find all GitHub Repo Admins
 
-Baton can installed via Homebrew (for other operating systems, see (SETUP_AND_INSTALL.md)[./docs/setup-and-install.md]):
+Baton can installed via Homebrew (for other operating systems, see (docs/setup-and-install.md)[./docs/setup-and-install.md]):
 ```
 brew install conductorone/baton/baton conductorone/baton/baton-github
 ```
@@ -19,7 +19,7 @@ baton-github
 baton -o json | jq ....
 ```
 
-Baton is structured as a _toolkit_ of several command line tools.  For each data source there is a "connector", eg, `baton-github` for interacting with GitHub's API.  This tool exports data in a format that the `baton` tool can understand, transform, and do other operations on.
+Baton is structured as a _toolkit_ of related command line tools.  For each data source there is a "connector", eg, `baton-github` for interacting with GitHub's API.  This tool exports data in a format that the `baton` tool can understand, transform, and do other operations on.
 
 # What can you do with Baton?
 
@@ -39,7 +39,7 @@ Additionally, making a new Connector is really easy -- we wrap up many complexit
 | [baton-aws](https://github.com/ConductorOne/baton-aws) |   GA   |
 | [baton-github](https://github.com/ConductorOne/baton-github) |   GA   |
 | [baton-mysql](https://github.com/ConductorOne/baton-github) |   GA   |
-| [baton-mysql](https://github.com/ConductorOne/baton-github) |   GA   |
+| [baton-okta](https://github.com/ConductorOne/baton-okta) |   GA   |
 | [baton-postgres](https://github.com/ConductorOne/baton-github) |   GA   |
 
 # Contributing
