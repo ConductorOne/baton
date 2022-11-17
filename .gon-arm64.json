@@ -1,6 +1,6 @@
 {
-  "source": ["./dist/macos-arm64_darwin_arm64/baton-cli"],
-  "bundle_id": "com.conductorone.baton.cli",
+  "source": ["./dist/macos-arm64_darwin_arm64/baton"],
+  "bundle_id": "com.conductorone.baton",
   "apple_id": {
     "username" : "justin.gallardo@conductorone.com",
     "password":  "@env:AC_PASSWORD"
@@ -9,6 +9,6 @@
     "application_identity": "Developer ID Application: Justin Gallardo (858DKH55XL)"
   },
   "zip" :{
-    "output_path":  "./dist/baton-cli-darwin-arm64.signed.zip"
+    "output_path":  "./dist/baton-darwin-arm64.signed.zip"
   }
 }

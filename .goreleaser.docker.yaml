@@ -1,4 +1,4 @@
-project_name: baton-cli
+project_name: baton
 builds:
   - binary: baton
     env:
