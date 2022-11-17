@@ -19,7 +19,7 @@ baton-github
 baton -o json | jq ....
 ```
 
-Baton is structured as a _toolkit_ of several command line tools.  For each source there is a tool, eg, `baton-github` for interacting with GitHub's API.  This tool exports data in a format that the `baton` tool can understand.
+Baton is structured as a _toolkit_ of several command line tools.  For each data source there is a "connector", eg, `baton-github` for interacting with GitHub's API.  This tool exports data in a format that the `baton` tool can understand, transform, and do other operations on.
 
 # What can you do with Baton?
 
@@ -28,9 +28,23 @@ Baton is structured as a _toolkit_ of several command line tools.  For each sour
 - Find users in apps that aren't in your IdP
 - Detect differences or changes in permissions in GitHub or AWS
 
+## What Connectors exist in Baton today?
+
+We're releasing 5 initial connectors with the open source launch of Baton.  The ConductorOne team has dozens of more connectors written in our precursor proprietary project from before Baton, and is aggressively porting them to the Baton ecosystem.
+
+Additionally, making a new Connector is really easy -- we wrap up many complexities in the SDK, letting a Connector developer just focus on translating to the Baton data model.
+
+| Connector                | Status     |
+|--------------------------|------------|
+| [baton-aws](https://github.com/ConductorOne/baton-aws) |   GA   |
+| [baton-github](https://github.com/ConductorOne/baton-github) |   GA   |
+| [baton-mysql](https://github.com/ConductorOne/baton-github) |   GA   |
+| [baton-mysql](https://github.com/ConductorOne/baton-github) |   GA   |
+| [baton-postgres](https://github.com/ConductorOne/baton-github) |   GA   |
+
 # Contributing
 
-We started Baton because we were tired of taking screenshots and manually building spreadsheets.   We welcome contributions, and ideas, no matter how small -- our goal is to make identity and permissions sprawl less painful for everyone.
+We started Baton because we were tired of taking screenshots and manually building spreadsheets.  We welcome contributions, and ideas, no matter how small -- our goal is to make identity and permissions sprawl less painful for everyone.
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for more details.
 
@@ -74,7 +88,9 @@ Baton, an open source project to extract, normalize, and interact with identity 
 # Ecosystem and Repositories 
 
 The Baton project lives over multiple git repositories.  We have several core repos, which contain the core of Baton, and for each specific Connector to a SaaS or IaaS we have a "connector repo":
+
 - [baton](https://github.com/ConductorOne/baton): Baton Command Line tool, which can be used to explore data extracted by a connector.
+
 - [baton-sdk](https://github.com/ConductorOne/baton-sdk): Primary SDK library, which contains many core behavoirs, data strcutures, and utilities. 
 
 Every individial connector also lives in their own repository:
