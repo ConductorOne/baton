@@ -54,6 +54,7 @@ message GrantOutput {
   c1.connector.v2.Entitlement entitlement = 2;
   c1.connector.v2.Resource resource = 3;
   c1.connector.v2.ResourceType resource_type = 4;
+  c1.connector.v2.Resource principal = 5;
 }
 
 message ResourceTypeListOutput {

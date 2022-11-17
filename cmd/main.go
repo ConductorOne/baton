@@ -26,7 +26,6 @@ func main() {
 	cliCmd.AddCommand(resourceTypesCmd())
 	cliCmd.AddCommand(entitlementsCmd())
 	cliCmd.AddCommand(grantsCmd())
-	cliCmd.AddCommand(usersCmd())
 	cliCmd.AddCommand(statsCmd())
 	cliCmd.AddCommand(diffCmd())
 	cliCmd.AddCommand(export())

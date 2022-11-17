@@ -18,7 +18,7 @@ func (j *jsonManager) Output(ctx context.Context, out interface{}) error {
 			return err
 		}
 
-		_, err = fmt.Fprintf(os.Stdout, string(outBytes))
+		_, err = fmt.Fprint(os.Stdout, string(outBytes))
 		if err != nil {
 			return err
 		}

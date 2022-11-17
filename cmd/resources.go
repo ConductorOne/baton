@@ -75,10 +75,13 @@ func runResources(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return err
 			}
+			var parent *v2.Resource
 
-			parent, err := sc.GetResource(ctx, r.ParentResourceId)
-			if err != nil {
-				return err
+			if r.ParentResourceId != nil {
+				parent, err = sc.GetResource(ctx, r.ParentResourceId)
+				if err != nil {
+					return err
+				}
 			}
 
 			resources = append(resources, &v1.ResourceOutput{

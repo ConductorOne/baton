@@ -19,6 +19,12 @@ func (c *consoleManager) Output(ctx context.Context, out interface{}) error {
 	case *v1.ResourceListOutput:
 		return c.outputResources(obj)
 
+	case *v1.EntitlementListOutput:
+		return c.outputEntitlements(obj)
+
+	case *v1.GrantListOutput:
+		return c.outputGrants(obj)
+
 	default:
 		return fmt.Errorf("unexpected output model")
 	}
@@ -58,10 +64,9 @@ func (c *consoleManager) outputResources(out *v1.ResourceListOutput) error {
 		parentResourceText := "-"
 		if r.Parent != nil {
 			parentResourceText = fmt.Sprintf(
-				"%s (%s - %s)",
+				"%s (%s)",
 				r.Parent.DisplayName,
 				r.Parent.Id.ResourceType,
-				r.Parent.Id.Resource,
 			)
 		}
 
@@ -74,6 +79,50 @@ func (c *consoleManager) outputResources(out *v1.ResourceListOutput) error {
 	}
 
 	err := pterm.DefaultTable.WithHasHeader().WithData(resourcesTable).Render()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *consoleManager) outputEntitlements(out *v1.EntitlementListOutput) error {
+	entitlementsTable := pterm.TableData{
+		{"ID", "Display Name", "Resource Type", "Resource", "Permission"},
+	}
+	for _, u := range out.Entitlements {
+		entitlementsTable = append(entitlementsTable, []string{
+			u.Entitlement.Id,
+			u.Entitlement.DisplayName,
+			u.ResourceType.DisplayName,
+			u.Resource.DisplayName,
+			u.Entitlement.Slug,
+		})
+	}
+
+	err := pterm.DefaultTable.WithHasHeader().WithData(entitlementsTable).Render()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *consoleManager) outputGrants(out *v1.GrantListOutput) error {
+	grantsTable := pterm.TableData{
+		{"Resource Type", "Resource", "Entitlement", "Principal"},
+	}
+
+	for _, g := range out.Grants {
+		grantsTable = append(grantsTable, []string{
+			g.ResourceType.DisplayName,
+			g.Resource.DisplayName,
+			g.Entitlement.DisplayName,
+			g.Principal.DisplayName,
+		})
+	}
+
+	err := pterm.DefaultTable.WithHasHeader().WithData(grantsTable).Render()
 	if err != nil {
 		return err
 	}
