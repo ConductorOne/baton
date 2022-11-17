@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package baton_cli.v1;
 
-option go_package = "github.com/conductorone/baton-cli/pb/baton_cli/v1";
+option go_package = "github.com/conductorone/baton/pb/baton_cli/v1";
 
 import "c1/connector/v2/resource.proto";
 import "c1/connector/v2/entitlement.proto";

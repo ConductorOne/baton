@@ -53,4 +53,4 @@ jobs:
       - name: Breaking change detection against `main`
         uses: bufbuild/buf-breaking-action@v1
         with:
-          against: 'https://github.com/conductorone/baton-cli.git#branch=main,ref=HEAD~1'
+          against: 'https://github.com/conductorone/baton.git#branch=main,ref=HEAD~1'

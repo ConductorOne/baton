@@ -1,4 +1,4 @@
-module github.com/conductorone/baton-cli
+module github.com/conductorone/baton
 
 go 1.19
 
