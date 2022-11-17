@@ -84,20 +84,19 @@ Baton, an open source project to extract, normalize, and interact with identity 
  - Diff'
  - `baton` CLI
  - `jq|` pipelines
+ - data model
 
 # Ecosystem and Repositories 
 
-The Baton project lives over multiple git repositories.  We have several core repos, which contain the core of Baton, and for each specific Connector to a SaaS or IaaS we have a "connector repo":
+The Baton project lives inside multiple git repositories.  We have several core repos, which contain the core of Baton, and for each specific Connector to a SaaS or IaaS we have a "connector repo":
 
 - [baton](https://github.com/ConductorOne/baton): Baton Command Line tool, which can be used to explore data extracted by a connector.
-
 - [baton-sdk](https://github.com/ConductorOne/baton-sdk): Primary SDK library, which contains many core behavoirs, data strcutures, and utilities. 
 
-Every individial connector also lives in their own repository:
-- [baton-github](https://github.com/ConductorOne/baton-github) contains the implementation of a GitHub connector.
+Every individial connector also lives in their own repository (see table above)
 
+## `baton` Command Line Usage
 
-## Command Line Usage
 ```
 baton is a utility for working with the output of a baton-based connector
 
