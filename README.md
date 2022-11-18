@@ -110,15 +110,16 @@ Available Commands:
   export         Export data from the C1Z for upload
   grants         List grants
   help           Help about any command
+  principals     List principals
   resource-types List resource types for the latest (or current) sync
-  resources      List resources for the latest (or current) sync
+  resources      List resources for the latest sync
   stats          Simple stats about the c1z
-  users          List user resources with more detail
 
 Flags:
-  -f, --file string   The path to the c1z file to work with. (default "sync.c1z")
-  -h, --help          help for baton
-  -v, --version       version for baton
+  -f, --file string            The path to the c1z file to work with. (default "sync.c1z")
+  -h, --help                   help for baton
+  -o, --output-format string   The format to output results in: (console, json) (default "console")
+  -v, --version                version for baton
 
 Use "baton [command] --help" for more information about a command.
 ```
