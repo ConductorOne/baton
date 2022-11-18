@@ -15,7 +15,6 @@ type StoreCache struct {
 	resourceTypes sync.Map
 	resources     sync.Map
 	entitlements  sync.Map
-	grants        sync.Map
 }
 
 func (f *StoreCache) GetResourceType(ctx context.Context, id string) (*v2.ResourceType, error) {
@@ -55,7 +54,7 @@ func (f *StoreCache) GetResource(ctx context.Context, id *v2.ResourceId) (*v2.Re
 		return nil, err
 	}
 
-	f.resourceTypes.Store(id, resource)
+	f.resources.Store(id, resource)
 
 	return resource, nil
 }
@@ -65,7 +64,7 @@ func (f *StoreCache) GetEntitlement(ctx context.Context, id string) (*v2.Entitle
 		return nil, fmt.Errorf("entitlement id must be set")
 	}
 
-	if v, ok := f.resources.Load(id); ok {
+	if v, ok := f.entitlements.Load(id); ok {
 		return v.(*v2.Entitlement), nil
 	}
 
@@ -76,7 +75,7 @@ func (f *StoreCache) GetEntitlement(ctx context.Context, id string) (*v2.Entitle
 		return nil, err
 	}
 
-	f.resourceTypes.Store(id, entitlement)
+	f.entitlements.Store(id, entitlement)
 
 	return entitlement, nil
 }
