@@ -25,5 +25,5 @@ lint:
 	golangci-lint run
 
 .PHONY: protogen
-proto-gen:
+protogen:
 	buf generate

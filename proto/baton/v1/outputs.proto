@@ -7,7 +7,6 @@ option go_package = "github.com/conductorone/baton/pb/baton_cli/v1";
 import "c1/connector/v2/resource.proto";
 import "c1/connector/v2/entitlement.proto";
 import "c1/connector/v2/grant.proto";
-import "google/protobuf/timestamp.proto";
 
 message ResourceDiff {
   repeated c1.connector.v2.Resource created = 1;
