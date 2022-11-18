@@ -29,6 +29,7 @@ func main() {
 	cliCmd.AddCommand(statsCmd())
 	cliCmd.AddCommand(diffCmd())
 	cliCmd.AddCommand(export())
+	cliCmd.AddCommand(principalsCmd())
 
 	err := cliCmd.ExecuteContext(ctx)
 	if err != nil {
