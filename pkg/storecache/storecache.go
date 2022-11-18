@@ -15,6 +15,11 @@ type StoreCache struct {
 	resourceTypes sync.Map
 	resources     sync.Map
 	entitlements  sync.Map
+	grants        sync.Map
+}
+
+func (f *StoreCache) Store() connectorstore.Reader {
+	return f.store
 }
 
 func (f *StoreCache) GetResourceType(ctx context.Context, id string) (*v2.ResourceType, error) {
@@ -38,12 +43,17 @@ func (f *StoreCache) GetResourceType(ctx context.Context, id string) (*v2.Resour
 	return rt, nil
 }
 
+func (f *StoreCache) getResourceKey(id *v2.ResourceId) string {
+	return fmt.Sprintf("%s:%s", id.ResourceType, id.Resource)
+}
+
 func (f *StoreCache) GetResource(ctx context.Context, id *v2.ResourceId) (*v2.Resource, error) {
+	cacheKey := f.getResourceKey(id)
 	if id == nil {
 		return nil, fmt.Errorf("resource id must be set")
 	}
 
-	if v, ok := f.resources.Load(id); ok {
+	if v, ok := f.resources.Load(cacheKey); ok {
 		return v.(*v2.Resource), nil
 	}
 
@@ -54,7 +64,7 @@ func (f *StoreCache) GetResource(ctx context.Context, id *v2.ResourceId) (*v2.Re
 		return nil, err
 	}
 
-	f.resources.Store(id, resource)
+	f.resources.Store(cacheKey, resource)
 
 	return resource, nil
 }
@@ -78,6 +88,27 @@ func (f *StoreCache) GetEntitlement(ctx context.Context, id string) (*v2.Entitle
 	f.entitlements.Store(id, entitlement)
 
 	return entitlement, nil
+}
+
+func (f *StoreCache) GetGrant(ctx context.Context, id string) (*v2.Grant, error) {
+	if id == "" {
+		return nil, fmt.Errorf("grant id must be set")
+	}
+
+	if v, ok := f.grants.Load(id); ok {
+		return v.(*v2.Grant), nil
+	}
+
+	grant, err := f.store.GetGrant(ctx, &reader_v2.GrantsReaderServiceGetGrantRequest{
+		GrantId: id,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	f.grants.Store(id, grant)
+
+	return grant, nil
 }
 
 func NewStoreCache(ctx context.Context, store connectorstore.Reader) *StoreCache {
