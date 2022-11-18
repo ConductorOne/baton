@@ -70,12 +70,14 @@ func ColorLevelFromEnv() (ColorLevel, error) {
 		}
 		return ColorLevelHundreds, nil
 	}
+
 	// otherwise determine from TERM's max_colors capability
 	if term := os.Getenv("TERM"); term != "" {
 		ti, err := Load(term)
 		if err != nil {
 			return ColorLevelNone, err
 		}
+
 		v, ok := ti.Nums[MaxColors]
 		switch {
 		case !ok || v <= 16:
@@ -84,5 +86,6 @@ func ColorLevelFromEnv() (ColorLevel, error) {
 			return ColorLevelHundreds, nil
 		}
 	}
+
 	return ColorLevelBasic, nil
 }

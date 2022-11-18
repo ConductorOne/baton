@@ -24,6 +24,6 @@ add-dep:
 lint:
 	golangci-lint run
 
-.PHONY: proto-gen
-proto-gen:
+.PHONY: protogen
+protogen:
 	buf generate

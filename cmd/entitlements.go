@@ -2,11 +2,12 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/conductorone/baton-sdk/pkg/dotc1z/manager"
 	"github.com/conductorone/baton-sdk/pkg/logging"
-	"github.com/pterm/pterm"
+	v1 "github.com/conductorone/baton/pb/baton/v1"
+	"github.com/conductorone/baton/pkg/output"
+	"github.com/conductorone/baton/pkg/storecache"
 	"github.com/spf13/cobra"
 
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
@@ -32,6 +33,12 @@ func runEntitlements(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	outputFormat, err := cmd.Flags().GetString("output-format")
+	if err != nil {
+		return err
+	}
+	outputManager := output.NewManager(ctx, outputFormat)
+
 	m, err := manager.New(ctx, c1zPath)
 	if err != nil {
 		return err
@@ -43,7 +50,9 @@ func runEntitlements(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var entitlements []*v2.Entitlement
+	sc := storecache.NewStoreCache(ctx, store)
+
+	var entitlements []*v1.EntitlementOutput
 	pageToken := ""
 	for {
 		req := &v2.EntitlementsServiceListEntitlementsRequest{PageToken: pageToken}
@@ -53,7 +62,22 @@ func runEntitlements(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		entitlements = append(entitlements, resp.List...)
+		for _, en := range resp.List {
+			rt, err := sc.GetResourceType(ctx, en.Resource.Id.ResourceType)
+			if err != nil {
+				return err
+			}
+			resource, err := sc.GetResource(ctx, en.Resource.Id)
+			if err != nil {
+				return err
+			}
+
+			entitlements = append(entitlements, &v1.EntitlementOutput{
+				Entitlement:  en,
+				Resource:     resource,
+				ResourceType: rt,
+			})
+		}
 
 		if resp.NextPageToken == "" {
 			break
@@ -62,18 +86,9 @@ func runEntitlements(cmd *cobra.Command, args []string) error {
 		pageToken = resp.NextPageToken
 	}
 
-	resourcesTable := pterm.TableData{
-		{"ID", "Resource", "Entitlement"},
-	}
-	for _, u := range entitlements {
-		resourcesTable = append(resourcesTable, []string{
-			u.Id,
-			fmt.Sprintf("%s (%s)", u.Resource.DisplayName, u.Resource.Id.Resource),
-			u.DisplayName,
-		})
-	}
-
-	err = pterm.DefaultTable.WithHasHeader().WithData(resourcesTable).Render()
+	err = outputManager.Output(ctx, &v1.EntitlementListOutput{
+		Entitlements: entitlements,
+	})
 	if err != nil {
 		return err
 	}

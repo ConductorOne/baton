@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
-	"strings"
 
 	"github.com/conductorone/baton-sdk/pkg/dotc1z/manager"
 	"github.com/conductorone/baton-sdk/pkg/logging"
-	"github.com/pterm/pterm"
+	v1 "github.com/conductorone/baton/pb/baton/v1"
+	"github.com/conductorone/baton/pkg/output"
 	"github.com/spf13/cobra"
 
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
@@ -32,6 +32,12 @@ func runResourceTypes(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	outputFormat, err := cmd.Flags().GetString("output-format")
+	if err != nil {
+		return err
+	}
+	outputManager := output.NewManager(ctx, outputFormat)
+
 	m, err := manager.New(ctx, c1zPath)
 	if err != nil {
 		return err
@@ -43,7 +49,7 @@ func runResourceTypes(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var resourceTypes []*v2.ResourceType
+	var resourceTypes []*v1.ResourceTypeOutput
 	pageToken := ""
 	for {
 		resp, err := store.ListResourceTypes(ctx, &v2.ResourceTypesServiceListResourceTypesRequest{PageToken: pageToken})
@@ -51,7 +57,9 @@ func runResourceTypes(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		resourceTypes = append(resourceTypes, resp.List...)
+		for _, rt := range resp.List {
+			resourceTypes = append(resourceTypes, &v1.ResourceTypeOutput{ResourceType: rt})
+		}
 
 		if resp.NextPageToken == "" {
 			break
@@ -60,24 +68,9 @@ func runResourceTypes(cmd *cobra.Command, args []string) error {
 		pageToken = resp.NextPageToken
 	}
 
-	resourceTypesTable := pterm.TableData{
-		{"ID", "Display Name", "Traits"},
-	}
-
-	for _, rt := range resourceTypes {
-		var traits []string
-		for _, t := range rt.Traits {
-			traits = append(traits, t.String())
-		}
-
-		resourceTypesTable = append(resourceTypesTable, []string{
-			rt.Id,
-			rt.DisplayName,
-			strings.Join(traits, ", "),
-		})
-	}
-
-	err = pterm.DefaultTable.WithHasHeader().WithData(resourceTypesTable).Render()
+	err = outputManager.Output(ctx, &v1.ResourceTypeListOutput{
+		ResourceTypes: resourceTypes,
+	})
 	if err != nil {
 		return err
 	}

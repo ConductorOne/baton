@@ -1,5 +1,7 @@
 package terminfo
 
+//go:generate go run gen.go
+
 // BoolCapName returns the bool capability name.
 func BoolCapName(i int) string {
 	return boolCapNames[2*i]

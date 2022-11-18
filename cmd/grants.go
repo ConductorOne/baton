@@ -3,12 +3,13 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/conductorone/baton-sdk/pkg/connectorstore"
 	"github.com/conductorone/baton-sdk/pkg/dotc1z/manager"
 	"github.com/conductorone/baton-sdk/pkg/logging"
-	"github.com/pterm/pterm"
+	v1 "github.com/conductorone/baton/pb/baton/v1"
+	"github.com/conductorone/baton/pkg/output"
+	"github.com/conductorone/baton/pkg/storecache"
 	"github.com/spf13/cobra"
 
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
@@ -108,6 +109,12 @@ func runGrants(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	outputFormat, err := cmd.Flags().GetString("output-format")
+	if err != nil {
+		return err
+	}
+	outputManager := output.NewManager(ctx, outputFormat)
+
 	m, err := manager.New(ctx, c1zPath)
 	if err != nil {
 		return err
@@ -119,9 +126,12 @@ func runGrants(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var grants []*v2.Grant
+	sc := storecache.NewStoreCache(ctx, store)
+
+	var grantOutputs []*v1.GrantOutput
 	pageToken := ""
 	for {
+		var grants []*v2.Grant
 		switch {
 		case cmd.Flags().Changed("resource-id"):
 			grants, pageToken, err = listGrantsForResource(ctx, cmd, store, pageToken)
@@ -134,44 +144,44 @@ func runGrants(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		resourcesTable := pterm.TableData{
-			{"Resource", "Entitlement", "Principal"},
-		}
-		for _, u := range grants {
-			en, err := store.GetEntitlement(ctx, &reader_v2.EntitlementsReaderServiceGetEntitlementRequest{
-				EntitlementId: u.Entitlement.Id,
-			})
+		for _, g := range grants {
+			en, err := sc.GetEntitlement(ctx, g.Entitlement.Id)
 			if err != nil {
 				return err
 			}
 
-			principal, err := store.GetResource(ctx, &reader_v2.ResourceTypesReaderServiceGetResourceRequest{
-				ResourceId: u.Principal.Id,
-			})
+			principal, err := sc.GetResource(ctx, g.Principal.Id)
 			if err != nil {
 				return err
 			}
 
-			resourcesTable = append(resourcesTable, []string{
-				fmt.Sprintf("%s: %s", en.Resource.Id.ResourceType, en.Resource.DisplayName),
-				en.DisplayName,
-				principal.DisplayName,
-			})
-		}
+			resource, err := sc.GetResource(ctx, g.Entitlement.Resource.Id)
+			if err != nil {
+				return err
+			}
 
-		err = pterm.DefaultTable.WithHasHeader().WithData(resourcesTable).Render()
-		if err != nil {
-			return err
+			resourceType, err := sc.GetResourceType(ctx, g.Entitlement.Resource.Id.ResourceType)
+			if err != nil {
+				return err
+			}
+
+			grantOutputs = append(grantOutputs, &v1.GrantOutput{
+				Grant:        g,
+				Entitlement:  en,
+				Principal:    principal,
+				Resource:     resource,
+				ResourceType: resourceType,
+			})
 		}
 
 		if pageToken == "" {
 			break
 		}
+	}
 
-		result, _ := pterm.DefaultInteractiveTextInput.WithDefaultText("Next Page?").WithMultiLine(false).Show()
-		if result == "n" {
-			break
-		}
+	err = outputManager.Output(ctx, &v1.GrantListOutput{Grants: grantOutputs})
+	if err != nil {
+		return err
 	}
 
 	return nil
