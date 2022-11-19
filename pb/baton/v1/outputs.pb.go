@@ -525,6 +525,69 @@ func (x *GrantOutput) GetPrincipal() *v2.Resource {
 	return nil
 }
 
+type ResourceAccessOutput struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	ResourceType *v2.ResourceType  `protobuf:"bytes,1,opt,name=resource_type,json=resourceType,proto3" json:"resource_type,omitempty"`
+	Resource     *v2.Resource      `protobuf:"bytes,2,opt,name=resource,proto3" json:"resource,omitempty"`
+	Entitlements []*v2.Entitlement `protobuf:"bytes,3,rep,name=entitlements,proto3" json:"entitlements,omitempty"`
+}
+
+func (x *ResourceAccessOutput) Reset() {
+	*x = ResourceAccessOutput{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_baton_v1_outputs_proto_msgTypes[8]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ResourceAccessOutput) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResourceAccessOutput) ProtoMessage() {}
+
+func (x *ResourceAccessOutput) ProtoReflect() protoreflect.Message {
+	mi := &file_baton_v1_outputs_proto_msgTypes[8]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResourceAccessOutput.ProtoReflect.Descriptor instead.
+func (*ResourceAccessOutput) Descriptor() ([]byte, []int) {
+	return file_baton_v1_outputs_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *ResourceAccessOutput) GetResourceType() *v2.ResourceType {
+	if x != nil {
+		return x.ResourceType
+	}
+	return nil
+}
+
+func (x *ResourceAccessOutput) GetResource() *v2.Resource {
+	if x != nil {
+		return x.Resource
+	}
+	return nil
+}
+
+func (x *ResourceAccessOutput) GetEntitlements() []*v2.Entitlement {
+	if x != nil {
+		return x.Entitlements
+	}
+	return nil
+}
+
 type ResourceTypeListOutput struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -536,7 +599,7 @@ type ResourceTypeListOutput struct {
 func (x *ResourceTypeListOutput) Reset() {
 	*x = ResourceTypeListOutput{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_baton_v1_outputs_proto_msgTypes[8]
+		mi := &file_baton_v1_outputs_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -549,7 +612,7 @@ func (x *ResourceTypeListOutput) String() string {
 func (*ResourceTypeListOutput) ProtoMessage() {}
 
 func (x *ResourceTypeListOutput) ProtoReflect() protoreflect.Message {
-	mi := &file_baton_v1_outputs_proto_msgTypes[8]
+	mi := &file_baton_v1_outputs_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -562,7 +625,7 @@ func (x *ResourceTypeListOutput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResourceTypeListOutput.ProtoReflect.Descriptor instead.
 func (*ResourceTypeListOutput) Descriptor() ([]byte, []int) {
-	return file_baton_v1_outputs_proto_rawDescGZIP(), []int{8}
+	return file_baton_v1_outputs_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *ResourceTypeListOutput) GetResourceTypes() []*ResourceTypeOutput {
@@ -583,7 +646,7 @@ type ResourceListOutput struct {
 func (x *ResourceListOutput) Reset() {
 	*x = ResourceListOutput{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_baton_v1_outputs_proto_msgTypes[9]
+		mi := &file_baton_v1_outputs_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -596,7 +659,7 @@ func (x *ResourceListOutput) String() string {
 func (*ResourceListOutput) ProtoMessage() {}
 
 func (x *ResourceListOutput) ProtoReflect() protoreflect.Message {
-	mi := &file_baton_v1_outputs_proto_msgTypes[9]
+	mi := &file_baton_v1_outputs_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -609,7 +672,7 @@ func (x *ResourceListOutput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResourceListOutput.ProtoReflect.Descriptor instead.
 func (*ResourceListOutput) Descriptor() ([]byte, []int) {
-	return file_baton_v1_outputs_proto_rawDescGZIP(), []int{9}
+	return file_baton_v1_outputs_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *ResourceListOutput) GetResources() []*ResourceOutput {
@@ -630,7 +693,7 @@ type EntitlementListOutput struct {
 func (x *EntitlementListOutput) Reset() {
 	*x = EntitlementListOutput{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_baton_v1_outputs_proto_msgTypes[10]
+		mi := &file_baton_v1_outputs_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -643,7 +706,7 @@ func (x *EntitlementListOutput) String() string {
 func (*EntitlementListOutput) ProtoMessage() {}
 
 func (x *EntitlementListOutput) ProtoReflect() protoreflect.Message {
-	mi := &file_baton_v1_outputs_proto_msgTypes[10]
+	mi := &file_baton_v1_outputs_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -656,7 +719,7 @@ func (x *EntitlementListOutput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EntitlementListOutput.ProtoReflect.Descriptor instead.
 func (*EntitlementListOutput) Descriptor() ([]byte, []int) {
-	return file_baton_v1_outputs_proto_rawDescGZIP(), []int{10}
+	return file_baton_v1_outputs_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *EntitlementListOutput) GetEntitlements() []*EntitlementOutput {
@@ -677,7 +740,7 @@ type GrantListOutput struct {
 func (x *GrantListOutput) Reset() {
 	*x = GrantListOutput{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_baton_v1_outputs_proto_msgTypes[11]
+		mi := &file_baton_v1_outputs_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -690,7 +753,7 @@ func (x *GrantListOutput) String() string {
 func (*GrantListOutput) ProtoMessage() {}
 
 func (x *GrantListOutput) ProtoReflect() protoreflect.Message {
-	mi := &file_baton_v1_outputs_proto_msgTypes[11]
+	mi := &file_baton_v1_outputs_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -703,12 +766,67 @@ func (x *GrantListOutput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GrantListOutput.ProtoReflect.Descriptor instead.
 func (*GrantListOutput) Descriptor() ([]byte, []int) {
-	return file_baton_v1_outputs_proto_rawDescGZIP(), []int{11}
+	return file_baton_v1_outputs_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *GrantListOutput) GetGrants() []*GrantOutput {
 	if x != nil {
 		return x.Grants
+	}
+	return nil
+}
+
+type ResourceAccessListOutput struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Principal *v2.Resource            `protobuf:"bytes,1,opt,name=principal,proto3" json:"principal,omitempty"`
+	Access    []*ResourceAccessOutput `protobuf:"bytes,2,rep,name=access,proto3" json:"access,omitempty"`
+}
+
+func (x *ResourceAccessListOutput) Reset() {
+	*x = ResourceAccessListOutput{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_baton_v1_outputs_proto_msgTypes[13]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ResourceAccessListOutput) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResourceAccessListOutput) ProtoMessage() {}
+
+func (x *ResourceAccessListOutput) ProtoReflect() protoreflect.Message {
+	mi := &file_baton_v1_outputs_proto_msgTypes[13]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResourceAccessListOutput.ProtoReflect.Descriptor instead.
+func (*ResourceAccessListOutput) Descriptor() ([]byte, []int) {
+	return file_baton_v1_outputs_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *ResourceAccessListOutput) GetPrincipal() *v2.Resource {
+	if x != nil {
+		return x.Principal
+	}
+	return nil
+}
+
+func (x *ResourceAccessListOutput) GetAccess() []*ResourceAccessOutput {
+	if x != nil {
+		return x.Access
 	}
 	return nil
 }
@@ -818,31 +936,53 @@ var file_baton_v1_outputs_proto_rawDesc = []byte{
 	0x65, 0x12, 0x37, 0x0a, 0x09, 0x70, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x18, 0x05,
 	0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x31, 0x2e, 0x63, 0x6f, 0x6e, 0x6e, 0x65, 0x63,
 	0x74, 0x6f, 0x72, 0x2e, 0x76, 0x32, 0x2e, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x52,
-	0x09, 0x70, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x22, 0x5d, 0x0a, 0x16, 0x52, 0x65,
-	0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x54, 0x79, 0x70, 0x65, 0x4c, 0x69, 0x73, 0x74, 0x4f, 0x75,
-	0x74, 0x70, 0x75, 0x74, 0x12, 0x43, 0x0a, 0x0e, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65,
-	0x5f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x62,
-	0x61, 0x74, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65,
-	0x54, 0x79, 0x70, 0x65, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x52, 0x0d, 0x72, 0x65, 0x73, 0x6f,
-	0x75, 0x72, 0x63, 0x65, 0x54, 0x79, 0x70, 0x65, 0x73, 0x22, 0x4c, 0x0a, 0x12, 0x52, 0x65, 0x73,
-	0x6f, 0x75, 0x72, 0x63, 0x65, 0x4c, 0x69, 0x73, 0x74, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12,
-	0x36, 0x0a, 0x09, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03,
-	0x28, 0x0b, 0x32, 0x18, 0x2e, 0x62, 0x61, 0x74, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65,
-	0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x52, 0x09, 0x72, 0x65,
-	0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x73, 0x22, 0x58, 0x0a, 0x15, 0x45, 0x6e, 0x74, 0x69, 0x74,
-	0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x4c, 0x69, 0x73, 0x74, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74,
-	0x12, 0x3f, 0x0a, 0x0c, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x73,
-	0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1b, 0x2e, 0x62, 0x61, 0x74, 0x6f, 0x6e, 0x2e, 0x76,
-	0x31, 0x2e, 0x45, 0x6e, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x4f, 0x75, 0x74,
-	0x70, 0x75, 0x74, 0x52, 0x0c, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74,
-	0x73, 0x22, 0x40, 0x0a, 0x0f, 0x47, 0x72, 0x61, 0x6e, 0x74, 0x4c, 0x69, 0x73, 0x74, 0x4f, 0x75,
-	0x74, 0x70, 0x75, 0x74, 0x12, 0x2d, 0x0a, 0x06, 0x67, 0x72, 0x61, 0x6e, 0x74, 0x73, 0x18, 0x01,
-	0x20, 0x03, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x62, 0x61, 0x74, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x2e,
-	0x47, 0x72, 0x61, 0x6e, 0x74, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x52, 0x06, 0x67, 0x72, 0x61,
-	0x6e, 0x74, 0x73, 0x42, 0x2f, 0x5a, 0x2d, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f,
-	0x6d, 0x2f, 0x63, 0x6f, 0x6e, 0x64, 0x75, 0x63, 0x74, 0x6f, 0x72, 0x6f, 0x6e, 0x65, 0x2f, 0x62,
-	0x61, 0x74, 0x6f, 0x6e, 0x2f, 0x70, 0x62, 0x2f, 0x62, 0x61, 0x74, 0x6f, 0x6e, 0x5f, 0x63, 0x6c,
-	0x69, 0x2f, 0x76, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x09, 0x70, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x22, 0xd3, 0x01, 0x0a, 0x14, 0x52,
+	0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x41, 0x63, 0x63, 0x65, 0x73, 0x73, 0x4f, 0x75, 0x74,
+	0x70, 0x75, 0x74, 0x12, 0x42, 0x0a, 0x0d, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x5f,
+	0x74, 0x79, 0x70, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x63, 0x31, 0x2e,
+	0x63, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x2e, 0x76, 0x32, 0x2e, 0x52, 0x65, 0x73,
+	0x6f, 0x75, 0x72, 0x63, 0x65, 0x54, 0x79, 0x70, 0x65, 0x52, 0x0c, 0x72, 0x65, 0x73, 0x6f, 0x75,
+	0x72, 0x63, 0x65, 0x54, 0x79, 0x70, 0x65, 0x12, 0x35, 0x0a, 0x08, 0x72, 0x65, 0x73, 0x6f, 0x75,
+	0x72, 0x63, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x31, 0x2e, 0x63,
+	0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x2e, 0x76, 0x32, 0x2e, 0x52, 0x65, 0x73, 0x6f,
+	0x75, 0x72, 0x63, 0x65, 0x52, 0x08, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x12, 0x40,
+	0x0a, 0x0c, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x73, 0x18, 0x03,
+	0x20, 0x03, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x63, 0x31, 0x2e, 0x63, 0x6f, 0x6e, 0x6e, 0x65, 0x63,
+	0x74, 0x6f, 0x72, 0x2e, 0x76, 0x32, 0x2e, 0x45, 0x6e, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x6d, 0x65,
+	0x6e, 0x74, 0x52, 0x0c, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x73,
+	0x22, 0x5d, 0x0a, 0x16, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x54, 0x79, 0x70, 0x65,
+	0x4c, 0x69, 0x73, 0x74, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x43, 0x0a, 0x0e, 0x72, 0x65,
+	0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03,
+	0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x62, 0x61, 0x74, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65,
+	0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x54, 0x79, 0x70, 0x65, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74,
+	0x52, 0x0d, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x54, 0x79, 0x70, 0x65, 0x73, 0x22,
+	0x4c, 0x0a, 0x12, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x4c, 0x69, 0x73, 0x74, 0x4f,
+	0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x36, 0x0a, 0x09, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63,
+	0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x62, 0x61, 0x74, 0x6f, 0x6e,
+	0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x4f, 0x75, 0x74, 0x70,
+	0x75, 0x74, 0x52, 0x09, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x73, 0x22, 0x58, 0x0a,
+	0x15, 0x45, 0x6e, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x4c, 0x69, 0x73, 0x74,
+	0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x3f, 0x0a, 0x0c, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x6c,
+	0x65, 0x6d, 0x65, 0x6e, 0x74, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1b, 0x2e, 0x62,
+	0x61, 0x74, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x2e, 0x45, 0x6e, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x6d,
+	0x65, 0x6e, 0x74, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x52, 0x0c, 0x65, 0x6e, 0x74, 0x69, 0x74,
+	0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x73, 0x22, 0x40, 0x0a, 0x0f, 0x47, 0x72, 0x61, 0x6e, 0x74,
+	0x4c, 0x69, 0x73, 0x74, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x2d, 0x0a, 0x06, 0x67, 0x72,
+	0x61, 0x6e, 0x74, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x62, 0x61, 0x74,
+	0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x72, 0x61, 0x6e, 0x74, 0x4f, 0x75, 0x74, 0x70, 0x75,
+	0x74, 0x52, 0x06, 0x67, 0x72, 0x61, 0x6e, 0x74, 0x73, 0x22, 0x8b, 0x01, 0x0a, 0x18, 0x52, 0x65,
+	0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x41, 0x63, 0x63, 0x65, 0x73, 0x73, 0x4c, 0x69, 0x73, 0x74,
+	0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x37, 0x0a, 0x09, 0x70, 0x72, 0x69, 0x6e, 0x63, 0x69,
+	0x70, 0x61, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x31, 0x2e, 0x63,
+	0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x2e, 0x76, 0x32, 0x2e, 0x52, 0x65, 0x73, 0x6f,
+	0x75, 0x72, 0x63, 0x65, 0x52, 0x09, 0x70, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x12,
+	0x36, 0x0a, 0x06, 0x61, 0x63, 0x63, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32,
+	0x1e, 0x2e, 0x62, 0x61, 0x74, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65, 0x73, 0x6f, 0x75,
+	0x72, 0x63, 0x65, 0x41, 0x63, 0x63, 0x65, 0x73, 0x73, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x52,
+	0x06, 0x61, 0x63, 0x63, 0x65, 0x73, 0x73, 0x42, 0x2f, 0x5a, 0x2d, 0x67, 0x69, 0x74, 0x68, 0x75,
+	0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x6e, 0x64, 0x75, 0x63, 0x74, 0x6f, 0x72, 0x6f,
+	0x6e, 0x65, 0x2f, 0x62, 0x61, 0x74, 0x6f, 0x6e, 0x2f, 0x70, 0x62, 0x2f, 0x62, 0x61, 0x74, 0x6f,
+	0x6e, 0x5f, 0x63, 0x6c, 0x69, 0x2f, 0x76, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -857,59 +997,66 @@ func file_baton_v1_outputs_proto_rawDescGZIP() []byte {
 	return file_baton_v1_outputs_proto_rawDescData
 }
 
-var file_baton_v1_outputs_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_baton_v1_outputs_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_baton_v1_outputs_proto_goTypes = []interface{}{
-	(*ResourceDiff)(nil),           // 0: baton.v1.ResourceDiff
-	(*EntitlementDiff)(nil),        // 1: baton.v1.EntitlementDiff
-	(*GrantDiff)(nil),              // 2: baton.v1.GrantDiff
-	(*C1ZDiffOutput)(nil),          // 3: baton.v1.C1ZDiffOutput
-	(*ResourceTypeOutput)(nil),     // 4: baton.v1.ResourceTypeOutput
-	(*ResourceOutput)(nil),         // 5: baton.v1.ResourceOutput
-	(*EntitlementOutput)(nil),      // 6: baton.v1.EntitlementOutput
-	(*GrantOutput)(nil),            // 7: baton.v1.GrantOutput
-	(*ResourceTypeListOutput)(nil), // 8: baton.v1.ResourceTypeListOutput
-	(*ResourceListOutput)(nil),     // 9: baton.v1.ResourceListOutput
-	(*EntitlementListOutput)(nil),  // 10: baton.v1.EntitlementListOutput
-	(*GrantListOutput)(nil),        // 11: baton.v1.GrantListOutput
-	(*v2.Resource)(nil),            // 12: c1.connector.v2.Resource
-	(*v2.Entitlement)(nil),         // 13: c1.connector.v2.Entitlement
-	(*v2.Grant)(nil),               // 14: c1.connector.v2.Grant
-	(*v2.ResourceType)(nil),        // 15: c1.connector.v2.ResourceType
+	(*ResourceDiff)(nil),             // 0: baton.v1.ResourceDiff
+	(*EntitlementDiff)(nil),          // 1: baton.v1.EntitlementDiff
+	(*GrantDiff)(nil),                // 2: baton.v1.GrantDiff
+	(*C1ZDiffOutput)(nil),            // 3: baton.v1.C1ZDiffOutput
+	(*ResourceTypeOutput)(nil),       // 4: baton.v1.ResourceTypeOutput
+	(*ResourceOutput)(nil),           // 5: baton.v1.ResourceOutput
+	(*EntitlementOutput)(nil),        // 6: baton.v1.EntitlementOutput
+	(*GrantOutput)(nil),              // 7: baton.v1.GrantOutput
+	(*ResourceAccessOutput)(nil),     // 8: baton.v1.ResourceAccessOutput
+	(*ResourceTypeListOutput)(nil),   // 9: baton.v1.ResourceTypeListOutput
+	(*ResourceListOutput)(nil),       // 10: baton.v1.ResourceListOutput
+	(*EntitlementListOutput)(nil),    // 11: baton.v1.EntitlementListOutput
+	(*GrantListOutput)(nil),          // 12: baton.v1.GrantListOutput
+	(*ResourceAccessListOutput)(nil), // 13: baton.v1.ResourceAccessListOutput
+	(*v2.Resource)(nil),              // 14: c1.connector.v2.Resource
+	(*v2.Entitlement)(nil),           // 15: c1.connector.v2.Entitlement
+	(*v2.Grant)(nil),                 // 16: c1.connector.v2.Grant
+	(*v2.ResourceType)(nil),          // 17: c1.connector.v2.ResourceType
 }
 var file_baton_v1_outputs_proto_depIdxs = []int32{
-	12, // 0: baton.v1.ResourceDiff.created:type_name -> c1.connector.v2.Resource
-	12, // 1: baton.v1.ResourceDiff.deleted:type_name -> c1.connector.v2.Resource
-	12, // 2: baton.v1.ResourceDiff.modified:type_name -> c1.connector.v2.Resource
-	13, // 3: baton.v1.EntitlementDiff.created:type_name -> c1.connector.v2.Entitlement
-	13, // 4: baton.v1.EntitlementDiff.deleted:type_name -> c1.connector.v2.Entitlement
-	13, // 5: baton.v1.EntitlementDiff.modified:type_name -> c1.connector.v2.Entitlement
-	14, // 6: baton.v1.GrantDiff.created:type_name -> c1.connector.v2.Grant
-	14, // 7: baton.v1.GrantDiff.deleted:type_name -> c1.connector.v2.Grant
-	14, // 8: baton.v1.GrantDiff.modified:type_name -> c1.connector.v2.Grant
+	14, // 0: baton.v1.ResourceDiff.created:type_name -> c1.connector.v2.Resource
+	14, // 1: baton.v1.ResourceDiff.deleted:type_name -> c1.connector.v2.Resource
+	14, // 2: baton.v1.ResourceDiff.modified:type_name -> c1.connector.v2.Resource
+	15, // 3: baton.v1.EntitlementDiff.created:type_name -> c1.connector.v2.Entitlement
+	15, // 4: baton.v1.EntitlementDiff.deleted:type_name -> c1.connector.v2.Entitlement
+	15, // 5: baton.v1.EntitlementDiff.modified:type_name -> c1.connector.v2.Entitlement
+	16, // 6: baton.v1.GrantDiff.created:type_name -> c1.connector.v2.Grant
+	16, // 7: baton.v1.GrantDiff.deleted:type_name -> c1.connector.v2.Grant
+	16, // 8: baton.v1.GrantDiff.modified:type_name -> c1.connector.v2.Grant
 	0,  // 9: baton.v1.C1ZDiffOutput.resources:type_name -> baton.v1.ResourceDiff
 	1,  // 10: baton.v1.C1ZDiffOutput.entitlements:type_name -> baton.v1.EntitlementDiff
 	2,  // 11: baton.v1.C1ZDiffOutput.grants:type_name -> baton.v1.GrantDiff
-	15, // 12: baton.v1.ResourceTypeOutput.resource_type:type_name -> c1.connector.v2.ResourceType
-	12, // 13: baton.v1.ResourceOutput.resource:type_name -> c1.connector.v2.Resource
-	15, // 14: baton.v1.ResourceOutput.resource_type:type_name -> c1.connector.v2.ResourceType
-	12, // 15: baton.v1.ResourceOutput.parent:type_name -> c1.connector.v2.Resource
-	13, // 16: baton.v1.EntitlementOutput.entitlement:type_name -> c1.connector.v2.Entitlement
-	12, // 17: baton.v1.EntitlementOutput.resource:type_name -> c1.connector.v2.Resource
-	15, // 18: baton.v1.EntitlementOutput.resource_type:type_name -> c1.connector.v2.ResourceType
-	14, // 19: baton.v1.GrantOutput.grant:type_name -> c1.connector.v2.Grant
-	13, // 20: baton.v1.GrantOutput.entitlement:type_name -> c1.connector.v2.Entitlement
-	12, // 21: baton.v1.GrantOutput.resource:type_name -> c1.connector.v2.Resource
-	15, // 22: baton.v1.GrantOutput.resource_type:type_name -> c1.connector.v2.ResourceType
-	12, // 23: baton.v1.GrantOutput.principal:type_name -> c1.connector.v2.Resource
-	4,  // 24: baton.v1.ResourceTypeListOutput.resource_types:type_name -> baton.v1.ResourceTypeOutput
-	5,  // 25: baton.v1.ResourceListOutput.resources:type_name -> baton.v1.ResourceOutput
-	6,  // 26: baton.v1.EntitlementListOutput.entitlements:type_name -> baton.v1.EntitlementOutput
-	7,  // 27: baton.v1.GrantListOutput.grants:type_name -> baton.v1.GrantOutput
-	28, // [28:28] is the sub-list for method output_type
-	28, // [28:28] is the sub-list for method input_type
-	28, // [28:28] is the sub-list for extension type_name
-	28, // [28:28] is the sub-list for extension extendee
-	0,  // [0:28] is the sub-list for field type_name
+	17, // 12: baton.v1.ResourceTypeOutput.resource_type:type_name -> c1.connector.v2.ResourceType
+	14, // 13: baton.v1.ResourceOutput.resource:type_name -> c1.connector.v2.Resource
+	17, // 14: baton.v1.ResourceOutput.resource_type:type_name -> c1.connector.v2.ResourceType
+	14, // 15: baton.v1.ResourceOutput.parent:type_name -> c1.connector.v2.Resource
+	15, // 16: baton.v1.EntitlementOutput.entitlement:type_name -> c1.connector.v2.Entitlement
+	14, // 17: baton.v1.EntitlementOutput.resource:type_name -> c1.connector.v2.Resource
+	17, // 18: baton.v1.EntitlementOutput.resource_type:type_name -> c1.connector.v2.ResourceType
+	16, // 19: baton.v1.GrantOutput.grant:type_name -> c1.connector.v2.Grant
+	15, // 20: baton.v1.GrantOutput.entitlement:type_name -> c1.connector.v2.Entitlement
+	14, // 21: baton.v1.GrantOutput.resource:type_name -> c1.connector.v2.Resource
+	17, // 22: baton.v1.GrantOutput.resource_type:type_name -> c1.connector.v2.ResourceType
+	14, // 23: baton.v1.GrantOutput.principal:type_name -> c1.connector.v2.Resource
+	17, // 24: baton.v1.ResourceAccessOutput.resource_type:type_name -> c1.connector.v2.ResourceType
+	14, // 25: baton.v1.ResourceAccessOutput.resource:type_name -> c1.connector.v2.Resource
+	15, // 26: baton.v1.ResourceAccessOutput.entitlements:type_name -> c1.connector.v2.Entitlement
+	4,  // 27: baton.v1.ResourceTypeListOutput.resource_types:type_name -> baton.v1.ResourceTypeOutput
+	5,  // 28: baton.v1.ResourceListOutput.resources:type_name -> baton.v1.ResourceOutput
+	6,  // 29: baton.v1.EntitlementListOutput.entitlements:type_name -> baton.v1.EntitlementOutput
+	7,  // 30: baton.v1.GrantListOutput.grants:type_name -> baton.v1.GrantOutput
+	14, // 31: baton.v1.ResourceAccessListOutput.principal:type_name -> c1.connector.v2.Resource
+	8,  // 32: baton.v1.ResourceAccessListOutput.access:type_name -> baton.v1.ResourceAccessOutput
+	33, // [33:33] is the sub-list for method output_type
+	33, // [33:33] is the sub-list for method input_type
+	33, // [33:33] is the sub-list for extension type_name
+	33, // [33:33] is the sub-list for extension extendee
+	0,  // [0:33] is the sub-list for field type_name
 }
 
 func init() { file_baton_v1_outputs_proto_init() }
@@ -1015,7 +1162,7 @@ func file_baton_v1_outputs_proto_init() {
 			}
 		}
 		file_baton_v1_outputs_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ResourceTypeListOutput); i {
+			switch v := v.(*ResourceAccessOutput); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1027,7 +1174,7 @@ func file_baton_v1_outputs_proto_init() {
 			}
 		}
 		file_baton_v1_outputs_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ResourceListOutput); i {
+			switch v := v.(*ResourceTypeListOutput); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1039,7 +1186,7 @@ func file_baton_v1_outputs_proto_init() {
 			}
 		}
 		file_baton_v1_outputs_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*EntitlementListOutput); i {
+			switch v := v.(*ResourceListOutput); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1051,7 +1198,31 @@ func file_baton_v1_outputs_proto_init() {
 			}
 		}
 		file_baton_v1_outputs_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*EntitlementListOutput); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_baton_v1_outputs_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*GrantListOutput); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_baton_v1_outputs_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ResourceAccessListOutput); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1069,7 +1240,7 @@ func file_baton_v1_outputs_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_baton_v1_outputs_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   12,
+			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

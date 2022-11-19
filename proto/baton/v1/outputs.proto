@@ -56,6 +56,12 @@ message GrantOutput {
   c1.connector.v2.Resource principal = 5;
 }
 
+message ResourceAccessOutput {
+  c1.connector.v2.ResourceType resource_type = 1;
+  c1.connector.v2.Resource resource = 2;
+  repeated c1.connector.v2.Entitlement entitlements = 3;
+}
+
 message ResourceTypeListOutput {
   repeated ResourceTypeOutput resource_types = 1;
 }
@@ -70,4 +76,9 @@ message EntitlementListOutput {
 
 message GrantListOutput {
   repeated GrantOutput grants = 1;
+}
+
+message ResourceAccessListOutput {
+  c1.connector.v2.Resource principal = 1;
+  repeated ResourceAccessOutput access = 2;
 }
