@@ -2,6 +2,7 @@ package manager
 
 import (
 	"context"
+	"io"
 	"strings"
 
 	"github.com/conductorone/baton-sdk/internal/dotc1z"
@@ -10,6 +11,7 @@ import (
 )
 
 type Manager interface {
+	LoadRaw(ctx context.Context) (io.Reader, error)
 	LoadC1Z(ctx context.Context) (*dotc1z.C1File, error)
 	SaveC1Z(ctx context.Context) error
 	Close(ctx context.Context) error
