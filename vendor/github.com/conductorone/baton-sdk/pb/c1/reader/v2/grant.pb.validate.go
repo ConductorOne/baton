@@ -497,3 +497,325 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GrantsReaderServiceListGrantsForEntitlementResponseValidationError{}
+
+// Validate checks the field values on
+// GrantsReaderServiceListGrantsForResourceTypeRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *GrantsReaderServiceListGrantsForResourceTypeRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on
+// GrantsReaderServiceListGrantsForResourceTypeRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in
+// GrantsReaderServiceListGrantsForResourceTypeRequestMultiError, or nil if
+// none found.
+func (m *GrantsReaderServiceListGrantsForResourceTypeRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GrantsReaderServiceListGrantsForResourceTypeRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if m.GetResourceTypeId() != "" {
+
+		if l := len(m.GetResourceTypeId()); l < 1 || l > 2048 {
+			err := GrantsReaderServiceListGrantsForResourceTypeRequestValidationError{
+				field:  "ResourceTypeId",
+				reason: "value length must be between 1 and 2048 bytes, inclusive",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+	}
+
+	if m.GetPageSize() != 0 {
+
+		if m.GetPageSize() > 250 {
+			err := GrantsReaderServiceListGrantsForResourceTypeRequestValidationError{
+				field:  "PageSize",
+				reason: "value must be less than or equal to 250",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+	}
+
+	if m.GetPageToken() != "" {
+
+		if l := len(m.GetPageToken()); l < 1 || l > 2048 {
+			err := GrantsReaderServiceListGrantsForResourceTypeRequestValidationError{
+				field:  "PageToken",
+				reason: "value length must be between 1 and 2048 bytes, inclusive",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return GrantsReaderServiceListGrantsForResourceTypeRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GrantsReaderServiceListGrantsForResourceTypeRequestMultiError is an error
+// wrapping multiple validation errors returned by
+// GrantsReaderServiceListGrantsForResourceTypeRequest.ValidateAll() if the
+// designated constraints aren't met.
+type GrantsReaderServiceListGrantsForResourceTypeRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GrantsReaderServiceListGrantsForResourceTypeRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GrantsReaderServiceListGrantsForResourceTypeRequestMultiError) AllErrors() []error { return m }
+
+// GrantsReaderServiceListGrantsForResourceTypeRequestValidationError is the
+// validation error returned by
+// GrantsReaderServiceListGrantsForResourceTypeRequest.Validate if the
+// designated constraints aren't met.
+type GrantsReaderServiceListGrantsForResourceTypeRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GrantsReaderServiceListGrantsForResourceTypeRequestValidationError) Field() string {
+	return e.field
+}
+
+// Reason function returns reason value.
+func (e GrantsReaderServiceListGrantsForResourceTypeRequestValidationError) Reason() string {
+	return e.reason
+}
+
+// Cause function returns cause value.
+func (e GrantsReaderServiceListGrantsForResourceTypeRequestValidationError) Cause() error {
+	return e.cause
+}
+
+// Key function returns key value.
+func (e GrantsReaderServiceListGrantsForResourceTypeRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GrantsReaderServiceListGrantsForResourceTypeRequestValidationError) ErrorName() string {
+	return "GrantsReaderServiceListGrantsForResourceTypeRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GrantsReaderServiceListGrantsForResourceTypeRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGrantsReaderServiceListGrantsForResourceTypeRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GrantsReaderServiceListGrantsForResourceTypeRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GrantsReaderServiceListGrantsForResourceTypeRequestValidationError{}
+
+// Validate checks the field values on
+// GrantsReaderServiceListGrantsForResourceTypeResponse with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *GrantsReaderServiceListGrantsForResourceTypeResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on
+// GrantsReaderServiceListGrantsForResourceTypeResponse with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in
+// GrantsReaderServiceListGrantsForResourceTypeResponseMultiError, or nil if
+// none found.
+func (m *GrantsReaderServiceListGrantsForResourceTypeResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GrantsReaderServiceListGrantsForResourceTypeResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetList() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, GrantsReaderServiceListGrantsForResourceTypeResponseValidationError{
+						field:  fmt.Sprintf("List[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, GrantsReaderServiceListGrantsForResourceTypeResponseValidationError{
+						field:  fmt.Sprintf("List[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GrantsReaderServiceListGrantsForResourceTypeResponseValidationError{
+					field:  fmt.Sprintf("List[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if m.GetNextPageToken() != "" {
+
+		if l := len(m.GetNextPageToken()); l < 1 || l > 2048 {
+			err := GrantsReaderServiceListGrantsForResourceTypeResponseValidationError{
+				field:  "NextPageToken",
+				reason: "value length must be between 1 and 2048 bytes, inclusive",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return GrantsReaderServiceListGrantsForResourceTypeResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// GrantsReaderServiceListGrantsForResourceTypeResponseMultiError is an error
+// wrapping multiple validation errors returned by
+// GrantsReaderServiceListGrantsForResourceTypeResponse.ValidateAll() if the
+// designated constraints aren't met.
+type GrantsReaderServiceListGrantsForResourceTypeResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GrantsReaderServiceListGrantsForResourceTypeResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GrantsReaderServiceListGrantsForResourceTypeResponseMultiError) AllErrors() []error { return m }
+
+// GrantsReaderServiceListGrantsForResourceTypeResponseValidationError is the
+// validation error returned by
+// GrantsReaderServiceListGrantsForResourceTypeResponse.Validate if the
+// designated constraints aren't met.
+type GrantsReaderServiceListGrantsForResourceTypeResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GrantsReaderServiceListGrantsForResourceTypeResponseValidationError) Field() string {
+	return e.field
+}
+
+// Reason function returns reason value.
+func (e GrantsReaderServiceListGrantsForResourceTypeResponseValidationError) Reason() string {
+	return e.reason
+}
+
+// Cause function returns cause value.
+func (e GrantsReaderServiceListGrantsForResourceTypeResponseValidationError) Cause() error {
+	return e.cause
+}
+
+// Key function returns key value.
+func (e GrantsReaderServiceListGrantsForResourceTypeResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GrantsReaderServiceListGrantsForResourceTypeResponseValidationError) ErrorName() string {
+	return "GrantsReaderServiceListGrantsForResourceTypeResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GrantsReaderServiceListGrantsForResourceTypeResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGrantsReaderServiceListGrantsForResourceTypeResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GrantsReaderServiceListGrantsForResourceTypeResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GrantsReaderServiceListGrantsForResourceTypeResponseValidationError{}
