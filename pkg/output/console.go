@@ -7,6 +7,7 @@ import (
 
 	v1 "github.com/conductorone/baton/pb/baton/v1"
 	"github.com/pterm/pterm"
+	"github.com/pterm/pterm/putils"
 )
 
 type consoleManager struct{}
@@ -24,6 +25,9 @@ func (c *consoleManager) Output(ctx context.Context, out interface{}) error {
 
 	case *v1.GrantListOutput:
 		return c.outputGrants(obj)
+
+	case *v1.ResourceAccessListOutput:
+		return c.outputResourceAccess(obj)
 
 	default:
 		return fmt.Errorf("unexpected output model")
@@ -123,6 +127,36 @@ func (c *consoleManager) outputGrants(out *v1.GrantListOutput) error {
 	}
 
 	err := pterm.DefaultTable.WithHasHeader().WithData(grantsTable).Render()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *consoleManager) outputResourceAccess(out *v1.ResourceAccessListOutput) error {
+	leveledList := pterm.LeveledList{
+		pterm.LeveledListItem{
+			Level: 0,
+			Text:  fmt.Sprintf("Effective Access for %s (%s)", out.Principal.DisplayName, out.Principal.Id.ResourceType),
+		},
+	}
+	for _, g := range out.Access {
+		leveledList = append(
+			leveledList,
+			pterm.LeveledListItem{Level: 1, Text: fmt.Sprintf("%s (%s)", g.Resource.DisplayName, g.ResourceType.DisplayName)},
+		)
+
+		for _, e := range g.Entitlements {
+			leveledList = append(
+				leveledList,
+				pterm.LeveledListItem{Level: 2, Text: e.Slug},
+			)
+		}
+	}
+
+	root := putils.TreeFromLeveledList(leveledList)
+	err := pterm.DefaultTree.WithRoot(root).Render()
 	if err != nil {
 		return err
 	}

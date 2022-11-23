@@ -1577,6 +1577,200 @@ var _ interface {
 	ErrorName() string
 } = GrantOutputValidationError{}
 
+// Validate checks the field values on ResourceAccessOutput with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ResourceAccessOutput) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ResourceAccessOutput with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ResourceAccessOutputMultiError, or nil if none found.
+func (m *ResourceAccessOutput) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ResourceAccessOutput) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetResourceType()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ResourceAccessOutputValidationError{
+					field:  "ResourceType",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ResourceAccessOutputValidationError{
+					field:  "ResourceType",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetResourceType()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ResourceAccessOutputValidationError{
+				field:  "ResourceType",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetResource()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ResourceAccessOutputValidationError{
+					field:  "Resource",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ResourceAccessOutputValidationError{
+					field:  "Resource",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetResource()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ResourceAccessOutputValidationError{
+				field:  "Resource",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	for idx, item := range m.GetEntitlements() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ResourceAccessOutputValidationError{
+						field:  fmt.Sprintf("Entitlements[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ResourceAccessOutputValidationError{
+						field:  fmt.Sprintf("Entitlements[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ResourceAccessOutputValidationError{
+					field:  fmt.Sprintf("Entitlements[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ResourceAccessOutputMultiError(errors)
+	}
+
+	return nil
+}
+
+// ResourceAccessOutputMultiError is an error wrapping multiple validation
+// errors returned by ResourceAccessOutput.ValidateAll() if the designated
+// constraints aren't met.
+type ResourceAccessOutputMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ResourceAccessOutputMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ResourceAccessOutputMultiError) AllErrors() []error { return m }
+
+// ResourceAccessOutputValidationError is the validation error returned by
+// ResourceAccessOutput.Validate if the designated constraints aren't met.
+type ResourceAccessOutputValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ResourceAccessOutputValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ResourceAccessOutputValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ResourceAccessOutputValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ResourceAccessOutputValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ResourceAccessOutputValidationError) ErrorName() string {
+	return "ResourceAccessOutputValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ResourceAccessOutputValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sResourceAccessOutput.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ResourceAccessOutputValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ResourceAccessOutputValidationError{}
+
 // Validate checks the field values on ResourceTypeListOutput with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -2118,3 +2312,168 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GrantListOutputValidationError{}
+
+// Validate checks the field values on ResourceAccessListOutput with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ResourceAccessListOutput) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ResourceAccessListOutput with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ResourceAccessListOutputMultiError, or nil if none found.
+func (m *ResourceAccessListOutput) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ResourceAccessListOutput) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetPrincipal()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ResourceAccessListOutputValidationError{
+					field:  "Principal",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ResourceAccessListOutputValidationError{
+					field:  "Principal",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetPrincipal()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ResourceAccessListOutputValidationError{
+				field:  "Principal",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	for idx, item := range m.GetAccess() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ResourceAccessListOutputValidationError{
+						field:  fmt.Sprintf("Access[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ResourceAccessListOutputValidationError{
+						field:  fmt.Sprintf("Access[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ResourceAccessListOutputValidationError{
+					field:  fmt.Sprintf("Access[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ResourceAccessListOutputMultiError(errors)
+	}
+
+	return nil
+}
+
+// ResourceAccessListOutputMultiError is an error wrapping multiple validation
+// errors returned by ResourceAccessListOutput.ValidateAll() if the designated
+// constraints aren't met.
+type ResourceAccessListOutputMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ResourceAccessListOutputMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ResourceAccessListOutputMultiError) AllErrors() []error { return m }
+
+// ResourceAccessListOutputValidationError is the validation error returned by
+// ResourceAccessListOutput.Validate if the designated constraints aren't met.
+type ResourceAccessListOutputValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ResourceAccessListOutputValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ResourceAccessListOutputValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ResourceAccessListOutputValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ResourceAccessListOutputValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ResourceAccessListOutputValidationError) ErrorName() string {
+	return "ResourceAccessListOutputValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ResourceAccessListOutputValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sResourceAccessListOutput.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ResourceAccessListOutputValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ResourceAccessListOutputValidationError{}

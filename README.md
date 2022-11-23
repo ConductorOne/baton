@@ -104,6 +104,7 @@ Usage:
   baton [command]
 
 Available Commands:
+  access         List effective access for a user
   completion     Generate the autocompletion script for the specified shell
   diff           Perform a diff between sync runs
   entitlements   List entitlements

@@ -204,6 +204,7 @@ github.com/mohae/deepcopy
 ## explicit; go 1.18
 github.com/pterm/pterm
 github.com/pterm/pterm/internal
+github.com/pterm/pterm/putils
 # github.com/remyoudompheng/bigfft v0.0.0-20220927061507-ef77025ab5aa
 ## explicit; go 1.12
 github.com/remyoudompheng/bigfft

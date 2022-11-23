@@ -30,6 +30,7 @@ func main() {
 	cliCmd.AddCommand(diffCmd())
 	cliCmd.AddCommand(export())
 	cliCmd.AddCommand(principalsCmd())
+	cliCmd.AddCommand(accessCmd())
 
 	err := cliCmd.ExecuteContext(ctx)
 	if err != nil {
