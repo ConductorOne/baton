@@ -105,17 +105,13 @@ func runAccess(cmd *cobra.Command, args []string) error {
 	}
 
 	entitlementsByResource := make(map[string]*v1.ResourceAccessOutput)
-	// strategy
-	// look up principal given input
-	// list all grants for that principal
-	// separate output by resource, entitlement, permission
 
 	for _, en := range entitlements {
 		rKey := getResourceIdString(en.Resource)
 
-		var output *v1.ResourceAccessOutput
+		var accessOutput *v1.ResourceAccessOutput
 		if rAccess, ok := entitlementsByResource[rKey]; ok {
-			output = rAccess
+			accessOutput = rAccess
 		} else {
 			resource, err := sc.GetResource(ctx, en.Resource.Id)
 			if err != nil {
@@ -127,14 +123,14 @@ func runAccess(cmd *cobra.Command, args []string) error {
 				return err
 			}
 
-			output = &v1.ResourceAccessOutput{
+			accessOutput = &v1.ResourceAccessOutput{
 				Resource:     resource,
 				ResourceType: rType,
 			}
 		}
 
-		output.Entitlements = append(output.Entitlements, en)
-		entitlementsByResource[rKey] = output
+		accessOutput.Entitlements = append(accessOutput.Entitlements, en)
+		entitlementsByResource[rKey] = accessOutput
 	}
 
 	var outputs []*v1.ResourceAccessOutput
