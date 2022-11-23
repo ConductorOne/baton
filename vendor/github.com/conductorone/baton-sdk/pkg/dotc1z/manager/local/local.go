@@ -1,6 +1,7 @@
 package local
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -43,6 +44,21 @@ func (l *localManager) copyFileToTmp(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// LoadRaw returns an io.Reader of the bytes in the c1z file.
+func (l *localManager) LoadRaw(ctx context.Context) (io.Reader, error) {
+	err := l.copyFileToTmp(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	fBytes, err := os.ReadFile(l.tmpPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return bytes.NewBuffer(fBytes), nil
 }
 
 // LoadC1Z loads the C1Z file from the local file system.

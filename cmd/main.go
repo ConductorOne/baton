@@ -31,6 +31,7 @@ func main() {
 	cliCmd.AddCommand(export())
 	cliCmd.AddCommand(principalsCmd())
 	cliCmd.AddCommand(accessCmd())
+	cliCmd.AddCommand(dumpDBCmd())
 
 	err := cliCmd.ExecuteContext(ctx)
 	if err != nil {
