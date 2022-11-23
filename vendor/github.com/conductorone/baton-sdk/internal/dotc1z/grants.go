@@ -123,6 +123,33 @@ func (c *C1File) ListGrantsForEntitlement(
 	}, nil
 }
 
+func (c *C1File) ListGrantsForResourceType(
+	ctx context.Context,
+	request *reader_v2.GrantsReaderServiceListGrantsForResourceTypeRequest,
+) (*reader_v2.GrantsReaderServiceListGrantsForResourceTypeResponse, error) {
+	ctxzap.Extract(ctx).Debug("listing grants for resource type")
+
+	objs, nextPageToken, err := c.listConnectorObjects(ctx, grants.Name(), request)
+	if err != nil {
+		return nil, err
+	}
+
+	ret := make([]*v2.Grant, 0, len(objs))
+	for _, o := range objs {
+		en := &v2.Grant{}
+		err = proto.Unmarshal(o, en)
+		if err != nil {
+			return nil, err
+		}
+		ret = append(ret, en)
+	}
+
+	return &reader_v2.GrantsReaderServiceListGrantsForResourceTypeResponse{
+		List:          ret,
+		NextPageToken: nextPageToken,
+	}, nil
+}
+
 func (c *C1File) PutGrant(ctx context.Context, grant *v2.Grant) error {
 	ctxzap.Extract(ctx).Debug("syncing grant", zap.String("grant_id", grant.Id))
 

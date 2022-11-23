@@ -25,6 +25,7 @@ const _ = grpc.SupportPackageIsVersion7
 type GrantsReaderServiceClient interface {
 	GetGrant(ctx context.Context, in *GrantsReaderServiceGetGrantRequest, opts ...grpc.CallOption) (*v2.Grant, error)
 	ListGrantsForEntitlement(ctx context.Context, in *GrantsReaderServiceListGrantsForEntitlementRequest, opts ...grpc.CallOption) (*GrantsReaderServiceListGrantsForEntitlementResponse, error)
+	ListGrantsForResourceType(ctx context.Context, in *GrantsReaderServiceListGrantsForResourceTypeRequest, opts ...grpc.CallOption) (*GrantsReaderServiceListGrantsForResourceTypeResponse, error)
 }
 
 type grantsReaderServiceClient struct {
@@ -53,12 +54,22 @@ func (c *grantsReaderServiceClient) ListGrantsForEntitlement(ctx context.Context
 	return out, nil
 }
 
+func (c *grantsReaderServiceClient) ListGrantsForResourceType(ctx context.Context, in *GrantsReaderServiceListGrantsForResourceTypeRequest, opts ...grpc.CallOption) (*GrantsReaderServiceListGrantsForResourceTypeResponse, error) {
+	out := new(GrantsReaderServiceListGrantsForResourceTypeResponse)
+	err := c.cc.Invoke(ctx, "/c1.reader.v2.GrantsReaderService/ListGrantsForResourceType", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GrantsReaderServiceServer is the server API for GrantsReaderService service.
 // All implementations should embed UnimplementedGrantsReaderServiceServer
 // for forward compatibility
 type GrantsReaderServiceServer interface {
 	GetGrant(context.Context, *GrantsReaderServiceGetGrantRequest) (*v2.Grant, error)
 	ListGrantsForEntitlement(context.Context, *GrantsReaderServiceListGrantsForEntitlementRequest) (*GrantsReaderServiceListGrantsForEntitlementResponse, error)
+	ListGrantsForResourceType(context.Context, *GrantsReaderServiceListGrantsForResourceTypeRequest) (*GrantsReaderServiceListGrantsForResourceTypeResponse, error)
 }
 
 // UnimplementedGrantsReaderServiceServer should be embedded to have forward compatible implementations.
@@ -70,6 +81,9 @@ func (UnimplementedGrantsReaderServiceServer) GetGrant(context.Context, *GrantsR
 }
 func (UnimplementedGrantsReaderServiceServer) ListGrantsForEntitlement(context.Context, *GrantsReaderServiceListGrantsForEntitlementRequest) (*GrantsReaderServiceListGrantsForEntitlementResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListGrantsForEntitlement not implemented")
+}
+func (UnimplementedGrantsReaderServiceServer) ListGrantsForResourceType(context.Context, *GrantsReaderServiceListGrantsForResourceTypeRequest) (*GrantsReaderServiceListGrantsForResourceTypeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListGrantsForResourceType not implemented")
 }
 
 // UnsafeGrantsReaderServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -119,6 +133,24 @@ func _GrantsReaderService_ListGrantsForEntitlement_Handler(srv interface{}, ctx 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GrantsReaderService_ListGrantsForResourceType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GrantsReaderServiceListGrantsForResourceTypeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GrantsReaderServiceServer).ListGrantsForResourceType(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/c1.reader.v2.GrantsReaderService/ListGrantsForResourceType",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GrantsReaderServiceServer).ListGrantsForResourceType(ctx, req.(*GrantsReaderServiceListGrantsForResourceTypeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GrantsReaderService_ServiceDesc is the grpc.ServiceDesc for GrantsReaderService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -133,6 +165,10 @@ var GrantsReaderService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListGrantsForEntitlement",
 			Handler:    _GrantsReaderService_ListGrantsForEntitlement_Handler,
+		},
+		{
+			MethodName: "ListGrantsForResourceType",
+			Handler:    _GrantsReaderService_ListGrantsForResourceType_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
