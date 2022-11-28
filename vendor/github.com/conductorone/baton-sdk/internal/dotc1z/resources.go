@@ -104,7 +104,7 @@ func (c *C1File) PutResource(ctx context.Context, resource *v2.Resource) error {
 
 	updateRecord := goqu.Record{
 		"resource_type_id": resource.Id.ResourceType,
-		"external_id":      resource.Id.Resource,
+		"external_id":      fmt.Sprintf("%s:%s", resource.Id.ResourceType, resource.Id.Resource),
 	}
 
 	if resource.ParentResourceId != nil {
