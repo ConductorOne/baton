@@ -168,6 +168,11 @@ func (c *consoleManager) outputResourceAccess(out *v1.ResourceAccessListOutput) 
 }
 
 func (c *consoleManager) outputPrincipalsCompare(out *v1.PrincipalsCompareOutput) error {
+	if len(out.Missing) == 0 && len(out.Extra) == 0 {
+		fmt.Println("The principals between these entitlements appear to match!")
+		return nil
+	}
+
 	if len(out.Missing) > 0 {
 		fmt.Println()
 		pterm.DefaultHeader.WithBackgroundStyle(pterm.NewStyle(pterm.BgLightBlue)).Println("Missing Principals")
