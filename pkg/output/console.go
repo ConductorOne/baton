@@ -3,6 +3,7 @@ package output
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 
 	v1 "github.com/conductorone/baton/pb/baton/v1"
@@ -28,6 +29,9 @@ func (c *consoleManager) Output(ctx context.Context, out interface{}) error {
 
 	case *v1.ResourceAccessListOutput:
 		return c.outputResourceAccess(obj)
+
+	case *v1.PrincipalsCompareOutput:
+		return c.outputPrincipalsCompare(obj)
 
 	default:
 		return fmt.Errorf("unexpected output model")
@@ -159,6 +163,81 @@ func (c *consoleManager) outputResourceAccess(out *v1.ResourceAccessListOutput) 
 	err := pterm.DefaultTree.WithRoot(root).Render()
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (c *consoleManager) outputPrincipalsCompare(out *v1.PrincipalsCompareOutput) error {
+	if len(out.Missing) == 0 && len(out.Extra) == 0 {
+		fmt.Fprintf(os.Stdout, "The principals between these entitlements appear to match!")
+		return nil
+	}
+
+	if len(out.Missing) > 0 {
+		fmt.Fprintf(os.Stdout, "\n")
+		pterm.DefaultHeader.WithBackgroundStyle(pterm.NewStyle(pterm.BgLightBlue)).Println("Missing Principals")
+		fmt.Fprintf(os.Stdout, "\n")
+
+		resourcesTable := pterm.TableData{
+			{"ID", "Display Name", "Resource Type", "Parent Resource"},
+		}
+
+		for _, r := range out.Missing {
+			parentResourceText := "-"
+			if r.Parent != nil {
+				parentResourceText = fmt.Sprintf(
+					"%s (%s)",
+					r.Parent.DisplayName,
+					r.Parent.Id.ResourceType,
+				)
+			}
+
+			resourcesTable = append(resourcesTable, []string{
+				r.Resource.Id.Resource,
+				r.Resource.DisplayName,
+				r.ResourceType.DisplayName,
+				parentResourceText,
+			})
+		}
+
+		err := pterm.DefaultTable.WithHasHeader().WithData(resourcesTable).Render()
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(out.Extra) > 0 {
+		fmt.Fprintf(os.Stdout, "\n")
+		pterm.DefaultHeader.WithBackgroundStyle(pterm.NewStyle(pterm.BgLightBlue)).Println("Extra Principals")
+		fmt.Fprintf(os.Stdout, "\n")
+
+		resourcesTable := pterm.TableData{
+			{"ID", "Display Name", "Resource Type", "Parent Resource"},
+		}
+
+		for _, r := range out.Extra {
+			parentResourceText := "-"
+			if r.Parent != nil {
+				parentResourceText = fmt.Sprintf(
+					"%s (%s)",
+					r.Parent.DisplayName,
+					r.Parent.Id.ResourceType,
+				)
+			}
+
+			resourcesTable = append(resourcesTable, []string{
+				r.Resource.Id.Resource,
+				r.Resource.DisplayName,
+				r.ResourceType.DisplayName,
+				parentResourceText,
+			})
+		}
+
+		err := pterm.DefaultTable.WithHasHeader().WithData(resourcesTable).Render()
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

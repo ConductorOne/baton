@@ -2477,3 +2477,241 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ResourceAccessListOutputValidationError{}
+
+// Validate checks the field values on PrincipalsCompareOutput with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *PrincipalsCompareOutput) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on PrincipalsCompareOutput with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// PrincipalsCompareOutputMultiError, or nil if none found.
+func (m *PrincipalsCompareOutput) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *PrincipalsCompareOutput) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetMissing() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, PrincipalsCompareOutputValidationError{
+						field:  fmt.Sprintf("Missing[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, PrincipalsCompareOutputValidationError{
+						field:  fmt.Sprintf("Missing[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return PrincipalsCompareOutputValidationError{
+					field:  fmt.Sprintf("Missing[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	for idx, item := range m.GetExtra() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, PrincipalsCompareOutputValidationError{
+						field:  fmt.Sprintf("Extra[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, PrincipalsCompareOutputValidationError{
+						field:  fmt.Sprintf("Extra[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return PrincipalsCompareOutputValidationError{
+					field:  fmt.Sprintf("Extra[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	for idx, item := range m.GetBase() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, PrincipalsCompareOutputValidationError{
+						field:  fmt.Sprintf("Base[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, PrincipalsCompareOutputValidationError{
+						field:  fmt.Sprintf("Base[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return PrincipalsCompareOutputValidationError{
+					field:  fmt.Sprintf("Base[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	for idx, item := range m.GetCompared() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, PrincipalsCompareOutputValidationError{
+						field:  fmt.Sprintf("Compared[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, PrincipalsCompareOutputValidationError{
+						field:  fmt.Sprintf("Compared[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return PrincipalsCompareOutputValidationError{
+					field:  fmt.Sprintf("Compared[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return PrincipalsCompareOutputMultiError(errors)
+	}
+
+	return nil
+}
+
+// PrincipalsCompareOutputMultiError is an error wrapping multiple validation
+// errors returned by PrincipalsCompareOutput.ValidateAll() if the designated
+// constraints aren't met.
+type PrincipalsCompareOutputMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m PrincipalsCompareOutputMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m PrincipalsCompareOutputMultiError) AllErrors() []error { return m }
+
+// PrincipalsCompareOutputValidationError is the validation error returned by
+// PrincipalsCompareOutput.Validate if the designated constraints aren't met.
+type PrincipalsCompareOutputValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PrincipalsCompareOutputValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PrincipalsCompareOutputValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PrincipalsCompareOutputValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PrincipalsCompareOutputValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PrincipalsCompareOutputValidationError) ErrorName() string {
+	return "PrincipalsCompareOutputValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e PrincipalsCompareOutputValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPrincipalsCompareOutput.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PrincipalsCompareOutputValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PrincipalsCompareOutputValidationError{}
