@@ -215,7 +215,7 @@ func (c *C1File) getResourceObject(ctx context.Context, resourceID *v2.ResourceI
 	q := c.db.From(resources.Name()).Prepared(true)
 	q = q.Select("data")
 	q = q.Where(goqu.C("resource_type_id").Eq(resourceID.ResourceType))
-	q = q.Where(goqu.C("external_id").Eq(resourceID.Resource))
+	q = q.Where(goqu.C("external_id").Eq(fmt.Sprintf("%s:%s", resourceID.ResourceType, resourceID.Resource)))
 
 	if c.currentSyncID != "" {
 		q = q.Where(goqu.C("sync_id").Eq(c.currentSyncID))
