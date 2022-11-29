@@ -165,7 +165,8 @@ func runPrincipals(cmd *cobra.Command, args []string) error {
 		case cmd.Flags().Changed("resource-id"):
 			principals, pageToken, err = listPrincipalsForResource(ctx, cmd, sc, pageToken)
 		case cmd.Flags().Changed("entitlement-id"):
-			enID, err := cmd.Flags().GetString("entitlement-id")
+			var enID string
+			enID, err = cmd.Flags().GetString("entitlement-id")
 			if err != nil {
 				return err
 			}

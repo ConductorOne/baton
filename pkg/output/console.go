@@ -3,6 +3,7 @@ package output
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 
 	v1 "github.com/conductorone/baton/pb/baton/v1"
@@ -169,14 +170,14 @@ func (c *consoleManager) outputResourceAccess(out *v1.ResourceAccessListOutput) 
 
 func (c *consoleManager) outputPrincipalsCompare(out *v1.PrincipalsCompareOutput) error {
 	if len(out.Missing) == 0 && len(out.Extra) == 0 {
-		fmt.Println("The principals between these entitlements appear to match!")
+		fmt.Fprintf(os.Stdout, "The principals between these entitlements appear to match!")
 		return nil
 	}
 
 	if len(out.Missing) > 0 {
-		fmt.Println()
+		fmt.Fprintf(os.Stdout, "\n")
 		pterm.DefaultHeader.WithBackgroundStyle(pterm.NewStyle(pterm.BgLightBlue)).Println("Missing Principals")
-		fmt.Println()
+		fmt.Fprintf(os.Stdout, "\n")
 
 		resourcesTable := pterm.TableData{
 			{"ID", "Display Name", "Resource Type", "Parent Resource"},
@@ -207,9 +208,9 @@ func (c *consoleManager) outputPrincipalsCompare(out *v1.PrincipalsCompareOutput
 	}
 
 	if len(out.Extra) > 0 {
-		fmt.Println()
+		fmt.Fprintf(os.Stdout, "\n")
 		pterm.DefaultHeader.WithBackgroundStyle(pterm.NewStyle(pterm.BgLightBlue)).Println("Extra Principals")
-		fmt.Println()
+		fmt.Fprintf(os.Stdout, "\n")
 
 		resourcesTable := pterm.TableData{
 			{"ID", "Display Name", "Resource Type", "Parent Resource"},
