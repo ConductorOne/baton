@@ -30,8 +30,12 @@ brew install conductorone/baton/baton conductorone/baton/baton-github
 Once installed, you can audit GitHub access with the following:
 
 ```
+# Run the baton github connector
 baton-github 
-baton -o json | jq ....
+# Output the resources discovered
+baton resources
+# Output the same data to JSON and parse it with jq
+baton resources -o json | jq '.resources[].resource.displayName'
 ```
 
 # What Connectors exist in Baton today?
