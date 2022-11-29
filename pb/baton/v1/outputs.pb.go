@@ -831,6 +831,77 @@ func (x *ResourceAccessListOutput) GetAccess() []*ResourceAccessOutput {
 	return nil
 }
 
+type PrincipalsCompareOutput struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Missing  []*ResourceOutput `protobuf:"bytes,1,rep,name=missing,proto3" json:"missing,omitempty"`
+	Extra    []*ResourceOutput `protobuf:"bytes,2,rep,name=extra,proto3" json:"extra,omitempty"`
+	Base     []*ResourceOutput `protobuf:"bytes,3,rep,name=base,proto3" json:"base,omitempty"`
+	Compared []*ResourceOutput `protobuf:"bytes,4,rep,name=compared,proto3" json:"compared,omitempty"`
+}
+
+func (x *PrincipalsCompareOutput) Reset() {
+	*x = PrincipalsCompareOutput{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_baton_v1_outputs_proto_msgTypes[14]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *PrincipalsCompareOutput) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PrincipalsCompareOutput) ProtoMessage() {}
+
+func (x *PrincipalsCompareOutput) ProtoReflect() protoreflect.Message {
+	mi := &file_baton_v1_outputs_proto_msgTypes[14]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PrincipalsCompareOutput.ProtoReflect.Descriptor instead.
+func (*PrincipalsCompareOutput) Descriptor() ([]byte, []int) {
+	return file_baton_v1_outputs_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *PrincipalsCompareOutput) GetMissing() []*ResourceOutput {
+	if x != nil {
+		return x.Missing
+	}
+	return nil
+}
+
+func (x *PrincipalsCompareOutput) GetExtra() []*ResourceOutput {
+	if x != nil {
+		return x.Extra
+	}
+	return nil
+}
+
+func (x *PrincipalsCompareOutput) GetBase() []*ResourceOutput {
+	if x != nil {
+		return x.Base
+	}
+	return nil
+}
+
+func (x *PrincipalsCompareOutput) GetCompared() []*ResourceOutput {
+	if x != nil {
+		return x.Compared
+	}
+	return nil
+}
+
 var File_baton_v1_outputs_proto protoreflect.FileDescriptor
 
 var file_baton_v1_outputs_proto_rawDesc = []byte{
@@ -979,10 +1050,25 @@ var file_baton_v1_outputs_proto_rawDesc = []byte{
 	0x36, 0x0a, 0x06, 0x61, 0x63, 0x63, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32,
 	0x1e, 0x2e, 0x62, 0x61, 0x74, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65, 0x73, 0x6f, 0x75,
 	0x72, 0x63, 0x65, 0x41, 0x63, 0x63, 0x65, 0x73, 0x73, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x52,
-	0x06, 0x61, 0x63, 0x63, 0x65, 0x73, 0x73, 0x42, 0x2f, 0x5a, 0x2d, 0x67, 0x69, 0x74, 0x68, 0x75,
-	0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x6e, 0x64, 0x75, 0x63, 0x74, 0x6f, 0x72, 0x6f,
-	0x6e, 0x65, 0x2f, 0x62, 0x61, 0x74, 0x6f, 0x6e, 0x2f, 0x70, 0x62, 0x2f, 0x62, 0x61, 0x74, 0x6f,
-	0x6e, 0x5f, 0x63, 0x6c, 0x69, 0x2f, 0x76, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x06, 0x61, 0x63, 0x63, 0x65, 0x73, 0x73, 0x22, 0xe1, 0x01, 0x0a, 0x17, 0x50, 0x72, 0x69, 0x6e,
+	0x63, 0x69, 0x70, 0x61, 0x6c, 0x73, 0x43, 0x6f, 0x6d, 0x70, 0x61, 0x72, 0x65, 0x4f, 0x75, 0x74,
+	0x70, 0x75, 0x74, 0x12, 0x32, 0x0a, 0x07, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6e, 0x67, 0x18, 0x01,
+	0x20, 0x03, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x62, 0x61, 0x74, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x2e,
+	0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x52, 0x07,
+	0x6d, 0x69, 0x73, 0x73, 0x69, 0x6e, 0x67, 0x12, 0x2e, 0x0a, 0x05, 0x65, 0x78, 0x74, 0x72, 0x61,
+	0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x62, 0x61, 0x74, 0x6f, 0x6e, 0x2e, 0x76,
+	0x31, 0x2e, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74,
+	0x52, 0x05, 0x65, 0x78, 0x74, 0x72, 0x61, 0x12, 0x2c, 0x0a, 0x04, 0x62, 0x61, 0x73, 0x65, 0x18,
+	0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x62, 0x61, 0x74, 0x6f, 0x6e, 0x2e, 0x76, 0x31,
+	0x2e, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x52,
+	0x04, 0x62, 0x61, 0x73, 0x65, 0x12, 0x34, 0x0a, 0x08, 0x63, 0x6f, 0x6d, 0x70, 0x61, 0x72, 0x65,
+	0x64, 0x18, 0x04, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x62, 0x61, 0x74, 0x6f, 0x6e, 0x2e,
+	0x76, 0x31, 0x2e, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x4f, 0x75, 0x74, 0x70, 0x75,
+	0x74, 0x52, 0x08, 0x63, 0x6f, 0x6d, 0x70, 0x61, 0x72, 0x65, 0x64, 0x42, 0x2f, 0x5a, 0x2d, 0x67,
+	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x6e, 0x64, 0x75, 0x63,
+	0x74, 0x6f, 0x72, 0x6f, 0x6e, 0x65, 0x2f, 0x62, 0x61, 0x74, 0x6f, 0x6e, 0x2f, 0x70, 0x62, 0x2f,
+	0x62, 0x61, 0x74, 0x6f, 0x6e, 0x5f, 0x63, 0x6c, 0x69, 0x2f, 0x76, 0x31, 0x62, 0x06, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -997,7 +1083,7 @@ func file_baton_v1_outputs_proto_rawDescGZIP() []byte {
 	return file_baton_v1_outputs_proto_rawDescData
 }
 
-var file_baton_v1_outputs_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_baton_v1_outputs_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_baton_v1_outputs_proto_goTypes = []interface{}{
 	(*ResourceDiff)(nil),             // 0: baton.v1.ResourceDiff
 	(*EntitlementDiff)(nil),          // 1: baton.v1.EntitlementDiff
@@ -1013,50 +1099,55 @@ var file_baton_v1_outputs_proto_goTypes = []interface{}{
 	(*EntitlementListOutput)(nil),    // 11: baton.v1.EntitlementListOutput
 	(*GrantListOutput)(nil),          // 12: baton.v1.GrantListOutput
 	(*ResourceAccessListOutput)(nil), // 13: baton.v1.ResourceAccessListOutput
-	(*v2.Resource)(nil),              // 14: c1.connector.v2.Resource
-	(*v2.Entitlement)(nil),           // 15: c1.connector.v2.Entitlement
-	(*v2.Grant)(nil),                 // 16: c1.connector.v2.Grant
-	(*v2.ResourceType)(nil),          // 17: c1.connector.v2.ResourceType
+	(*PrincipalsCompareOutput)(nil),  // 14: baton.v1.PrincipalsCompareOutput
+	(*v2.Resource)(nil),              // 15: c1.connector.v2.Resource
+	(*v2.Entitlement)(nil),           // 16: c1.connector.v2.Entitlement
+	(*v2.Grant)(nil),                 // 17: c1.connector.v2.Grant
+	(*v2.ResourceType)(nil),          // 18: c1.connector.v2.ResourceType
 }
 var file_baton_v1_outputs_proto_depIdxs = []int32{
-	14, // 0: baton.v1.ResourceDiff.created:type_name -> c1.connector.v2.Resource
-	14, // 1: baton.v1.ResourceDiff.deleted:type_name -> c1.connector.v2.Resource
-	14, // 2: baton.v1.ResourceDiff.modified:type_name -> c1.connector.v2.Resource
-	15, // 3: baton.v1.EntitlementDiff.created:type_name -> c1.connector.v2.Entitlement
-	15, // 4: baton.v1.EntitlementDiff.deleted:type_name -> c1.connector.v2.Entitlement
-	15, // 5: baton.v1.EntitlementDiff.modified:type_name -> c1.connector.v2.Entitlement
-	16, // 6: baton.v1.GrantDiff.created:type_name -> c1.connector.v2.Grant
-	16, // 7: baton.v1.GrantDiff.deleted:type_name -> c1.connector.v2.Grant
-	16, // 8: baton.v1.GrantDiff.modified:type_name -> c1.connector.v2.Grant
+	15, // 0: baton.v1.ResourceDiff.created:type_name -> c1.connector.v2.Resource
+	15, // 1: baton.v1.ResourceDiff.deleted:type_name -> c1.connector.v2.Resource
+	15, // 2: baton.v1.ResourceDiff.modified:type_name -> c1.connector.v2.Resource
+	16, // 3: baton.v1.EntitlementDiff.created:type_name -> c1.connector.v2.Entitlement
+	16, // 4: baton.v1.EntitlementDiff.deleted:type_name -> c1.connector.v2.Entitlement
+	16, // 5: baton.v1.EntitlementDiff.modified:type_name -> c1.connector.v2.Entitlement
+	17, // 6: baton.v1.GrantDiff.created:type_name -> c1.connector.v2.Grant
+	17, // 7: baton.v1.GrantDiff.deleted:type_name -> c1.connector.v2.Grant
+	17, // 8: baton.v1.GrantDiff.modified:type_name -> c1.connector.v2.Grant
 	0,  // 9: baton.v1.C1ZDiffOutput.resources:type_name -> baton.v1.ResourceDiff
 	1,  // 10: baton.v1.C1ZDiffOutput.entitlements:type_name -> baton.v1.EntitlementDiff
 	2,  // 11: baton.v1.C1ZDiffOutput.grants:type_name -> baton.v1.GrantDiff
-	17, // 12: baton.v1.ResourceTypeOutput.resource_type:type_name -> c1.connector.v2.ResourceType
-	14, // 13: baton.v1.ResourceOutput.resource:type_name -> c1.connector.v2.Resource
-	17, // 14: baton.v1.ResourceOutput.resource_type:type_name -> c1.connector.v2.ResourceType
-	14, // 15: baton.v1.ResourceOutput.parent:type_name -> c1.connector.v2.Resource
-	15, // 16: baton.v1.EntitlementOutput.entitlement:type_name -> c1.connector.v2.Entitlement
-	14, // 17: baton.v1.EntitlementOutput.resource:type_name -> c1.connector.v2.Resource
-	17, // 18: baton.v1.EntitlementOutput.resource_type:type_name -> c1.connector.v2.ResourceType
-	16, // 19: baton.v1.GrantOutput.grant:type_name -> c1.connector.v2.Grant
-	15, // 20: baton.v1.GrantOutput.entitlement:type_name -> c1.connector.v2.Entitlement
-	14, // 21: baton.v1.GrantOutput.resource:type_name -> c1.connector.v2.Resource
-	17, // 22: baton.v1.GrantOutput.resource_type:type_name -> c1.connector.v2.ResourceType
-	14, // 23: baton.v1.GrantOutput.principal:type_name -> c1.connector.v2.Resource
-	17, // 24: baton.v1.ResourceAccessOutput.resource_type:type_name -> c1.connector.v2.ResourceType
-	14, // 25: baton.v1.ResourceAccessOutput.resource:type_name -> c1.connector.v2.Resource
-	15, // 26: baton.v1.ResourceAccessOutput.entitlements:type_name -> c1.connector.v2.Entitlement
+	18, // 12: baton.v1.ResourceTypeOutput.resource_type:type_name -> c1.connector.v2.ResourceType
+	15, // 13: baton.v1.ResourceOutput.resource:type_name -> c1.connector.v2.Resource
+	18, // 14: baton.v1.ResourceOutput.resource_type:type_name -> c1.connector.v2.ResourceType
+	15, // 15: baton.v1.ResourceOutput.parent:type_name -> c1.connector.v2.Resource
+	16, // 16: baton.v1.EntitlementOutput.entitlement:type_name -> c1.connector.v2.Entitlement
+	15, // 17: baton.v1.EntitlementOutput.resource:type_name -> c1.connector.v2.Resource
+	18, // 18: baton.v1.EntitlementOutput.resource_type:type_name -> c1.connector.v2.ResourceType
+	17, // 19: baton.v1.GrantOutput.grant:type_name -> c1.connector.v2.Grant
+	16, // 20: baton.v1.GrantOutput.entitlement:type_name -> c1.connector.v2.Entitlement
+	15, // 21: baton.v1.GrantOutput.resource:type_name -> c1.connector.v2.Resource
+	18, // 22: baton.v1.GrantOutput.resource_type:type_name -> c1.connector.v2.ResourceType
+	15, // 23: baton.v1.GrantOutput.principal:type_name -> c1.connector.v2.Resource
+	18, // 24: baton.v1.ResourceAccessOutput.resource_type:type_name -> c1.connector.v2.ResourceType
+	15, // 25: baton.v1.ResourceAccessOutput.resource:type_name -> c1.connector.v2.Resource
+	16, // 26: baton.v1.ResourceAccessOutput.entitlements:type_name -> c1.connector.v2.Entitlement
 	4,  // 27: baton.v1.ResourceTypeListOutput.resource_types:type_name -> baton.v1.ResourceTypeOutput
 	5,  // 28: baton.v1.ResourceListOutput.resources:type_name -> baton.v1.ResourceOutput
 	6,  // 29: baton.v1.EntitlementListOutput.entitlements:type_name -> baton.v1.EntitlementOutput
 	7,  // 30: baton.v1.GrantListOutput.grants:type_name -> baton.v1.GrantOutput
-	14, // 31: baton.v1.ResourceAccessListOutput.principal:type_name -> c1.connector.v2.Resource
+	15, // 31: baton.v1.ResourceAccessListOutput.principal:type_name -> c1.connector.v2.Resource
 	8,  // 32: baton.v1.ResourceAccessListOutput.access:type_name -> baton.v1.ResourceAccessOutput
-	33, // [33:33] is the sub-list for method output_type
-	33, // [33:33] is the sub-list for method input_type
-	33, // [33:33] is the sub-list for extension type_name
-	33, // [33:33] is the sub-list for extension extendee
-	0,  // [0:33] is the sub-list for field type_name
+	5,  // 33: baton.v1.PrincipalsCompareOutput.missing:type_name -> baton.v1.ResourceOutput
+	5,  // 34: baton.v1.PrincipalsCompareOutput.extra:type_name -> baton.v1.ResourceOutput
+	5,  // 35: baton.v1.PrincipalsCompareOutput.base:type_name -> baton.v1.ResourceOutput
+	5,  // 36: baton.v1.PrincipalsCompareOutput.compared:type_name -> baton.v1.ResourceOutput
+	37, // [37:37] is the sub-list for method output_type
+	37, // [37:37] is the sub-list for method input_type
+	37, // [37:37] is the sub-list for extension type_name
+	37, // [37:37] is the sub-list for extension extendee
+	0,  // [0:37] is the sub-list for field type_name
 }
 
 func init() { file_baton_v1_outputs_proto_init() }
@@ -1233,6 +1324,18 @@ func file_baton_v1_outputs_proto_init() {
 				return nil
 			}
 		}
+		file_baton_v1_outputs_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*PrincipalsCompareOutput); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1240,7 +1343,7 @@ func file_baton_v1_outputs_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_baton_v1_outputs_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   14,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -82,3 +82,10 @@ message ResourceAccessListOutput {
   c1.connector.v2.Resource principal = 1;
   repeated ResourceAccessOutput access = 2;
 }
+
+message PrincipalsCompareOutput {
+  repeated ResourceOutput missing = 1;
+  repeated ResourceOutput extra = 2;
+  repeated ResourceOutput base = 3;
+  repeated ResourceOutput compared = 4;
+}

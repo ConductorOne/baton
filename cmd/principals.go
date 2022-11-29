@@ -33,19 +33,13 @@ func principalsCmd() *cobra.Command {
 
 	cmd.MarkFlagsMutuallyExclusive("resource-id", "entitlement-id")
 
+	cmd.AddCommand(principalsCompareCmd())
+
 	return cmd
 }
 
-func listPrincipalsForEntitlement(ctx context.Context, cmd *cobra.Command, sc *storecache.StoreCache, pageToken string) ([]*v2.Resource, string, error) {
+func listPrincipalsForEntitlement(ctx context.Context, entitlementID string, sc *storecache.StoreCache, pageToken string) ([]*v2.Resource, string, error) {
 	var ret []*v2.Resource
-
-	entitlementID, err := cmd.Flags().GetString("entitlement-id")
-	if err != nil {
-		return nil, "", err
-	}
-	if entitlementID == "" {
-		return nil, "", errors.New("--entitlement-id is required")
-	}
 
 	entitlement := &v2.Entitlement{Id: entitlementID}
 	req := &reader_v2.GrantsReaderServiceListGrantsForEntitlementRequest{
@@ -171,7 +165,12 @@ func runPrincipals(cmd *cobra.Command, args []string) error {
 		case cmd.Flags().Changed("resource-id"):
 			principals, pageToken, err = listPrincipalsForResource(ctx, cmd, sc, pageToken)
 		case cmd.Flags().Changed("entitlement-id"):
-			principals, pageToken, err = listPrincipalsForEntitlement(ctx, cmd, sc, pageToken)
+			enID, err := cmd.Flags().GetString("entitlement-id")
+			if err != nil {
+				return err
+			}
+
+			principals, pageToken, err = listPrincipalsForEntitlement(ctx, enID, sc, pageToken)
 		default:
 			principals, pageToken, err = listAllPrincipals(ctx, sc, pageToken)
 		}
