@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	reader_v2 "github.com/conductorone/baton-sdk/pb/c1/reader/v2"
@@ -23,15 +22,11 @@ func principalsCmd() *cobra.Command {
 		RunE:  runPrincipals,
 	}
 
-	// Filter by resource
-	cmd.Flags().String("resource-type-id", "", "Resource Type ID")
-	cmd.Flags().String("resource-id", "", "Resource ID")
-	cmd.MarkFlagsRequiredTogether("resource-type-id", "resource-id")
-
-	// Filter by entitlement
-	cmd.Flags().String("entitlement-id", "", "Entitlement ID")
-
-	cmd.MarkFlagsMutuallyExclusive("resource-id", "entitlement-id")
+	addResourceFlag(cmd)
+	addResourceTypeFlag(cmd)
+	addEntitlementFlag(cmd)
+	cmd.MarkFlagsRequiredTogether(resourceTypeFlag, resourceFlag)
+	cmd.MarkFlagsMutuallyExclusive(resourceFlag, entitlementFlag)
 
 	cmd.AddCommand(principalsCompareCmd())
 
@@ -65,16 +60,16 @@ func listPrincipalsForEntitlement(ctx context.Context, entitlementID string, sc 
 func listPrincipalsForResource(ctx context.Context, cmd *cobra.Command, sc *storecache.StoreCache, pageToken string) ([]*v2.Resource, string, error) {
 	var ret []*v2.Resource
 
-	resourceTypeID, err := cmd.Flags().GetString("resource-type-id")
+	resourceTypeID, err := cmd.Flags().GetString(resourceTypeFlag)
 	if err != nil {
 		return nil, "", err
 	}
-	resourceID, err := cmd.Flags().GetString("resource-id")
+	resourceID, err := cmd.Flags().GetString(resourceFlag)
 	if err != nil {
 		return nil, "", err
 	}
 	if resourceTypeID == "" || resourceID == "" {
-		return nil, "", errors.New("--resource-type-id and --resource-id are required")
+		return nil, "", fmt.Errorf("--%s and --%s are required", resourceTypeFlag, resourceFlag)
 	}
 
 	resource := &v2.Resource{Id: &v2.ResourceId{
@@ -162,11 +157,11 @@ func runPrincipals(cmd *cobra.Command, args []string) error {
 	for {
 		var principals []*v2.Resource
 		switch {
-		case cmd.Flags().Changed("resource-id"):
+		case cmd.Flags().Changed(resourceFlag):
 			principals, pageToken, err = listPrincipalsForResource(ctx, cmd, sc, pageToken)
-		case cmd.Flags().Changed("entitlement-id"):
+		case cmd.Flags().Changed(entitlementFlag):
 			var enID string
-			enID, err = cmd.Flags().GetString("entitlement-id")
+			enID, err = cmd.Flags().GetString(entitlementFlag)
 			if err != nil {
 				return err
 			}

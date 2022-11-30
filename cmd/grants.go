@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/conductorone/baton-sdk/pkg/connectorstore"
 	"github.com/conductorone/baton-sdk/pkg/dotc1z/manager"
@@ -23,20 +24,17 @@ func grantsCmd() *cobra.Command {
 		RunE:  runGrants,
 	}
 
-	// Filter by resource type or resource
-	cmd.Flags().String("resource-type-id", "", "Resource Type ID")
-	cmd.Flags().String("resource-id", "", "Resource ID")
+	addResourceTypeFlag(cmd)
+	addResourceFlag(cmd)
+	addEntitlementFlag(cmd)
 
-	// Filter by entitlement
-	cmd.Flags().String("entitlement-id", "", "Entitlement ID")
-
-	cmd.MarkFlagsMutuallyExclusive("resource-id", "entitlement-id")
+	cmd.MarkFlagsMutuallyExclusive(resourceFlag, entitlementFlag)
 
 	return cmd
 }
 
 func listGrantsForEntitlement(ctx context.Context, cmd *cobra.Command, store connectorstore.Reader, pageToken string) ([]*v2.Grant, string, error) {
-	entitlementID, err := cmd.Flags().GetString("entitlement-id")
+	entitlementID, err := cmd.Flags().GetString(entitlementFlag)
 	if err != nil {
 		return nil, "", err
 	}
@@ -58,16 +56,16 @@ func listGrantsForEntitlement(ctx context.Context, cmd *cobra.Command, store con
 }
 
 func listGrantsForResource(ctx context.Context, cmd *cobra.Command, store connectorstore.Reader, pageToken string) ([]*v2.Grant, string, error) {
-	resourceTypeID, err := cmd.Flags().GetString("resource-type-id")
+	resourceTypeID, err := cmd.Flags().GetString(resourceTypeFlag)
 	if err != nil {
 		return nil, "", err
 	}
-	resourceID, err := cmd.Flags().GetString("resource-id")
+	resourceID, err := cmd.Flags().GetString(resourceFlag)
 	if err != nil {
 		return nil, "", err
 	}
 	if resourceTypeID == "" || resourceID == "" {
-		return nil, "", errors.New("--resource-type-id and --resource-id are required")
+		return nil, "", fmt.Errorf("--%s and --%s are required", resourceTypeFlag, resourceFlag)
 	}
 
 	resource := &v2.Resource{Id: &v2.ResourceId{
@@ -87,13 +85,13 @@ func listGrantsForResource(ctx context.Context, cmd *cobra.Command, store connec
 }
 
 func listGrantsForResourceType(ctx context.Context, cmd *cobra.Command, store connectorstore.Reader, pageToken string) ([]*v2.Grant, string, error) {
-	resourceTypeID, err := cmd.Flags().GetString("resource-type-id")
+	resourceTypeID, err := cmd.Flags().GetString(resourceTypeFlag)
 	if err != nil {
 		return nil, "", err
 	}
 
 	if resourceTypeID == "" {
-		return nil, "", errors.New("--resource-type-id")
+		return nil, "", fmt.Errorf("--%s is required", resourceTypeFlag)
 	}
 
 	req := &reader_v2.GrantsReaderServiceListGrantsForResourceTypeRequest{
@@ -154,11 +152,11 @@ func runGrants(cmd *cobra.Command, args []string) error {
 	for {
 		var grants []*v2.Grant
 		switch {
-		case cmd.Flags().Changed("resource-type-id"):
-			grants, pageToken, err = listGrantsForResourceType(ctx, cmd, store, pageToken)
-		case cmd.Flags().Changed("resource-id"):
+		case cmd.Flags().Changed(resourceFlag):
 			grants, pageToken, err = listGrantsForResource(ctx, cmd, store, pageToken)
-		case cmd.Flags().Changed("entitlement-id"):
+		case cmd.Flags().Changed(resourceTypeFlag):
+			grants, pageToken, err = listGrantsForResourceType(ctx, cmd, store, pageToken)
+		case cmd.Flags().Changed(entitlementFlag):
 			grants, pageToken, err = listGrantsForEntitlement(ctx, cmd, store, pageToken)
 		default:
 			grants, pageToken, err = listAllGrants(ctx, store, pageToken)

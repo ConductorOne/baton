@@ -20,7 +20,7 @@ func resourcesCmd() *cobra.Command {
 		RunE:  runResources,
 	}
 
-	cmd.Flags().String("resource-type", "", "The resource type to list resources for")
+	addResourceTypeFlag(cmd)
 
 	return cmd
 }
@@ -35,7 +35,7 @@ func runResources(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	resourceType, err := cmd.Flags().GetString("resource-type")
+	resourceType, err := cmd.Flags().GetString(resourceTypeFlag)
 	if err != nil {
 		return err
 	}
