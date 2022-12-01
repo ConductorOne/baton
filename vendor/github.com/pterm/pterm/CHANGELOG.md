@@ -1,6 +1,13 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+### Bug Fixes
+- revert original test & add new test
+- slice bounds out of range on select printer
+
+
+<a name="v0.12.49"></a>
+## [v0.12.49] - 2022-10-03
 
 <a name="v0.12.48"></a>
 ## [v0.12.48] - 2022-10-02
@@ -1069,7 +1076,8 @@ removed `Header` and put it's content directly into `HeaderPrinter`
 - initial commit
 
 
-[Unreleased]: https://github.com/pterm/pterm/compare/v0.12.48...HEAD
+[Unreleased]: https://github.com/pterm/pterm/compare/v0.12.49...HEAD
+[v0.12.49]: https://github.com/pterm/pterm/compare/v0.12.48...v0.12.49
 [v0.12.48]: https://github.com/pterm/pterm/compare/v0.12.47...v0.12.48
 [v0.12.47]: https://github.com/pterm/pterm/compare/v0.12.46...v0.12.47
 [v0.12.46]: https://github.com/pterm/pterm/compare/v0.12.45...v0.12.46

@@ -89,6 +89,10 @@ func (c *C1File) GetEntitlement(ctx context.Context, request *reader_v2.Entitlem
 func (c *C1File) PutEntitlement(ctx context.Context, entitlement *v2.Entitlement) error {
 	ctxzap.Extract(ctx).Debug("syncing entitlement", zap.String("entitlement_id", entitlement.Id))
 
+	if entitlement.Resource == nil && entitlement.Resource.Id == nil {
+		return fmt.Errorf("entitlements must have a non-nil resource")
+	}
+
 	query, args, err := c.putConnectorObjectQuery(ctx, entitlements.Name(), entitlement, goqu.Record{
 		"resource_id":      entitlement.Resource.Id.Resource,
 		"resource_type_id": entitlement.Resource.Id.ResourceType,

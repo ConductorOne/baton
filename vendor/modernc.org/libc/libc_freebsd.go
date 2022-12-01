@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"runtime/debug"
 	"strings"
 	"syscall"
@@ -275,6 +276,8 @@ func Xsysconf(t *TLS, name int32) long {
 		return -1
 	case unistd.X_SC_GETGR_R_SIZE_MAX:
 		return -1
+	case unistd.X_SC_NPROCESSORS_ONLN:
+		return long(runtime.NumCPU())
 	}
 
 	panic(todo("", name))
@@ -1517,4 +1520,19 @@ func X___tolower(t *TLS, r rune) rune {
 
 func X___toupper(t *TLS, r rune) rune {
 	return unicode.ToLower(r)
+}
+
+// uint16_t __builtin_bswap16 (uint32_t x)
+func Xbswap16(t *TLS, x uint16) uint16 {
+	return X__builtin_bswap16(t, x)
+}
+
+// uint32_t __builtin_bswap32 (uint32_t x)
+func Xbswap32(t *TLS, x uint32) uint32 {
+	return X__builtin_bswap32(t, x)
+}
+
+// uint64_t __builtin_bswap64 (uint64_t x)
+func Xbswap64(t *TLS, x uint64) uint64 {
+	return X__builtin_bswap64(t, x)
 }
