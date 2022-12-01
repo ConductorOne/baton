@@ -21,9 +21,9 @@ func principalsCompareCmd() *cobra.Command {
 	}
 
 	// Filter by entitlement
-	cmd.Flags().String("entitlement-id", "", "The entitlement ID from the base C1Z to compare against")
-	cmd.Flags().String("compare-file", "sync.c1z", "The path to the c1z file to compare with ($C1_COMPARE_FILE)")
-	cmd.Flags().String("compare-entitlement-id", "", "The entitlement ID from the secondary C1Z to compare against")
+	addEntitlementFlag(cmd)
+	cmd.Flags().String("compare-file", "sync.c1z", "The path to the c1z file to compare with")
+	cmd.Flags().String("compare-entitlement", "", "The entitlement ID from the secondary C1Z to compare against")
 
 	return cmd
 }
@@ -75,12 +75,12 @@ func runPrincipalsCompare(cmd *cobra.Command, args []string) error {
 
 	scDiff := storecache.NewStoreCache(ctx, storeCompare)
 
-	baseEntitlementID, err := cmd.Flags().GetString("entitlement-id")
+	baseEntitlementID, err := cmd.Flags().GetString(entitlementFlag)
 	if err != nil {
 		return err
 	}
 
-	diffEntitlementID, err := cmd.Flags().GetString("compare-entitlement-id")
+	diffEntitlementID, err := cmd.Flags().GetString("compare-entitlement")
 	if err != nil {
 		return err
 	}

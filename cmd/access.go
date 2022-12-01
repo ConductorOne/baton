@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"errors"
+	"fmt"
 
 	"github.com/conductorone/baton-sdk/pkg/dotc1z/manager"
 	"github.com/conductorone/baton-sdk/pkg/logging"
@@ -21,10 +21,9 @@ func accessCmd() *cobra.Command {
 		RunE:  runAccess,
 	}
 
-	// Filter by resource
-	cmd.Flags().String("resource-type-id", "", "Resource Type ID")
-	cmd.Flags().String("resource-id", "", "Resource ID")
-	cmd.MarkFlagsRequiredTogether("resource-type-id", "resource-id")
+	addResourceTypeFlag(cmd)
+	addResourceFlag(cmd)
+	cmd.MarkFlagsRequiredTogether(resourceTypeFlag, resourceFlag)
 
 	return cmd
 }
@@ -58,16 +57,16 @@ func runAccess(cmd *cobra.Command, args []string) error {
 
 	sc := storecache.NewStoreCache(ctx, store)
 
-	resourceTypeID, err := cmd.Flags().GetString("resource-type-id")
+	resourceTypeID, err := cmd.Flags().GetString(resourceTypeFlag)
 	if err != nil {
 		return err
 	}
-	resourceID, err := cmd.Flags().GetString("resource-id")
+	resourceID, err := cmd.Flags().GetString(resourceFlag)
 	if err != nil {
 		return err
 	}
 	if resourceTypeID == "" || resourceID == "" {
-		return errors.New("--resource-type-id and --resource-id are required")
+		return fmt.Errorf("--%s and --%s are required", resourceTypeFlag, resourceFlag)
 	}
 
 	principal, err := sc.GetResource(ctx, &v2.ResourceId{
