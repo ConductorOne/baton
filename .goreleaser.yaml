@@ -4,7 +4,7 @@ builds:
     env:
       - CGO_ENABLED=0
     id: linux
-    main: ./cmd
+    main: ./cmd/baton
     goos:
       - linux
     goarch:
@@ -14,7 +14,7 @@ builds:
     env:
       - CGO_ENABLED=0
     id: macos-amd64
-    main: ./cmd
+    main: ./cmd/baton
     goos:
       - darwin
     goarch:
@@ -27,7 +27,7 @@ builds:
     env:
       - CGO_ENABLED=0
     id: macos-arm64
-    main: ./cmd
+    main: ./cmd/baton
     goos:
       - darwin
     goarch:
