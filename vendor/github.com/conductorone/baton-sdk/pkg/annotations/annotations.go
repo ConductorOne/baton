@@ -25,6 +25,7 @@ func (a *Annotations) Append(msgs ...proto.Message) {
 func (a *Annotations) Update(msg proto.Message) {
 	var newAnnotations []*anypb.Any
 
+	found := false
 	for _, v := range *a {
 		if v.MessageIs(msg) {
 			updatedAny, err := anypb.New(msg)
@@ -32,13 +33,14 @@ func (a *Annotations) Update(msg proto.Message) {
 				panic(fmt.Errorf("failed to anypb.New: %w", err))
 			}
 			newAnnotations = append(newAnnotations, updatedAny)
+			found = true
 		} else {
 			newAnnotations = append(newAnnotations, v)
 		}
 	}
 
-	// If we don't have any annotations, just add it.
-	if len(*a) == 0 {
+	// If we are trying to update a new message, just append it.
+	if !found {
 		v, err := anypb.New(msg)
 		if err != nil {
 			panic(fmt.Errorf("failed to anypb.New: %w", err))

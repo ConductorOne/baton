@@ -3,7 +3,7 @@ module github.com/conductorone/baton
 go 1.19
 
 require (
-	github.com/conductorone/baton-sdk v0.0.14
+	github.com/conductorone/baton-sdk v0.0.16
 	github.com/envoyproxy/protoc-gen-validate v0.9.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/pterm/pterm v0.12.50
@@ -65,7 +65,7 @@ require (
 	golang.org/x/sys v0.2.0 // indirect
 	golang.org/x/term v0.2.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
-	google.golang.org/genproto v0.0.0-20221130183247-a2ec334bae6f // indirect
+	google.golang.org/genproto v0.0.0-20221201164419-0e50fba7f41c // indirect
 	modernc.org/libc v1.21.5 // indirect
 	modernc.org/mathutil v1.5.0 // indirect
 	modernc.org/memory v1.4.0 // indirect

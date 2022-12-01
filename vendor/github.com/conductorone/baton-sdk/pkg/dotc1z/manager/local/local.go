@@ -119,6 +119,10 @@ func (l *localManager) SaveC1Z(ctx context.Context) error {
 }
 
 func (l *localManager) Close(ctx context.Context) error {
+	err := os.Remove(l.tmpPath)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
