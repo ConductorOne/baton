@@ -23,7 +23,7 @@ func principalsCompareCmd() *cobra.Command {
 	// Filter by entitlement
 	addEntitlementFlag(cmd)
 	cmd.Flags().String("compare-file", "sync.c1z", "The path to the c1z file to compare with")
-	cmd.Flags().String("compare-entitlement-id", "", "The entitlement ID from the secondary C1Z to compare against")
+	cmd.Flags().String("compare-entitlement", "", "The entitlement ID from the secondary C1Z to compare against")
 
 	return cmd
 }
