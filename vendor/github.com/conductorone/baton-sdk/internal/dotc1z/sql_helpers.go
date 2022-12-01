@@ -272,8 +272,29 @@ func (c *C1File) getConnectorObject(ctx context.Context, tableName string, id st
 	q = q.Select("data")
 	q = q.Where(goqu.C("external_id").Eq(id))
 
-	if c.currentSyncID != "" {
+	switch {
+	case c.currentSyncID != "":
 		q = q.Where(goqu.C("sync_id").Eq(c.currentSyncID))
+	case c.viewSyncID != "":
+		q = q.Where(goqu.C("sync_id").Eq(c.viewSyncID))
+	default:
+		var latestSyncRun *syncRun
+		var err error
+		latestSyncRun, err = c.getFinishedSync(ctx, 0)
+		if err != nil {
+			return err
+		}
+
+		if latestSyncRun == nil {
+			latestSyncRun, err = c.getLatestUnfinishedSync(ctx)
+			if err != nil {
+				return err
+			}
+		}
+
+		if latestSyncRun != nil {
+			q = q.Where(goqu.C("sync_id").Eq(latestSyncRun.ID))
+		}
 	}
 
 	query, args, err := q.ToSQL()
