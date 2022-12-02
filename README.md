@@ -17,6 +17,7 @@ As a generic toolkit for auditing access, Baton can be used for several use case
 - Export GitHub permissions into a CSV for loading into a user access review
 - Discovering all access for an user / account across all SaaS and IaaS systems
 - Calculating the effective access of a user based on group membership
+
 These are just a few of the use cases that Baton can be leveraged for.
 
 
