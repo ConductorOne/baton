@@ -1,29 +1,29 @@
 
 ![Baton Logo](./docs/images/baton-logo.png)
 
-# Baton: A Toolkit for Auditing Infrastructure Access
+# Baton: A toolkit for auditing infrastructure access
 
 The Baton toolkit gives developers the ability to extract, normalize, and interact with workforce identity data such as user accounts, permissions, roles, groups, resources, and more. Through the Baton CLI, developers can audit infrastructure access on-demand, run diffs, and extract access data. This can be used for automating user access reviews, exports into SIEMs, real-time visibility, and many other use cases.
 
-Baton is structured as a toolkit of related command line tools. For each data source there is a "connector", eg, baton-github for interacting with GitHub's API. This tool exports data in a format that the baton tool can understand, transform, and use to perform operations on the application
+Baton is structured as a toolkit of related command line tools. For each data source there is a "connector", such as `baton-github` for interacting with GitHub's API. This tool exports data in a format that the `baton` tool can understand, transform, and use to perform operations on the application
 
 # What can you do with Baton?
 
-As a generic toolkit for auditing access, Baton can be used for several use cases. Illustratively:
-- Find all AWS IAM Users with a specific IAM Role
-- Audit Github Repo Admin
-- Find users in apps that aren't in your IdP
-- Detect differences or changes in permissions in GitHub or AWS
-- Export GitHub permissions into a CSV for loading into a user access review
-- Discovering all access for an user / account across all SaaS and IaaS systems
+As a generic toolkit for auditing access, Baton can be used for many use cases, such as:
+
+- Finding all AWS IAM Users with a specific IAM Role
+- Auditing Github Repo Admins
+- Finding users in apps that aren't in your IdP
+- Detecting differences or changes in permissions in GitHub or AWS
+- Exporting GitHub permissions into a CSV for loading into a user access review
+- Discovering all access for an user or account across all SaaS and IaaS systems
 - Calculating the effective access of a user based on group membership
 
 These are just a few of the use cases that Baton can be leveraged for.
 
+# Trying it out: Find all GitHub repo admins
 
-# Trying it out: Find all GitHub Repo Admins
-
-Baton can installed via Homebrew (for other operating systems, see [docs/setup-and-install.md](./docs/setup-and-install.md]:
+Baton can installed via Homebrew:
 
 ```
 brew install conductorone/baton/baton conductorone/baton/baton-github
@@ -40,27 +40,27 @@ baton resources
 baton resources -o json | jq '.resources[].resource.displayName'
 ```
 
-# What Connectors exist in Baton today?
+# What connectors exist in Baton today?
 
-We're releasing 5 initial connectors with the open source launch of Baton. The ConductorOne team has dozens of more connectors written in our precursor proprietary project from before Baton, and is aggressively porting them to the Baton ecosystem.
+We're releasing five initial connectors with the open source launch of Baton. The ConductorOne team has dozens of more connectors written in our precursor proprietary project from before Baton, and is aggressively porting them to the Baton ecosystem.
 
-Additionally, making a new Connector is really easy -- we wrap up many complexities in the SDK, letting a Connector developer just focus on translating to the Baton data model.
+Additionally, making a new connector is really easy -- we wrap up many complexities in the SDK, letting a connector developer focus on translating to the Baton data model.
 
 | Connector                | Status     |
 |--------------------------|------------|
 | [baton-aws](https://github.com/ConductorOne/baton-aws) |   GA   |
 | [baton-github](https://github.com/ConductorOne/baton-github) |   GA   |
-| [baton-mysql](https://github.com/ConductorOne/baton-github) |   GA   |
+| [baton-mysql](https://github.com/ConductorOne/baton-mysql) |   GA   |
 | [baton-okta](https://github.com/ConductorOne/baton-okta) |   GA   |
-| [baton-postgres](https://github.com/ConductorOne/baton-github) |   GA   |
+| [baton-postgres](https://github.com/ConductorOne/baton-postgresql) |   GA   |
 
-# Contributing, Support and Issues
+# Contributing, support and issues
 
 We started Baton because we were tired of taking screenshots and manually building spreadsheets.  We welcome contributions, and ideas, no matter how small -- our goal is to make identity and permissions sprawl less painful for everyone.  If you have questions, problems, or ideas: Please open a Github Issue!
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for more details.
 
-# `baton` Command Line Usage
+# `baton` command line usage
 
 ```
 baton is a utility for working with the output of a baton-based connector
