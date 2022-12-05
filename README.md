@@ -22,7 +22,7 @@ These are just a few of the use cases that Baton can be leveraged for.
 
 # Trying it out: Find all GitHub Repo Admins
 
-Baton can installed via Homebrew (for other operating systems, see [docs/setup-and-install.md](./docs/setup-and-install.md]:
+Baton can installed via Homebrew (for other operating systems, see [docs/setup-and-install.md](./docs/setup-and-install.md):
 
 ```
 brew install conductorone/baton/baton conductorone/baton/baton-github
