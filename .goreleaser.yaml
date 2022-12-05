@@ -69,8 +69,6 @@ brews:
       owner: conductorone
       name: homebrew-baton
     folder: Formula
-    download_strategy: GitHubPrivateRepositoryReleaseDownloadStrategy
-    custom_require: "lib/custom_download_strategy"
     homepage: https://conductorone.com
     test: |
       system "#{bin}/baton -v"

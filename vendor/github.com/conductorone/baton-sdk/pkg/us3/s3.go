@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -223,6 +224,11 @@ func NewClient(ctx context.Context, bucketName string, opts ...Option) (*S3Clien
 	awsOpts := []func(*awsConfig.LoadOptions) error{
 		awsConfig.WithHTTPClient(httpClient),
 		awsConfig.WithDefaultsMode(awsSdk.DefaultsModeInRegion),
+	}
+
+	// If the region wasn't set, set it to whatever is in the AWS_REGION envvar.
+	if cfg.region == "" {
+		cfg.region = os.Getenv("AWS_REGION")
 	}
 
 	if cfg.region != "" {
