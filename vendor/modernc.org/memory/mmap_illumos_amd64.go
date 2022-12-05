@@ -2,27 +2,45 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE-MMAP-GO file.
 
-//go:build darwin || dragonfly || freebsd || linux || openbsd || (solaris && !illumos) || netbsd
-// +build darwin dragonfly freebsd linux openbsd solaris,!illumos netbsd
-
-// Modifications (c) 2017 The Memory Authors.
+// Modifications (c) 2022 The Memory Authors.
 
 package memory // import "modernc.org/memory"
 
 import (
 	"os"
 	"syscall"
+	_ "unsafe"
 )
 
-const pageSizeLog = 20
+const (
+	pageSizeLog = 20
+
+	// $ find /usr/include -name syscall.h
+	// /usr/include/sys/syscall.h
+	// $ grep -ni munmap /usr/include/sys/syscall.h
+	// 293:#define     SYS_munmap      117
+	// $ grep -ni mmap /usr/include/sys/syscall.h
+	// 291:#define	SYS_mmap	115
+	// 303:#define	SYS_mmapobj	127
+	// 442:#define	SYS_mmap64		214
+	// $
+	// $ uname -a
+	// SunOS omnios64 5.11 omnios-r151044-d3b715b9d1 i86pc i386 i86pc
+	// $
+	sys_MUNMAP = 117
+	sys_MMAP   = 214
+)
 
 var (
 	osPageMask = osPageSize - 1
 	osPageSize = os.Getpagesize()
 )
 
+//go:linkname mmapSyscall syscall.mmap
+func mmapSyscall(addr uintptr, length uintptr, prot int, flags int, fd int, offset int64) (xaddr uintptr, err error)
+
 func unmap(addr uintptr, size int) error {
-	_, _, errno := syscall.Syscall(syscall.SYS_MUNMAP, addr, uintptr(size), 0)
+	_, _, errno := syscall.Syscall(sys_MUNMAP, addr, uintptr(size), 0)
 	if errno != 0 {
 		return errno
 	}
