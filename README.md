@@ -7,15 +7,24 @@ The Baton toolkit gives developers the ability to extract, normalize, and intera
 
 Baton is structured as a toolkit of related command line tools. For each data source there is a "connector", such as `baton-github` for interacting with GitHub's API. This tool exports data in a format that the `baton` tool can understand, transform, and use to perform operations on the application
 
+## :tada: :tada: Launching Baton as an Open Source Project!
+- [Announcing Baton, an Open Source Toolkit for Auditing Infrastructure User Access](https://www.conductorone.com/blog/announcing-baton-open-source-for-auditing-infrastructure-access/)
+- [Technical Deep Dive: Using Baton to Audit Infrastructure Access](https://www.conductorone.com/blog/technical-deep-dive-using-baton-to-audit-infrastructure-access/)
+- [Baton and the Journey to Identity Security and Unified Access Control](https://www.conductorone.com/blog/baton-journey-to-identity-security-and-unified-access/)
+
+
 # What can you do with Baton?
 
 As a generic toolkit for auditing access, Baton can be used for many use cases, such as:
 
+ - [Export GitHub access updates to a CSV file using Baton](https://www.conductorone.com/docs/baton/github_integration/)
+ - [Use Baton to get Splunk alerts when a new Github admin is added](https://www.conductorone.com/docs/baton/siem_integration/)
+ - [Set up a daily check for GitHub user rights updates using Baton](https://www.conductorone.com/docs/baton/github_action_schedule/)
+ - [Diff access rights from two SaaS systems with Baton](https://www.conductorone.com/docs/baton/saas_integration/)
 - Finding all AWS IAM Users with a specific IAM Role
 - Auditing Github Repo Admins
 - Finding users in apps that aren't in your IdP
 - Detecting differences or changes in permissions in GitHub or AWS
-- Exporting GitHub permissions into a CSV for loading into a user access review
 - Discovering all access for an user or account across all SaaS and IaaS systems
 - Calculating the effective access of a user based on group membership
 
@@ -39,6 +48,9 @@ baton resources
 # Output the same data to JSON and parse it with jq
 baton resources -o json | jq '.resources[].resource.displayName'
 ```
+
+We have also recorded a short video exploring some of the data Baton can extract from Github:
+[![Alt Video demo of using Baton with Github](https://img.youtube.com/vi/mgoPNvIc1U8/0.jpg)](http://www.youtube.com/watch?v=mgoPNvIc1U8 "VIDEO: Using Baton - How to export account and access data from GitHub")
 
 # What connectors exist in Baton today?
 
