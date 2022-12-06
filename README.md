@@ -66,6 +66,10 @@ Additionally, making a new connector is really easy -- we wrap up many complexit
 | [baton-okta](https://github.com/ConductorOne/baton-okta) |   GA   |
 | [baton-postgres](https://github.com/ConductorOne/baton-postgresql) |   GA   |
 
+# Learn more about Baton
+
+The [Baton documentation site contains more documentation and example use cases](https://www.conductorone.com/docs/baton/intro/).
+
 # Contributing, support and issues
 
 We started Baton because we were tired of taking screenshots and manually building spreadsheets.  We welcome contributions, and ideas, no matter how small -- our goal is to make identity and permissions sprawl less painful for everyone.  If you have questions, problems, or ideas: Please open a Github Issue!
