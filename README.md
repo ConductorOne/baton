@@ -50,7 +50,7 @@ baton resources -o json | jq '.resources[].resource.displayName'
 ```
 
 We have also recorded a short video exploring some of the data Baton can extract from Github:
-[![Alt Video demo of using Baton with Github](./docs/images/baton-github-video.jpg](http://www.youtube.com/watch?v=mgoPNvIc1U8 "VIDEO: Using Baton - How to export account and access data from GitHub")
+[![Alt Video demo of using Baton with Github](./docs/images/baton-github-video.jpg)](http://www.youtube.com/watch?v=mgoPNvIc1U8 "VIDEO: Using Baton - How to export account and access data from GitHub")
 
 # What connectors exist in Baton today?
 
