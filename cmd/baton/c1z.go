@@ -15,6 +15,7 @@ func exportC1Z() *cobra.Command {
 		RunE:  runExportC1Z,
 	}
 
+	cmd.Flags().String("sync-id", "", "The sync ID the export")
 	cmd.Flags().String("out", "./latest.c1z", "The path to export the C1Z to")
 
 	return cmd
@@ -35,6 +36,11 @@ func runExportC1Z(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	syncID, err := cmd.Flags().GetString("sync-id")
+	if err != nil {
+		return err
+	}
+
 	m, err := manager.New(ctx, c1zPath)
 	if err != nil {
 		return err
@@ -45,7 +51,7 @@ func runExportC1Z(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = store.CloneSync(ctx, outPath, "")
+	err = store.CloneSync(ctx, outPath, syncID)
 	if err != nil {
 		return err
 	}
