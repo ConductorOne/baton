@@ -25,6 +25,8 @@ func principalsCmd() *cobra.Command {
 	addResourceFlag(cmd)
 	addResourceTypeFlag(cmd)
 	addEntitlementFlag(cmd)
+	addSyncIDFlag(cmd)
+
 	cmd.MarkFlagsRequiredTogether(resourceTypeFlag, resourceFlag)
 	cmd.MarkFlagsMutuallyExclusive(resourceFlag, entitlementFlag)
 
@@ -138,6 +140,11 @@ func runPrincipals(cmd *cobra.Command, args []string) error {
 	}
 	outputManager := output.NewManager(ctx, outputFormat)
 
+	syncID, err := cmd.Flags().GetString("sync-id")
+	if err != nil {
+		return err
+	}
+
 	m, err := manager.New(ctx, c1zPath)
 	if err != nil {
 		return err
@@ -147,6 +154,13 @@ func runPrincipals(cmd *cobra.Command, args []string) error {
 	store, err := m.LoadC1Z(ctx)
 	if err != nil {
 		return err
+	}
+
+	if syncID != "" {
+		err = store.ViewSync(ctx, syncID)
+		if err != nil {
+			return err
+		}
 	}
 
 	sc := storecache.NewStoreCache(ctx, store)
