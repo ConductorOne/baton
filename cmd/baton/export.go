@@ -73,6 +73,7 @@ func export() *cobra.Command {
 
 	cmd.AddCommand(exportCSV())
 	cmd.AddCommand(exportXLSX())
+	cmd.AddCommand(exportC1Z())
 
 	return cmd
 }
