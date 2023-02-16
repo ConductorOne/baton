@@ -2715,3 +2715,298 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = PrincipalsCompareOutputValidationError{}
+
+// Validate checks the field values on SyncOutput with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *SyncOutput) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on SyncOutput with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in SyncOutputMultiError, or
+// nil if none found.
+func (m *SyncOutput) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *SyncOutput) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Id
+
+	if all {
+		switch v := interface{}(m.GetStartedAt()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, SyncOutputValidationError{
+					field:  "StartedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, SyncOutputValidationError{
+					field:  "StartedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetStartedAt()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return SyncOutputValidationError{
+				field:  "StartedAt",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetEndedAt()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, SyncOutputValidationError{
+					field:  "EndedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, SyncOutputValidationError{
+					field:  "EndedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetEndedAt()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return SyncOutputValidationError{
+				field:  "EndedAt",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for SyncToken
+
+	if len(errors) > 0 {
+		return SyncOutputMultiError(errors)
+	}
+
+	return nil
+}
+
+// SyncOutputMultiError is an error wrapping multiple validation errors
+// returned by SyncOutput.ValidateAll() if the designated constraints aren't met.
+type SyncOutputMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SyncOutputMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SyncOutputMultiError) AllErrors() []error { return m }
+
+// SyncOutputValidationError is the validation error returned by
+// SyncOutput.Validate if the designated constraints aren't met.
+type SyncOutputValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SyncOutputValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SyncOutputValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SyncOutputValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SyncOutputValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SyncOutputValidationError) ErrorName() string { return "SyncOutputValidationError" }
+
+// Error satisfies the builtin error interface
+func (e SyncOutputValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSyncOutput.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SyncOutputValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SyncOutputValidationError{}
+
+// Validate checks the field values on SyncListOutput with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *SyncListOutput) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on SyncListOutput with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in SyncListOutputMultiError,
+// or nil if none found.
+func (m *SyncListOutput) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *SyncListOutput) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetSyncs() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, SyncListOutputValidationError{
+						field:  fmt.Sprintf("Syncs[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, SyncListOutputValidationError{
+						field:  fmt.Sprintf("Syncs[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return SyncListOutputValidationError{
+					field:  fmt.Sprintf("Syncs[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return SyncListOutputMultiError(errors)
+	}
+
+	return nil
+}
+
+// SyncListOutputMultiError is an error wrapping multiple validation errors
+// returned by SyncListOutput.ValidateAll() if the designated constraints
+// aren't met.
+type SyncListOutputMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SyncListOutputMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SyncListOutputMultiError) AllErrors() []error { return m }
+
+// SyncListOutputValidationError is the validation error returned by
+// SyncListOutput.Validate if the designated constraints aren't met.
+type SyncListOutputValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SyncListOutputValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SyncListOutputValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SyncListOutputValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SyncListOutputValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SyncListOutputValidationError) ErrorName() string { return "SyncListOutputValidationError" }
+
+// Error satisfies the builtin error interface
+func (e SyncListOutputValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSyncListOutput.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SyncListOutputValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SyncListOutputValidationError{}

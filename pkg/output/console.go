@@ -9,6 +9,7 @@ import (
 	v1 "github.com/conductorone/baton/pb/baton/v1"
 	"github.com/pterm/pterm"
 	"github.com/pterm/pterm/putils"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type consoleManager struct{}
@@ -33,9 +34,42 @@ func (c *consoleManager) Output(ctx context.Context, out interface{}) error {
 	case *v1.PrincipalsCompareOutput:
 		return c.outputPrincipalsCompare(obj)
 
+	case *v1.SyncListOutput:
+		return c.outputSyncRuns(obj)
+
 	default:
 		return fmt.Errorf("unexpected output model")
 	}
+}
+
+func (c *consoleManager) formatTimestamp(ts *timestamppb.Timestamp) string {
+	if ts == nil {
+		return ""
+	}
+
+	return ts.AsTime().Format("2006-01-02T15:04:05Z07:00")
+}
+
+func (c *consoleManager) outputSyncRuns(out *v1.SyncListOutput) error {
+	syncsTable := pterm.TableData{
+		{"ID", "Started At", "Ended At", "Token"},
+	}
+
+	for _, o := range out.Syncs {
+		syncsTable = append(syncsTable, []string{
+			o.Id,
+			c.formatTimestamp(o.StartedAt),
+			c.formatTimestamp(o.EndedAt),
+			o.SyncToken,
+		})
+	}
+
+	err := pterm.DefaultTable.WithHasHeader().WithData(syncsTable).Render()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c *consoleManager) outputResourceTypes(out *v1.ResourceTypeListOutput) error {
