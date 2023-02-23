@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	v1 "github.com/conductorone/baton/pb/baton/v1"
 	"github.com/pterm/pterm"
@@ -47,7 +48,7 @@ func (c *consoleManager) formatTimestamp(ts *timestamppb.Timestamp) string {
 		return ""
 	}
 
-	return ts.AsTime().Format("2006-01-02T15:04:05Z07:00")
+	return ts.AsTime().Format(time.RFC3339)
 }
 
 func (c *consoleManager) outputSyncRuns(out *v1.SyncListOutput) error {
