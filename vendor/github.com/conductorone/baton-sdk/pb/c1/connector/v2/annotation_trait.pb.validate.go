@@ -189,6 +189,17 @@ func (m *UserTrait) validate(all bool) error {
 		}
 	}
 
+	if _, ok := UserTrait_AccountType_name[int32(m.GetAccountType())]; !ok {
+		err := UserTraitValidationError{
+			field:  "AccountType",
+			reason: "value must be one of the defined enum values",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return UserTraitMultiError(errors)
 	}

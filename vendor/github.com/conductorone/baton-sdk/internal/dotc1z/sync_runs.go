@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
@@ -114,6 +115,64 @@ func (c *C1File) getFinishedSync(ctx context.Context, offset uint) (*syncRun, er
 	}
 
 	return ret, nil
+}
+
+func (c *C1File) ListSyncRuns(ctx context.Context, pageToken string, pageSize int) ([]*syncRun, string, error) {
+	err := c.validateDb(ctx)
+	if err != nil {
+		return nil, "", err
+	}
+
+	q := c.db.From(syncRuns.Name()).Prepared(true)
+	q = q.Select("id", "sync_id", "started_at", "ended_at", "sync_token")
+
+	if pageToken != "" {
+		q = q.Where(goqu.C("id").Gte(pageToken))
+	}
+
+	if pageSize > maxPageSize || pageSize <= 0 {
+		pageSize = maxPageSize
+	}
+
+	q = q.Order(goqu.C("id").Asc())
+	q = q.Limit(uint(pageSize + 1))
+
+	var ret []*syncRun
+
+	query, args, err := q.ToSQL()
+	if err != nil {
+		return nil, "", err
+	}
+
+	rows, err := c.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, "", err
+	}
+	defer rows.Close()
+
+	count := 0
+	lastRow := 0
+	for rows.Next() {
+		count++
+		if count > pageSize {
+			break
+		}
+		rowId := 0
+		data := &syncRun{}
+		err := rows.Scan(&rowId, &data.ID, &data.StartedAt, &data.EndedAt, &data.SyncToken)
+		if err != nil {
+			return nil, "", err
+		}
+		lastRow = rowId
+		ret = append(ret, data)
+	}
+
+	nextPageToken := ""
+	if count > pageSize {
+		nextPageToken = strconv.Itoa(lastRow + 1)
+	}
+
+	return ret, nextPageToken, nil
 }
 
 func (c *C1File) LatestSyncID(ctx context.Context) (string, error) {

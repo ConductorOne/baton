@@ -501,6 +501,7 @@ func (s *S3Client) Put(ctx context.Context, key string, r io.Reader, contentType
 		return err
 	}
 
+	// FIXME(jirwin): We can stream this
 	fBytes, err := io.ReadAll(r)
 	if err != nil {
 		return err
@@ -542,4 +543,8 @@ func (s *S3Client) Put(ctx context.Context, key string, r io.Reader, contentType
 	)
 
 	return nil
+}
+
+func (s *S3Client) BucketName(ctx context.Context) string {
+	return s.cfg.bucketName
 }
