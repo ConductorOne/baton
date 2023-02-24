@@ -14,6 +14,15 @@ import (
 
 const maxPageSize = 100
 
+var allTableDescriptors = []tableDescriptor{
+	resourceTypes,
+	resources,
+	entitlements,
+	grants,
+	syncRuns,
+	assets,
+}
+
 type tableDescriptor interface {
 	Name() string
 	Schema() (string, []interface{})
@@ -179,7 +188,7 @@ func (c *C1File) putConnectorObjectQuery(ctx context.Context, tableName string, 
 		return "", nil, err
 	}
 
-	messageBlob, err := proto.Marshal(m)
+	messageBlob, err := proto.MarshalOptions{Deterministic: true}.Marshal(m)
 	if err != nil {
 		return "", nil, err
 	}

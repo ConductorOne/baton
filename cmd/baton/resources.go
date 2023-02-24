@@ -21,6 +21,7 @@ func resourcesCmd() *cobra.Command {
 	}
 
 	addResourceTypeFlag(cmd)
+	addSyncIDFlag(cmd)
 
 	return cmd
 }
@@ -46,6 +47,11 @@ func runResources(cmd *cobra.Command, args []string) error {
 	}
 	outputManager := output.NewManager(ctx, outputFormat)
 
+	syncID, err := cmd.Flags().GetString("sync-id")
+	if err != nil {
+		return err
+	}
+
 	m, err := manager.New(ctx, c1zPath)
 	if err != nil {
 		return err
@@ -55,6 +61,13 @@ func runResources(cmd *cobra.Command, args []string) error {
 	store, err := m.LoadC1Z(ctx)
 	if err != nil {
 		return err
+	}
+
+	if syncID != "" {
+		err = store.ViewSync(ctx, syncID)
+		if err != nil {
+			return err
+		}
 	}
 
 	sc := storecache.NewStoreCache(ctx, store)

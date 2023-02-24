@@ -4,6 +4,7 @@ package baton.v1;
 
 option go_package = "github.com/conductorone/baton/pb/baton_cli/v1";
 
+import "google/protobuf/timestamp.proto";
 import "c1/connector/v2/resource.proto";
 import "c1/connector/v2/entitlement.proto";
 import "c1/connector/v2/grant.proto";
@@ -88,4 +89,15 @@ message PrincipalsCompareOutput {
   repeated ResourceOutput extra = 2;
   repeated ResourceOutput base = 3;
   repeated ResourceOutput compared = 4;
+}
+
+message SyncOutput {
+  string id = 1;
+  google.protobuf.Timestamp started_at = 2;
+  google.protobuf.Timestamp ended_at = 3;
+  string sync_token = 4;
+}
+
+message SyncListOutput {
+  repeated SyncOutput syncs = 1;
 }

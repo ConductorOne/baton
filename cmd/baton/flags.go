@@ -21,3 +21,7 @@ func addResourceFlag(cmd *cobra.Command) {
 func addEntitlementFlag(cmd *cobra.Command) {
 	cmd.Flags().StringP(entitlementFlag, "e", "", "The entitlement to filter output by")
 }
+
+func addSyncIDFlag(cmd *cobra.Command) {
+	cmd.Flags().String("sync-id", "", "The sync ID to view data for. Will use the latest completed sync if not set.")
+}

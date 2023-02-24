@@ -95,16 +95,7 @@ func (c *C1File) init(ctx context.Context) error {
 		return err
 	}
 
-	tables := []tableDescriptor{
-		resourceTypes,
-		resources,
-		entitlements,
-		grants,
-		syncRuns,
-		assets,
-	}
-
-	for _, t := range tables {
+	for _, t := range allTableDescriptors {
 		query, args := t.Schema()
 
 		_, err = c.db.ExecContext(ctx, fmt.Sprintf(query, args...))

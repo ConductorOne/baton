@@ -8,23 +8,20 @@ import (
 	v1 "github.com/conductorone/baton/pb/baton/v1"
 	"github.com/conductorone/baton/pkg/output"
 	"github.com/spf13/cobra"
-
-	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func resourceTypesCmd() *cobra.Command {
+func syncsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "resource-types",
-		Short: "List resource types for the latest (or current) sync",
-		RunE:  runResourceTypes,
+		Use:   "syncs",
+		Short: "List the information for the various sync data stored in the C1Z",
+		RunE:  runSyncList,
 	}
-
-	addSyncIDFlag(cmd)
 
 	return cmd
 }
 
-func runResourceTypes(cmd *cobra.Command, args []string) error {
+func runSyncList(cmd *cobra.Command, args []string) error {
 	ctx, err := logging.Init(context.Background(), "console", "error")
 	if err != nil {
 		return err
@@ -40,11 +37,6 @@ func runResourceTypes(cmd *cobra.Command, args []string) error {
 	}
 	outputManager := output.NewManager(ctx, outputFormat)
 
-	syncID, err := cmd.Flags().GetString("sync-id")
-	if err != nil {
-		return err
-	}
-
 	m, err := manager.New(ctx, c1zPath)
 	if err != nil {
 		return err
@@ -56,34 +48,41 @@ func runResourceTypes(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if syncID != "" {
-		err = store.ViewSync(ctx, syncID)
-		if err != nil {
-			return err
-		}
-	}
-
-	var resourceTypes []*v1.ResourceTypeOutput
+	var syncRuns []*v1.SyncOutput
 	pageToken := ""
 	for {
-		resp, err := store.ListResourceTypes(ctx, &v2.ResourceTypesServiceListResourceTypesRequest{PageToken: pageToken})
+		resp, nextPageToken, err := store.ListSyncRuns(ctx, pageToken, 100)
 		if err != nil {
 			return err
 		}
 
-		for _, rt := range resp.List {
-			resourceTypes = append(resourceTypes, &v1.ResourceTypeOutput{ResourceType: rt})
+		for _, sr := range resp {
+			var startTime *timestamppb.Timestamp
+			if sr.StartedAt != nil {
+				startTime = timestamppb.New(*sr.StartedAt)
+			}
+
+			var endTime *timestamppb.Timestamp
+			if sr.EndedAt != nil {
+				endTime = timestamppb.New(*sr.EndedAt)
+			}
+			syncRuns = append(syncRuns, &v1.SyncOutput{
+				Id:        sr.ID,
+				StartedAt: startTime,
+				EndedAt:   endTime,
+				SyncToken: sr.SyncToken,
+			})
 		}
 
-		if resp.NextPageToken == "" {
+		if nextPageToken == "" {
 			break
 		}
 
-		pageToken = resp.NextPageToken
+		pageToken = nextPageToken
 	}
 
-	err = outputManager.Output(ctx, &v1.ResourceTypeListOutput{
-		ResourceTypes: resourceTypes,
+	err = outputManager.Output(ctx, &v1.SyncListOutput{
+		Syncs: syncRuns,
 	})
 	if err != nil {
 		return err
