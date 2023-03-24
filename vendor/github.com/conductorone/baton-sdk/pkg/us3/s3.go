@@ -147,7 +147,7 @@ type S3BucketConfig struct {
 }
 
 func parseS3Uri(s3Uri string) (*S3BucketConfig, error) {
-	parsed, err := url.Parse(s3Uri)
+	parsed, err := url.Parse(strings.TrimSpace(s3Uri))
 	if err != nil {
 		return nil, err
 	}

@@ -8,7 +8,7 @@ import (
 	"os"
 
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
-	"github.com/conductorone/baton-sdk/pkg/connectorstore"
+	"github.com/conductorone/baton-sdk/pkg/dotc1z"
 	"github.com/conductorone/baton-sdk/pkg/dotc1z/manager"
 	"github.com/conductorone/baton-sdk/pkg/logging"
 	v1 "github.com/conductorone/baton/pb/baton/v1"
@@ -100,7 +100,7 @@ func runDiff(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func bucketResources(ctx context.Context, store connectorstore.Reader, oldSyncID string, newSyncID string) (*v1.ResourceDiff, error) {
+func bucketResources(ctx context.Context, store *dotc1z.C1File, oldSyncID string, newSyncID string) (*v1.ResourceDiff, error) {
 	ret := &v1.ResourceDiff{}
 
 	oldResources := make(map[string]*v2.Resource)
@@ -183,7 +183,7 @@ func bucketResources(ctx context.Context, store connectorstore.Reader, oldSyncID
 	return ret, nil
 }
 
-func bucketEntitlements(ctx context.Context, store connectorstore.Reader, oldSyncID string, newSyncID string) (*v1.EntitlementDiff, error) {
+func bucketEntitlements(ctx context.Context, store *dotc1z.C1File, oldSyncID string, newSyncID string) (*v1.EntitlementDiff, error) {
 	ret := &v1.EntitlementDiff{}
 
 	oldEntitlements := make(map[string]*v2.Entitlement)
@@ -261,7 +261,7 @@ func bucketEntitlements(ctx context.Context, store connectorstore.Reader, oldSyn
 	return ret, nil
 }
 
-func bucketGrants(ctx context.Context, store connectorstore.Reader, oldSyncID string, newSyncID string) (*v1.GrantDiff, error) {
+func bucketGrants(ctx context.Context, store *dotc1z.C1File, oldSyncID string, newSyncID string) (*v1.GrantDiff, error) {
 	ret := &v1.GrantDiff{}
 
 	oldGrants := make(map[string]*v2.Grant)

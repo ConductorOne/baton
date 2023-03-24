@@ -5,7 +5,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/conductorone/baton-sdk/internal/dotc1z"
+	"github.com/conductorone/baton-sdk/pkg/dotc1z"
 	"github.com/conductorone/baton-sdk/pkg/dotc1z/manager/local"
 	"github.com/conductorone/baton-sdk/pkg/dotc1z/manager/s3"
 )
