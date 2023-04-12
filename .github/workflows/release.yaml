@@ -14,9 +14,9 @@ jobs:
         with:
           fetch-depth: 0
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
-          go-version: 1.19
+          go-version: 1.20.x
       - name: Set up Gon
         run: brew tap mitchellh/gon && brew install mitchellh/gon/gon
       - name: Import Keychain Certs
@@ -25,10 +25,10 @@ jobs:
           p12-file-base64: ${{ secrets.APPLE_SIGNING_KEY_P12 }}
           p12-password: ${{ secrets.APPLE_SIGNING_KEY_P12_PASSWORD }}
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v2
+        uses: goreleaser/goreleaser-action@v4
         with:
           version: latest
-          args: release --rm-dist
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.RELENG_GITHUB_TOKEN }}
           AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
@@ -40,9 +40,9 @@ jobs:
         with:
           fetch-depth: 0
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
-          go-version: 1.19
+          go-version: 1.20.x
       - name: Docker Login
         uses: docker/login-action@v1
         with:
@@ -52,9 +52,9 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v2
+        uses: goreleaser/goreleaser-action@v4
         with:
           version: latest
-          args: release --rm-dist -f .goreleaser.docker.yaml
+          args: release --clean -f .goreleaser.docker.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.RELENG_GITHUB_TOKEN }}
