@@ -153,11 +153,12 @@ func (c *consoleManager) outputEntitlements(out *v1.EntitlementListOutput) error
 
 func (c *consoleManager) outputGrants(out *v1.GrantListOutput) error {
 	grantsTable := pterm.TableData{
-		{"Resource Type", "Resource", "Entitlement", "Principal"},
+		{"ID", "Resource Type", "Resource", "Entitlement", "Principal"},
 	}
 
 	for _, g := range out.Grants {
 		grantsTable = append(grantsTable, []string{
+			g.Grant.Id,
 			g.ResourceType.DisplayName,
 			g.Resource.DisplayName,
 			g.Entitlement.DisplayName,
