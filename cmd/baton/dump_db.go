@@ -44,6 +44,7 @@ func runDumpDB(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	defer f.Close()
 
 	dbFile, err := dotc1z.NewC1ZFileDecoder(f)
 	if err != nil {

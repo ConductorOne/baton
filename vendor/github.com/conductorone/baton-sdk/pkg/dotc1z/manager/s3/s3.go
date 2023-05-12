@@ -1,7 +1,6 @@
 package s3
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -42,7 +41,7 @@ func (s *s3Manager) copyToTempFile(ctx context.Context, r io.Reader) error {
 }
 
 // LoadRaw loads the file from S3 and returns an io.Reader for the contents.
-func (s *s3Manager) LoadRaw(ctx context.Context) (io.Reader, error) {
+func (s *s3Manager) LoadRaw(ctx context.Context) (io.ReadCloser, error) {
 	out, err := s.client.Get(ctx, s.fileName)
 	if err != nil {
 		var ae smithy.APIError
@@ -63,12 +62,12 @@ func (s *s3Manager) LoadRaw(ctx context.Context) (io.Reader, error) {
 		return nil, err
 	}
 
-	fBytes, err := os.ReadFile(s.tmpFile)
+	f, err := os.Open(s.tmpFile)
 	if err != nil {
 		return nil, err
 	}
 
-	return bytes.NewBuffer(fBytes), nil
+	return f, nil
 }
 
 // LoadC1Z gets a file from the AWS S3 bucket and copies it to a temp file.
