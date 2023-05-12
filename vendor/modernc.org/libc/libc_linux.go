@@ -133,11 +133,7 @@ var localtime ctime.Tm
 
 // struct tm *localtime(const time_t *timep);
 func Xlocaltime(_ *TLS, timep uintptr) uintptr {
-	loc := time.Local
-	if r := getenv(Environ(), "TZ"); r != 0 {
-		zone, off := parseZone(GoString(r))
-		loc = time.FixedZone(zone, -off)
-	}
+	loc := getLocalLocation()
 	ut := *(*unix.Time_t)(unsafe.Pointer(timep))
 	t := time.Unix(int64(ut), 0).In(loc)
 	localtime.Ftm_sec = int32(t.Second())
@@ -154,11 +150,7 @@ func Xlocaltime(_ *TLS, timep uintptr) uintptr {
 
 // struct tm *localtime_r(const time_t *timep, struct tm *result);
 func Xlocaltime_r(_ *TLS, timep, result uintptr) uintptr {
-	loc := time.Local
-	if r := getenv(Environ(), "TZ"); r != 0 {
-		zone, off := parseZone(GoString(r))
-		loc = time.FixedZone(zone, -off)
-	}
+	loc := getLocalLocation()
 	ut := *(*unix.Time_t)(unsafe.Pointer(timep))
 	t := time.Unix(int64(ut), 0).In(loc)
 	(*ctime.Tm)(unsafe.Pointer(result)).Ftm_sec = int32(t.Second())
@@ -1591,4 +1583,11 @@ func Xreadlinkat(t *TLS, dirfd int32, pathname, buf uintptr, bufsiz types.Size_t
 	}
 
 	return types.Ssize_t(n)
+}
+
+// int nanosleep(const struct timespec *req, struct timespec *rem);
+func Xnanosleep(t *TLS, req, rem uintptr) int32 {
+	v := *(*ctime.Timespec)(unsafe.Pointer(req))
+	time.Sleep(time.Second*time.Duration(v.Ftv_sec) + time.Duration(v.Ftv_nsec))
+	return 0
 }

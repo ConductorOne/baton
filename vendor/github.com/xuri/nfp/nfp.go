@@ -1,5 +1,6 @@
-// Copyright 2022 The nfp Authors. All rights reserved. Use of this source code
-// is governed by a BSD-style license that can be found in the LICENSE file.
+// Copyright 2022 - 2023 The nfp Authors. All rights reserved. Use of this
+// source code is governed by a BSD-style license that can be found in the
+// LICENSE file.
 //
 // This package NFP (Number Format Parser) produce syntax trees for number
 // format expression. Excel Number format controls options such the number of
@@ -179,10 +180,9 @@ type Section struct {
 // Tokens directly maps the ordered list of tokens.
 // Attributes:
 //
-//    Index        - Current position in the number format expression
-//    SectionIndex - Current position in section
-//    Sections     - Ordered section of token sequences
-//
+//	Index        - Current position in the number format expression
+//	SectionIndex - Current position in section
+//	Sections     - Ordered section of token sequences
 type Tokens struct {
 	Index        int
 	SectionIndex int
@@ -349,6 +349,10 @@ func (ps *Parser) getTokens() Tokens {
 				}
 				if ps.Token.TType != "" {
 					ps.Tokens.add(ps.Token.TValue, ps.Token.TType, ps.Token.Parts)
+					ps.Token = Token{}
+				}
+				if ps.Token.TValue != "" && !strings.ContainsAny(NumCodeChars, ps.Token.TValue) {
+					ps.Tokens.add(ps.Token.TValue, TokenTypeLiteral, ps.Token.Parts)
 					ps.Token = Token{}
 				}
 				ps.Token.TType = TokenTypeZeroPlaceHolder
@@ -568,6 +572,9 @@ func (ps *Parser) getTokens() Tokens {
 		}
 
 		if ps.currentChar() == BracketOpen {
+			if ps.Token.TType == "" && ps.Token.TValue != "" {
+				ps.Token.TType = TokenTypeLiteral
+			}
 			if ps.Token.TType != "" && !ps.InBracket {
 				ps.Tokens.add(ps.Token.TValue, ps.Token.TType, ps.Token.Parts)
 				ps.Token = Token{}
@@ -657,6 +664,10 @@ func (ps *Parser) getTokens() Tokens {
 					ps.Tokens.add(ps.Token.TValue, ps.Token.TType, ps.Token.Parts)
 					ps.Token = Token{}
 				}
+				if ps.Token.TType != "" && ps.Token.TType != TokenTypeDateTimes {
+					ps.Tokens.add(ps.Token.TValue, ps.Token.TType, ps.Token.Parts)
+					ps.Token = Token{}
+				}
 				ps.Token.TType = TokenTypeDateTimes
 				ps.Token.TValue += ps.currentChar()
 				ps.Offset++
@@ -677,6 +688,10 @@ func (ps *Parser) getTokens() Tokens {
 			if ps.currentChar() == QuoteSingle {
 				ps.Offset++
 				continue
+			}
+			if !strings.ContainsAny(NumCodeChars, ps.currentChar()) && ps.Token.TType == TokenTypeZeroPlaceHolder {
+				ps.Tokens.add(ps.Token.TValue, ps.Token.TType, ps.Token.Parts)
+				ps.Token = Token{}
 			}
 		}
 		ps.Token.TValue += ps.currentChar()
