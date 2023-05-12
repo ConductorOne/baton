@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/doug-martin/goqu/v9"
 	_ "github.com/glebarez/go-sqlite"
@@ -85,6 +87,12 @@ func (c *C1File) Close() error {
 		if err != nil {
 			return err
 		}
+	}
+
+	// Cleanup the database filepath. This should always be a file within a temp directory, so we remove the entire dir.
+	err = os.RemoveAll(filepath.Dir(c.dbFilePath))
+	if err != nil {
+		return err
 	}
 
 	return nil

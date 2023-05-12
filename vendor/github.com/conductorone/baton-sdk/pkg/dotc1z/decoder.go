@@ -6,13 +6,19 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
+	"strconv"
 	"sync"
 
 	"github.com/klauspost/compress/zstd"
 )
 
-const defaultDecoderMaxMemory = 32 * 1024 * 1024     // 32MiB
-const defaultMaxDecodedSize = 1 * 1024 * 1024 * 1024 // 1GiB
+const (
+	defaultMaxDecodedSize   = 2 * 1024 * 1024 * 1024 // 2GiB
+	defaultDecoderMaxMemory = 32 * 1024 * 1024       // 32MiB
+	maxDecodedSizeEnvVar    = "BATON_DECODER_MAX_DECODED_SIZE_MB"
+	maxDecoderMemorySizeEnv = "BATON_DECODER_MAX_MEMORY_MB"
+)
 
 var C1ZFileHeader = []byte("C1ZF\x00")
 
@@ -83,7 +89,7 @@ func WithDecoderMaxMemory(n uint64) DecoderOption {
 
 // WithDecoderMaxDecodedSize sets the maximum size of the decoded stream.
 // This can be used to cap the resulting decoded stream size.
-// Maximum is 1 << 63 bytes. Default is 2GiB.
+// Maximum is 1 << 63 bytes. Default is 1GiB.
 func WithDecoderMaxDecodedSize(n uint64) DecoderOption {
 	return func(o *decoderOptions) error {
 		if n == 0 {
@@ -179,6 +185,24 @@ func (d *decoder) Close() error {
 
 // NewDecoder wraps a given .c1z file io.Reader and returns an io.Reader for the underlying decoded/uncompressed file.
 func NewDecoder(f io.Reader, opts ...DecoderOption) (*decoder, error) {
+	// We want these options to be configurable via the environment. They are appended to the end of opts so they will take
+	// precedence over any other options of the same type.
+	maxDecodedSizeVar := os.Getenv(maxDecodedSizeEnvVar)
+	if maxDecodedSizeVar != "" {
+		maxDecodedSize, err := strconv.ParseUint(maxDecodedSizeVar, 10, 64)
+		if err == nil {
+			opts = append(opts, WithDecoderMaxDecodedSize(maxDecodedSize*1024*1024))
+		}
+	}
+
+	maxDecoderMemorySizeVar := os.Getenv(maxDecoderMemorySizeEnv)
+	if maxDecoderMemorySizeVar != "" {
+		maxDecoderMemorySize, err := strconv.ParseUint(maxDecoderMemorySizeVar, 10, 64)
+		if err == nil {
+			opts = append(opts, WithDecoderMaxMemory(maxDecoderMemorySize*1024*1024))
+		}
+	}
+
 	o := &decoderOptions{}
 	for _, opt := range opts {
 		err := opt(o)

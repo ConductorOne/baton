@@ -3,13 +3,12 @@ package us3
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
-	"encoding/base64"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -28,6 +27,8 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"go.uber.org/zap"
 )
+
+const defaultS3MaxFilesize = 256 * 1024 * 1024
 
 type S3Client struct {
 	awsConfig  awsSdk.Config
@@ -173,6 +174,20 @@ func parseS3Uri(s3Uri string) (*S3BucketConfig, error) {
 	return ret, nil
 }
 
+func fetchS3MaxFilesize() int64 {
+	s3MaxFilesize := os.Getenv("BATON_S3_MAX_FILESIZE_MB")
+	if s3MaxFilesize == "" {
+		return defaultS3MaxFilesize
+	}
+
+	maxFilesize, err := strconv.ParseInt(s3MaxFilesize, 10, 64)
+	if err != nil {
+		return defaultS3MaxFilesize
+	}
+
+	return maxFilesize * 1024 * 1024
+}
+
 // NewClientFromURI parses an s3://bucket/uri and creates a client. It also returns the key specified in the URI.
 func NewClientFromURI(ctx context.Context, uri string) (string, *S3Client, error) {
 	s3Cfg, err := parseS3Uri(uri)
@@ -181,7 +196,7 @@ func NewClientFromURI(ctx context.Context, uri string) (string, *S3Client, error
 	}
 
 	opts := []Option{
-		WithMaxDownloadFilesize(32 * 1024 * 1024), // Max filesize of 32MB
+		WithMaxDownloadFilesize(fetchS3MaxFilesize()),
 	}
 
 	if s3Cfg.region != "" {
@@ -501,27 +516,12 @@ func (s *S3Client) Put(ctx context.Context, key string, r io.Reader, contentType
 		return err
 	}
 
-	// FIXME(jirwin): We can stream this
-	fBytes, err := io.ReadAll(r)
-	if err != nil {
-		return err
-	}
-
-	h := sha256.New()
-	_, err = h.Write(fBytes)
-	if err != nil {
-		return err
-	}
-	shaBytes := h.Sum(nil)
-	sha256Sum := base64.StdEncoding.EncodeToString(shaBytes)
-
 	uploader := s3manager.NewUploader(s3svc)
 	input := &s3.PutObjectInput{
 		ACL:               s3Types.ObjectCannedACLPrivate,
 		Bucket:            awsSdk.String(s.cfg.bucketName),
 		Key:               awsSdk.String(key),
-		Body:              bytes.NewBuffer(fBytes),
-		ChecksumSHA256:    awsSdk.String(sha256Sum),
+		Body:              r,
 		ChecksumAlgorithm: s3Types.ChecksumAlgorithmSha256,
 	}
 
