@@ -246,6 +246,11 @@ func (c Color) String() string {
 	return fmt.Sprintf("%d", c)
 }
 
+// ToStyle converts the color to a style.
+func (c Color) ToStyle() *Style {
+	return &Style{c}
+}
+
 // Style is a collection of colors.
 // Can include foreground, background and styling (eg. Bold, Underscore, etc.) colors.
 type Style []Color
@@ -266,6 +271,23 @@ func (s Style) Add(styles ...Style) Style {
 
 	for _, st := range styles {
 		ret = append(ret, st...)
+	}
+
+	return ret
+}
+
+// RemoveColor removes the given colors from the Style.
+func (s Style) RemoveColor(colors ...Color) Style {
+	ret := s
+
+	for _, c := range colors {
+		// remove via index
+		for i := 0; i < len(ret); i++ {
+			if ret[i] == c {
+				ret = append(ret[:i], ret[i+1:]...)
+				i--
+			}
+		}
 	}
 
 	return ret
