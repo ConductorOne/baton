@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	c1zpb "github.com/conductorone/baton-sdk/pb/c1/c1z/v1"
+	"github.com/conductorone/baton-sdk/pkg/annotations"
 	"github.com/doug-martin/goqu/v9"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"go.uber.org/zap"
@@ -78,7 +80,7 @@ func (c *C1File) ListResources(ctx context.Context, request *v2.ResourcesService
 	}, nil
 }
 
-func (c *C1File) GetResource(ctx context.Context, request *reader_v2.ResourceTypesReaderServiceGetResourceRequest) (*v2.Resource, error) {
+func (c *C1File) GetResource(ctx context.Context, request *reader_v2.ResourcesReaderServiceGetResourceRequest) (*reader_v2.ResourcesReaderServiceGetResourceResponse, error) {
 	ctxzap.Extract(ctx).Debug(
 		"fetching resource",
 		zap.String("resource_id", request.ResourceId.Resource),
@@ -86,13 +88,22 @@ func (c *C1File) GetResource(ctx context.Context, request *reader_v2.ResourceTyp
 	)
 
 	ret := &v2.Resource{}
+	annos := annotations.Annotations(request.GetAnnotations())
+	syncDetails := &c1zpb.SyncDetails{}
+	syncID := ""
 
-	err := c.getResourceObject(ctx, request.ResourceId, ret)
+	if ok, err := annos.Pick(syncDetails); err == nil && ok {
+		syncID = syncDetails.GetId()
+	}
+
+	err := c.getResourceObject(ctx, request.ResourceId, ret, syncID)
 	if err != nil {
 		return nil, err
 	}
 
-	return ret, nil
+	return &reader_v2.ResourcesReaderServiceGetResourceResponse{
+		Resource: ret,
+	}, nil
 }
 
 func (c *C1File) PutResource(ctx context.Context, resource *v2.Resource) error {
