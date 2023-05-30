@@ -134,3 +134,230 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ETagValidationError{}
+
+// Validate checks the field values on ETagMetadata with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ETagMetadata) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ETagMetadata with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ETagMetadataMultiError, or
+// nil if none found.
+func (m *ETagMetadata) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ETagMetadata) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetMetadata()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ETagMetadataValidationError{
+					field:  "Metadata",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ETagMetadataValidationError{
+					field:  "Metadata",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMetadata()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ETagMetadataValidationError{
+				field:  "Metadata",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return ETagMetadataMultiError(errors)
+	}
+
+	return nil
+}
+
+// ETagMetadataMultiError is an error wrapping multiple validation errors
+// returned by ETagMetadata.ValidateAll() if the designated constraints aren't met.
+type ETagMetadataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ETagMetadataMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ETagMetadataMultiError) AllErrors() []error { return m }
+
+// ETagMetadataValidationError is the validation error returned by
+// ETagMetadata.Validate if the designated constraints aren't met.
+type ETagMetadataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ETagMetadataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ETagMetadataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ETagMetadataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ETagMetadataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ETagMetadataValidationError) ErrorName() string { return "ETagMetadataValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ETagMetadataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sETagMetadata.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ETagMetadataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ETagMetadataValidationError{}
+
+// Validate checks the field values on ETagMatch with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ETagMatch) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ETagMatch with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ETagMatchMultiError, or nil
+// if none found.
+func (m *ETagMatch) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ETagMatch) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if len(errors) > 0 {
+		return ETagMatchMultiError(errors)
+	}
+
+	return nil
+}
+
+// ETagMatchMultiError is an error wrapping multiple validation errors returned
+// by ETagMatch.ValidateAll() if the designated constraints aren't met.
+type ETagMatchMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ETagMatchMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ETagMatchMultiError) AllErrors() []error { return m }
+
+// ETagMatchValidationError is the validation error returned by
+// ETagMatch.Validate if the designated constraints aren't met.
+type ETagMatchValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ETagMatchValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ETagMatchValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ETagMatchValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ETagMatchValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ETagMatchValidationError) ErrorName() string { return "ETagMatchValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ETagMatchValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sETagMatch.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ETagMatchValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ETagMatchValidationError{}

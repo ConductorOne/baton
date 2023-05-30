@@ -58,12 +58,13 @@ func (f *StoreCache) GetResourceType(ctx context.Context, id string) (*v2.Resour
 		return v.(*v2.ResourceType), nil
 	}
 
-	rt, err := f.store.GetResourceType(ctx, &reader_v2.ResourceTypesReaderServiceGetResourceTypeRequest{
+	rtResp, err := f.store.GetResourceType(ctx, &reader_v2.ResourceTypesReaderServiceGetResourceTypeRequest{
 		ResourceTypeId: id,
 	})
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, err
 	}
+	rt := rtResp.ResourceType
 
 	if rt == nil {
 		l.Error("unable to find resource type", zap.String("resource_type_id", id))
@@ -91,13 +92,14 @@ func (f *StoreCache) GetResource(ctx context.Context, id *v2.ResourceId) (*v2.Re
 		return v.(*v2.Resource), nil
 	}
 
-	resource, err := f.store.GetResource(ctx, &reader_v2.ResourceTypesReaderServiceGetResourceRequest{
+	resourceResp, err := f.store.GetResource(ctx, &reader_v2.ResourcesReaderServiceGetResourceRequest{
 		ResourceId: id,
 	})
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, err
 	}
 
+	resource := resourceResp.Resource
 	if resource == nil {
 		l.Error(
 			"unable to find resource",
@@ -123,13 +125,14 @@ func (f *StoreCache) GetEntitlement(ctx context.Context, id string) (*v2.Entitle
 		return v.(*v2.Entitlement), nil
 	}
 
-	entitlement, err := f.store.GetEntitlement(ctx, &reader_v2.EntitlementsReaderServiceGetEntitlementRequest{
+	entitlementResp, err := f.store.GetEntitlement(ctx, &reader_v2.EntitlementsReaderServiceGetEntitlementRequest{
 		EntitlementId: id,
 	})
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, err
 	}
 
+	entitlement := entitlementResp.Entitlement
 	if entitlement == nil {
 		l.Error("unable to find entitlement", zap.String("entitlement_id", id))
 		entitlement = f.getMissingEntitlement(id)
@@ -149,13 +152,14 @@ func (f *StoreCache) GetGrant(ctx context.Context, id string) (*v2.Grant, error)
 		return v.(*v2.Grant), nil
 	}
 
-	grant, err := f.store.GetGrant(ctx, &reader_v2.GrantsReaderServiceGetGrantRequest{
+	grantResp, err := f.store.GetGrant(ctx, &reader_v2.GrantsReaderServiceGetGrantRequest{
 		GrantId: id,
 	})
 	if err != nil {
 		return nil, err
 	}
 
+	grant := grantResp.Grant
 	f.grants.Store(id, grant)
 
 	return grant, nil

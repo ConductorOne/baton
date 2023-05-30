@@ -236,6 +236,17 @@ func (m *ConnectorMetadata) validate(all bool) error {
 
 	}
 
+	if l := len(m.GetDescription()); l < 1 || l > 4096 {
+		err := ConnectorMetadataValidationError{
+			field:  "Description",
+			reason: "value length must be between 1 and 4096 bytes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return ConnectorMetadataMultiError(errors)
 	}

@@ -214,6 +214,19 @@ func (c *C1File) PreviousSyncID(ctx context.Context) (string, error) {
 	return s.ID, nil
 }
 
+func (c *C1File) LatestFinishedSync(ctx context.Context) (string, error) {
+	s, err := c.getFinishedSync(ctx, 0)
+	if err != nil {
+		return "", err
+	}
+
+	if s == nil {
+		return "", nil
+	}
+
+	return s.ID, nil
+}
+
 func (c *C1File) getSync(ctx context.Context, syncID string) (*syncRun, error) {
 	err := c.validateDb(ctx)
 	if err != nil {

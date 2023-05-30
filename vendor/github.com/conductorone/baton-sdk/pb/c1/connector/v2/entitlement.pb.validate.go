@@ -108,26 +108,34 @@ func (m *Entitlement) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := len(m.GetDisplayName()); l < 1 || l > 1024 {
-		err := EntitlementValidationError{
-			field:  "DisplayName",
-			reason: "value length must be between 1 and 1024 bytes, inclusive",
+	if m.GetDisplayName() != "" {
+
+		if l := len(m.GetDisplayName()); l < 1 || l > 1024 {
+			err := EntitlementValidationError{
+				field:  "DisplayName",
+				reason: "value length must be between 1 and 1024 bytes, inclusive",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
 		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
+
 	}
 
-	if l := len(m.GetDescription()); l < 1 || l > 2048 {
-		err := EntitlementValidationError{
-			field:  "Description",
-			reason: "value length must be between 1 and 2048 bytes, inclusive",
+	if m.GetDescription() != "" {
+
+		if l := len(m.GetDescription()); l < 1 || l > 2048 {
+			err := EntitlementValidationError{
+				field:  "Description",
+				reason: "value length must be between 1 and 2048 bytes, inclusive",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
 		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
+
 	}
 
 	for idx, item := range m.GetGrantableTo() {

@@ -23,6 +23,10 @@ func (a *Annotations) Append(msgs ...proto.Message) {
 
 // Update updates the annotations slice.
 func (a *Annotations) Update(msg proto.Message) {
+	if msg == nil {
+		return
+	}
+
 	var newAnnotations []*anypb.Any
 
 	found := false
@@ -53,6 +57,10 @@ func (a *Annotations) Update(msg proto.Message) {
 
 // Contains checks if the message is in the annotations slice.
 func (a *Annotations) Contains(msg proto.Message) bool {
+	if msg == nil {
+		return false
+	}
+
 	for _, v := range *a {
 		if v.MessageIs(msg) {
 			return true
@@ -64,6 +72,10 @@ func (a *Annotations) Contains(msg proto.Message) bool {
 
 // Pick checks if the message is in the annotations slice.
 func (a *Annotations) Pick(needle proto.Message) (bool, error) {
+	if needle == nil {
+		return false, nil
+	}
+
 	for _, v := range *a {
 		if v.MessageIs(needle) {
 			if err := v.UnmarshalTo(needle); err != nil {

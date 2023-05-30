@@ -83,7 +83,7 @@ func (c *C1File) ListGrants(ctx context.Context, request *v2.GrantsServiceListGr
 	}, nil
 }
 
-func (c *C1File) GetGrant(ctx context.Context, request *reader_v2.GrantsReaderServiceGetGrantRequest) (*v2.Grant, error) {
+func (c *C1File) GetGrant(ctx context.Context, request *reader_v2.GrantsReaderServiceGetGrantRequest) (*reader_v2.GrantsReaderServiceGetGrantResponse, error) {
 	ctxzap.Extract(ctx).Debug("fetching grant", zap.String("grant_id", request.GrantId))
 
 	ret := &v2.Grant{}
@@ -93,7 +93,9 @@ func (c *C1File) GetGrant(ctx context.Context, request *reader_v2.GrantsReaderSe
 		return nil, err
 	}
 
-	return ret, nil
+	return &reader_v2.GrantsReaderServiceGetGrantResponse{
+		Grant: ret,
+	}, nil
 }
 
 func (c *C1File) ListGrantsForEntitlement(

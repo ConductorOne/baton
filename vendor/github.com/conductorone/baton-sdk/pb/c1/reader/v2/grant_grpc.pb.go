@@ -8,7 +8,6 @@ package v2
 
 import (
 	context "context"
-	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -23,7 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GrantsReaderServiceClient interface {
-	GetGrant(ctx context.Context, in *GrantsReaderServiceGetGrantRequest, opts ...grpc.CallOption) (*v2.Grant, error)
+	GetGrant(ctx context.Context, in *GrantsReaderServiceGetGrantRequest, opts ...grpc.CallOption) (*GrantsReaderServiceGetGrantResponse, error)
 	ListGrantsForEntitlement(ctx context.Context, in *GrantsReaderServiceListGrantsForEntitlementRequest, opts ...grpc.CallOption) (*GrantsReaderServiceListGrantsForEntitlementResponse, error)
 	ListGrantsForResourceType(ctx context.Context, in *GrantsReaderServiceListGrantsForResourceTypeRequest, opts ...grpc.CallOption) (*GrantsReaderServiceListGrantsForResourceTypeResponse, error)
 }
@@ -36,8 +35,8 @@ func NewGrantsReaderServiceClient(cc grpc.ClientConnInterface) GrantsReaderServi
 	return &grantsReaderServiceClient{cc}
 }
 
-func (c *grantsReaderServiceClient) GetGrant(ctx context.Context, in *GrantsReaderServiceGetGrantRequest, opts ...grpc.CallOption) (*v2.Grant, error) {
-	out := new(v2.Grant)
+func (c *grantsReaderServiceClient) GetGrant(ctx context.Context, in *GrantsReaderServiceGetGrantRequest, opts ...grpc.CallOption) (*GrantsReaderServiceGetGrantResponse, error) {
+	out := new(GrantsReaderServiceGetGrantResponse)
 	err := c.cc.Invoke(ctx, "/c1.reader.v2.GrantsReaderService/GetGrant", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -67,7 +66,7 @@ func (c *grantsReaderServiceClient) ListGrantsForResourceType(ctx context.Contex
 // All implementations should embed UnimplementedGrantsReaderServiceServer
 // for forward compatibility
 type GrantsReaderServiceServer interface {
-	GetGrant(context.Context, *GrantsReaderServiceGetGrantRequest) (*v2.Grant, error)
+	GetGrant(context.Context, *GrantsReaderServiceGetGrantRequest) (*GrantsReaderServiceGetGrantResponse, error)
 	ListGrantsForEntitlement(context.Context, *GrantsReaderServiceListGrantsForEntitlementRequest) (*GrantsReaderServiceListGrantsForEntitlementResponse, error)
 	ListGrantsForResourceType(context.Context, *GrantsReaderServiceListGrantsForResourceTypeRequest) (*GrantsReaderServiceListGrantsForResourceTypeResponse, error)
 }
@@ -76,7 +75,7 @@ type GrantsReaderServiceServer interface {
 type UnimplementedGrantsReaderServiceServer struct {
 }
 
-func (UnimplementedGrantsReaderServiceServer) GetGrant(context.Context, *GrantsReaderServiceGetGrantRequest) (*v2.Grant, error) {
+func (UnimplementedGrantsReaderServiceServer) GetGrant(context.Context, *GrantsReaderServiceGetGrantRequest) (*GrantsReaderServiceGetGrantResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGrant not implemented")
 }
 func (UnimplementedGrantsReaderServiceServer) ListGrantsForEntitlement(context.Context, *GrantsReaderServiceListGrantsForEntitlementRequest) (*GrantsReaderServiceListGrantsForEntitlementResponse, error) {

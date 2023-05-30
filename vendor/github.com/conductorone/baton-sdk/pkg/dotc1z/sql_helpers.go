@@ -6,8 +6,11 @@ import (
 	"strconv"
 	"time"
 
+	c1zpb "github.com/conductorone/baton-sdk/pb/c1/c1z/v1"
+	"github.com/conductorone/baton-sdk/pkg/annotations"
 	"github.com/doug-martin/goqu/v9"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 )
@@ -33,6 +36,7 @@ type listRequest interface {
 	proto.Message
 	GetPageSize() uint32
 	GetPageToken() string
+	GetAnnotations() []*anypb.Any
 }
 
 type hasResourceTypeListRequest interface {
@@ -74,6 +78,33 @@ func (c *C1File) listConnectorObjects(ctx context.Context, tableName string, req
 		return nil, "", fmt.Errorf("c1file: invalid list request")
 	}
 
+	reqAnnos := annotations.Annotations(listReq.GetAnnotations())
+
+	var reqSyncID string
+	syncDetails := &c1zpb.SyncDetails{}
+	hasSyncIdAnno, err := reqAnnos.Pick(syncDetails)
+	if err != nil {
+		return nil, "", fmt.Errorf("c1file: failed to get sync id annotation: %w", err)
+	}
+
+	switch {
+	// If the request has a sync id annotation, use that
+	case hasSyncIdAnno && syncDetails.GetId() != "":
+		reqSyncID = syncDetails.GetId()
+
+	// We are currently syncing, so use the current sync id
+	case c.currentSyncID != "":
+		reqSyncID = c.currentSyncID
+
+	// We are viewing a sync, so use the view sync id
+	case c.viewSyncID != "":
+		reqSyncID = c.viewSyncID
+
+	// Be explicit that we have no sync ID set
+	default:
+		reqSyncID = ""
+	}
+
 	q := c.db.From(tableName).Prepared(true)
 	q = q.Select("id", "data")
 
@@ -104,10 +135,8 @@ func (c *C1File) listConnectorObjects(ctx context.Context, tableName string, req
 
 	// If a sync is running, be sure we only select from the current values
 	switch {
-	case c.currentSyncID != "":
-		q = q.Where(goqu.C("sync_id").Eq(c.currentSyncID))
-	case c.viewSyncID != "":
-		q = q.Where(goqu.C("sync_id").Eq(c.viewSyncID))
+	case reqSyncID != "":
+		q = q.Where(goqu.C("sync_id").Eq(reqSyncID))
 	default:
 		var latestSyncRun *syncRun
 		var err error
@@ -215,7 +244,7 @@ func (c *C1File) putConnectorObjectQuery(ctx context.Context, tableName string, 
 	return q.ToSQL()
 }
 
-func (c *C1File) getResourceObject(ctx context.Context, resourceID *v2.ResourceId, m *v2.Resource) error {
+func (c *C1File) getResourceObject(ctx context.Context, resourceID *v2.ResourceId, m *v2.Resource, syncID string) error {
 	err := c.validateDb(ctx)
 	if err != nil {
 		return err
@@ -227,6 +256,8 @@ func (c *C1File) getResourceObject(ctx context.Context, resourceID *v2.ResourceI
 	q = q.Where(goqu.C("external_id").Eq(fmt.Sprintf("%s:%s", resourceID.ResourceType, resourceID.Resource)))
 
 	switch {
+	case syncID != "":
+		q = q.Where(goqu.C("sync_id").Eq(syncID))
 	case c.currentSyncID != "":
 		q = q.Where(goqu.C("sync_id").Eq(c.currentSyncID))
 	case c.viewSyncID != "":

@@ -27,7 +27,7 @@ func resourcesCmd() *cobra.Command {
 }
 
 func runResources(cmd *cobra.Command, args []string) error {
-	ctx, err := logging.Init(context.Background(), "console", "error")
+	ctx, err := logging.Init(context.Background(), logging.WithLogFormat("console"), logging.WithLogLevel("error"))
 	if err != nil {
 		return err
 	}

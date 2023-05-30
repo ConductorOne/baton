@@ -8,7 +8,6 @@ package v2
 
 import (
 	context "context"
-	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -23,7 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type EntitlementsReaderServiceClient interface {
-	GetEntitlement(ctx context.Context, in *EntitlementsReaderServiceGetEntitlementRequest, opts ...grpc.CallOption) (*v2.Entitlement, error)
+	GetEntitlement(ctx context.Context, in *EntitlementsReaderServiceGetEntitlementRequest, opts ...grpc.CallOption) (*EntitlementsReaderServiceGetEntitlementResponse, error)
 }
 
 type entitlementsReaderServiceClient struct {
@@ -34,8 +33,8 @@ func NewEntitlementsReaderServiceClient(cc grpc.ClientConnInterface) Entitlement
 	return &entitlementsReaderServiceClient{cc}
 }
 
-func (c *entitlementsReaderServiceClient) GetEntitlement(ctx context.Context, in *EntitlementsReaderServiceGetEntitlementRequest, opts ...grpc.CallOption) (*v2.Entitlement, error) {
-	out := new(v2.Entitlement)
+func (c *entitlementsReaderServiceClient) GetEntitlement(ctx context.Context, in *EntitlementsReaderServiceGetEntitlementRequest, opts ...grpc.CallOption) (*EntitlementsReaderServiceGetEntitlementResponse, error) {
+	out := new(EntitlementsReaderServiceGetEntitlementResponse)
 	err := c.cc.Invoke(ctx, "/c1.reader.v2.EntitlementsReaderService/GetEntitlement", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -47,14 +46,14 @@ func (c *entitlementsReaderServiceClient) GetEntitlement(ctx context.Context, in
 // All implementations should embed UnimplementedEntitlementsReaderServiceServer
 // for forward compatibility
 type EntitlementsReaderServiceServer interface {
-	GetEntitlement(context.Context, *EntitlementsReaderServiceGetEntitlementRequest) (*v2.Entitlement, error)
+	GetEntitlement(context.Context, *EntitlementsReaderServiceGetEntitlementRequest) (*EntitlementsReaderServiceGetEntitlementResponse, error)
 }
 
 // UnimplementedEntitlementsReaderServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedEntitlementsReaderServiceServer struct {
 }
 
-func (UnimplementedEntitlementsReaderServiceServer) GetEntitlement(context.Context, *EntitlementsReaderServiceGetEntitlementRequest) (*v2.Entitlement, error) {
+func (UnimplementedEntitlementsReaderServiceServer) GetEntitlement(context.Context, *EntitlementsReaderServiceGetEntitlementRequest) (*EntitlementsReaderServiceGetEntitlementResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetEntitlement not implemented")
 }
 
