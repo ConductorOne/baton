@@ -64,11 +64,13 @@ func (f *StoreCache) GetResourceType(ctx context.Context, id string) (*v2.Resour
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, err
 	}
-	rt := rtResp.ResourceType
 
-	if rt == nil {
+	var rt *v2.ResourceType
+	if rtResp == nil || rtResp.ResourceType == nil {
 		l.Error("unable to find resource type", zap.String("resource_type_id", id))
 		rt = f.getMissingResourceType(id)
+	} else {
+		rt = rtResp.ResourceType
 	}
 
 	f.resourceTypes.Store(id, rt)
@@ -99,14 +101,16 @@ func (f *StoreCache) GetResource(ctx context.Context, id *v2.ResourceId) (*v2.Re
 		return nil, err
 	}
 
-	resource := resourceResp.Resource
-	if resource == nil {
+	var resource *v2.Resource
+	if resourceResp == nil || resourceResp.Resource == nil {
 		l.Error(
 			"unable to find resource",
 			zap.String("resource_type_id", id.ResourceType),
 			zap.String("resource_id", id.Resource),
 		)
 		resource = f.getMissingResource(id)
+	} else {
+		resource = resourceResp.Resource
 	}
 
 	f.resources.Store(cacheKey, resource)
@@ -132,10 +136,12 @@ func (f *StoreCache) GetEntitlement(ctx context.Context, id string) (*v2.Entitle
 		return nil, err
 	}
 
-	entitlement := entitlementResp.Entitlement
-	if entitlement == nil {
+	var entitlement *v2.Entitlement
+	if entitlementResp == nil || entitlementResp.Entitlement == nil {
 		l.Error("unable to find entitlement", zap.String("entitlement_id", id))
 		entitlement = f.getMissingEntitlement(id)
+	} else {
+		entitlement = entitlementResp.Entitlement
 	}
 
 	f.entitlements.Store(id, entitlement)
