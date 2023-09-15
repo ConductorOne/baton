@@ -350,6 +350,35 @@ func (m *GrantsReaderServiceListGrantsForEntitlementRequest) validate(all bool) 
 		}
 	}
 
+	if all {
+		switch v := interface{}(m.GetPrincipalId()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GrantsReaderServiceListGrantsForEntitlementRequestValidationError{
+					field:  "PrincipalId",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GrantsReaderServiceListGrantsForEntitlementRequestValidationError{
+					field:  "PrincipalId",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetPrincipalId()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GrantsReaderServiceListGrantsForEntitlementRequestValidationError{
+				field:  "PrincipalId",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if m.GetPageSize() != 0 {
 
 		if m.GetPageSize() > 250 {

@@ -236,15 +236,48 @@ func (m *ConnectorMetadata) validate(all bool) error {
 
 	}
 
-	if l := len(m.GetDescription()); l < 1 || l > 4096 {
-		err := ConnectorMetadataValidationError{
-			field:  "Description",
-			reason: "value length must be between 1 and 4096 bytes, inclusive",
+	if m.GetDescription() != "" {
+
+		if l := len(m.GetDescription()); l < 1 || l > 4096 {
+			err := ConnectorMetadataValidationError{
+				field:  "Description",
+				reason: "value length must be between 1 and 4096 bytes, inclusive",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
 		}
-		if !all {
-			return err
+
+	}
+
+	if all {
+		switch v := interface{}(m.GetCapabilities()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ConnectorMetadataValidationError{
+					field:  "Capabilities",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ConnectorMetadataValidationError{
+					field:  "Capabilities",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
 		}
-		errors = append(errors, err)
+	} else if v, ok := interface{}(m.GetCapabilities()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ConnectorMetadataValidationError{
+				field:  "Capabilities",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
 	}
 
 	if len(errors) > 0 {
@@ -326,6 +359,273 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ConnectorMetadataValidationError{}
+
+// Validate checks the field values on ConnectorCapabilities with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ConnectorCapabilities) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ConnectorCapabilities with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ConnectorCapabilitiesMultiError, or nil if none found.
+func (m *ConnectorCapabilities) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ConnectorCapabilities) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetResourceTypeCapabilities() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ConnectorCapabilitiesValidationError{
+						field:  fmt.Sprintf("ResourceTypeCapabilities[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ConnectorCapabilitiesValidationError{
+						field:  fmt.Sprintf("ResourceTypeCapabilities[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ConnectorCapabilitiesValidationError{
+					field:  fmt.Sprintf("ResourceTypeCapabilities[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ConnectorCapabilitiesMultiError(errors)
+	}
+
+	return nil
+}
+
+// ConnectorCapabilitiesMultiError is an error wrapping multiple validation
+// errors returned by ConnectorCapabilities.ValidateAll() if the designated
+// constraints aren't met.
+type ConnectorCapabilitiesMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ConnectorCapabilitiesMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ConnectorCapabilitiesMultiError) AllErrors() []error { return m }
+
+// ConnectorCapabilitiesValidationError is the validation error returned by
+// ConnectorCapabilities.Validate if the designated constraints aren't met.
+type ConnectorCapabilitiesValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ConnectorCapabilitiesValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ConnectorCapabilitiesValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ConnectorCapabilitiesValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ConnectorCapabilitiesValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ConnectorCapabilitiesValidationError) ErrorName() string {
+	return "ConnectorCapabilitiesValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ConnectorCapabilitiesValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sConnectorCapabilities.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ConnectorCapabilitiesValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ConnectorCapabilitiesValidationError{}
+
+// Validate checks the field values on ResourceTypeCapability with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ResourceTypeCapability) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ResourceTypeCapability with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ResourceTypeCapabilityMultiError, or nil if none found.
+func (m *ResourceTypeCapability) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ResourceTypeCapability) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetResourceType()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ResourceTypeCapabilityValidationError{
+					field:  "ResourceType",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ResourceTypeCapabilityValidationError{
+					field:  "ResourceType",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetResourceType()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ResourceTypeCapabilityValidationError{
+				field:  "ResourceType",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return ResourceTypeCapabilityMultiError(errors)
+	}
+
+	return nil
+}
+
+// ResourceTypeCapabilityMultiError is an error wrapping multiple validation
+// errors returned by ResourceTypeCapability.ValidateAll() if the designated
+// constraints aren't met.
+type ResourceTypeCapabilityMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ResourceTypeCapabilityMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ResourceTypeCapabilityMultiError) AllErrors() []error { return m }
+
+// ResourceTypeCapabilityValidationError is the validation error returned by
+// ResourceTypeCapability.Validate if the designated constraints aren't met.
+type ResourceTypeCapabilityValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ResourceTypeCapabilityValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ResourceTypeCapabilityValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ResourceTypeCapabilityValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ResourceTypeCapabilityValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ResourceTypeCapabilityValidationError) ErrorName() string {
+	return "ResourceTypeCapabilityValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ResourceTypeCapabilityValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sResourceTypeCapability.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ResourceTypeCapabilityValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ResourceTypeCapabilityValidationError{}
 
 // Validate checks the field values on ConnectorServiceGetMetadataRequest with
 // the rules defined in the proto definition for this message. If any rules

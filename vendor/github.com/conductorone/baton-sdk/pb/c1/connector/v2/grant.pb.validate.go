@@ -35,6 +35,151 @@ var (
 	_ = sort.Sort
 )
 
+// Validate checks the field values on GrantSources with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *GrantSources) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GrantSources with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in GrantSourcesMultiError, or
+// nil if none found.
+func (m *GrantSources) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GrantSources) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	{
+		sorted_keys := make([]string, len(m.GetSources()))
+		i := 0
+		for key := range m.GetSources() {
+			sorted_keys[i] = key
+			i++
+		}
+		sort.Slice(sorted_keys, func(i, j int) bool { return sorted_keys[i] < sorted_keys[j] })
+		for _, key := range sorted_keys {
+			val := m.GetSources()[key]
+			_ = val
+
+			// no validation rules for Sources[key]
+
+			if all {
+				switch v := interface{}(val).(type) {
+				case interface{ ValidateAll() error }:
+					if err := v.ValidateAll(); err != nil {
+						errors = append(errors, GrantSourcesValidationError{
+							field:  fmt.Sprintf("Sources[%v]", key),
+							reason: "embedded message failed validation",
+							cause:  err,
+						})
+					}
+				case interface{ Validate() error }:
+					if err := v.Validate(); err != nil {
+						errors = append(errors, GrantSourcesValidationError{
+							field:  fmt.Sprintf("Sources[%v]", key),
+							reason: "embedded message failed validation",
+							cause:  err,
+						})
+					}
+				}
+			} else if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+				if err := v.Validate(); err != nil {
+					return GrantSourcesValidationError{
+						field:  fmt.Sprintf("Sources[%v]", key),
+						reason: "embedded message failed validation",
+						cause:  err,
+					}
+				}
+			}
+
+		}
+	}
+
+	if len(errors) > 0 {
+		return GrantSourcesMultiError(errors)
+	}
+
+	return nil
+}
+
+// GrantSourcesMultiError is an error wrapping multiple validation errors
+// returned by GrantSources.ValidateAll() if the designated constraints aren't met.
+type GrantSourcesMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GrantSourcesMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GrantSourcesMultiError) AllErrors() []error { return m }
+
+// GrantSourcesValidationError is the validation error returned by
+// GrantSources.Validate if the designated constraints aren't met.
+type GrantSourcesValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GrantSourcesValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GrantSourcesValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GrantSourcesValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GrantSourcesValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GrantSourcesValidationError) ErrorName() string { return "GrantSourcesValidationError" }
+
+// Error satisfies the builtin error interface
+func (e GrantSourcesValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGrantSources.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GrantSourcesValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GrantSourcesValidationError{}
+
 // Validate checks the field values on Grant with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -145,6 +290,35 @@ func (m *Grant) validate(all bool) error {
 			return err
 		}
 		errors = append(errors, err)
+	}
+
+	if all {
+		switch v := interface{}(m.GetSources()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GrantValidationError{
+					field:  "Sources",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GrantValidationError{
+					field:  "Sources",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetSources()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GrantValidationError{
+				field:  "Sources",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
 	}
 
 	for idx, item := range m.GetAnnotations() {
@@ -337,10 +511,10 @@ func (m *GrantsServiceListGrantsRequest) validate(all bool) error {
 
 	if m.GetPageToken() != "" {
 
-		if l := len(m.GetPageToken()); l < 1 || l > 2048 {
+		if l := len(m.GetPageToken()); l < 1 || l > 4096 {
 			err := GrantsServiceListGrantsRequestValidationError{
 				field:  "PageToken",
-				reason: "value length must be between 1 and 2048 bytes, inclusive",
+				reason: "value length must be between 1 and 4096 bytes, inclusive",
 			}
 			if !all {
 				return err
@@ -523,10 +697,10 @@ func (m *GrantsServiceListGrantsResponse) validate(all bool) error {
 
 	if m.GetNextPageToken() != "" {
 
-		if l := len(m.GetNextPageToken()); l < 1 || l > 2048 {
+		if l := len(m.GetNextPageToken()); l < 1 || l > 4096 {
 			err := GrantsServiceListGrantsResponseValidationError{
 				field:  "NextPageToken",
-				reason: "value length must be between 1 and 2048 bytes, inclusive",
+				reason: "value length must be between 1 and 4096 bytes, inclusive",
 			}
 			if !all {
 				return err
@@ -1324,3 +1498,105 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GrantManagerServiceRevokeResponseValidationError{}
+
+// Validate checks the field values on GrantSources_GrantSource with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GrantSources_GrantSource) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GrantSources_GrantSource with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GrantSources_GrantSourceMultiError, or nil if none found.
+func (m *GrantSources_GrantSource) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GrantSources_GrantSource) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if len(errors) > 0 {
+		return GrantSources_GrantSourceMultiError(errors)
+	}
+
+	return nil
+}
+
+// GrantSources_GrantSourceMultiError is an error wrapping multiple validation
+// errors returned by GrantSources_GrantSource.ValidateAll() if the designated
+// constraints aren't met.
+type GrantSources_GrantSourceMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GrantSources_GrantSourceMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GrantSources_GrantSourceMultiError) AllErrors() []error { return m }
+
+// GrantSources_GrantSourceValidationError is the validation error returned by
+// GrantSources_GrantSource.Validate if the designated constraints aren't met.
+type GrantSources_GrantSourceValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GrantSources_GrantSourceValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GrantSources_GrantSourceValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GrantSources_GrantSourceValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GrantSources_GrantSourceValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GrantSources_GrantSourceValidationError) ErrorName() string {
+	return "GrantSources_GrantSourceValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GrantSources_GrantSourceValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGrantSources_GrantSource.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GrantSources_GrantSourceValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GrantSources_GrantSourceValidationError{}

@@ -58,6 +58,8 @@ func (m *ETag) validate(all bool) error {
 
 	// no validation rules for Value
 
+	// no validation rules for EntitlementId
+
 	if len(errors) > 0 {
 		return ETagMultiError(errors)
 	}
@@ -284,6 +286,8 @@ func (m *ETagMatch) validate(all bool) error {
 	}
 
 	var errors []error
+
+	// no validation rules for EntitlementId
 
 	if len(errors) > 0 {
 		return ETagMatchMultiError(errors)
