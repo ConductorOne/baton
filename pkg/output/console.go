@@ -153,17 +153,29 @@ func (c *consoleManager) outputEntitlements(out *v1.EntitlementListOutput) error
 
 func (c *consoleManager) outputGrants(out *v1.GrantListOutput) error {
 	grantsTable := pterm.TableData{
-		{"ID", "Resource Type", "Resource", "Entitlement", "Principal"},
+		{"ID", "Entitlement", "Principal", "Sources"},
 	}
 
 	for _, g := range out.Grants {
-		grantsTable = append(grantsTable, []string{
+		columns := []string{
 			g.Grant.Id,
-			g.ResourceType.DisplayName,
-			g.Resource.DisplayName,
 			g.Entitlement.DisplayName,
 			g.Principal.DisplayName,
-		})
+		}
+
+		if g.Grant.Sources != nil && g.Grant.Sources.Sources != nil {
+			sources := ""
+			for source := range g.Grant.Sources.Sources {
+				sources += fmt.Sprintf("%s, ", source)
+			}
+			sources = strings.TrimSuffix(sources, ", ")
+			sources = fmt.Sprintf("[%s]", sources)
+			columns = append(columns, sources)
+		} else {
+			// Sources is nil, so this means that the grant is sourced directly
+			columns = append(columns, "direct")
+		}
+		grantsTable = append(grantsTable, columns)
 	}
 
 	err := pterm.DefaultTable.WithHasHeader().WithData(grantsTable).Render()
