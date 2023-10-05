@@ -1,0 +1,32 @@
+.react-flow__node {
+  background-color: rgba(228, 244, 221, 1);
+  display: flex;
+  padding: 16px 16px 16px 12px;
+  align-items: center;
+  border-radius: 12px;
+  border: none;
+  max-width: 300px;
+  min-width: 200px;
+}
+
+.react-flow__node span {
+  color: rgba(0, 0, 0, 0.60);
+}
+
+.react-flow__node.selectable.selected {
+  background-color: rgba(115, 189, 81, 1);
+  color: rgba(255, 255, 255, 1);
+  box-shadow: none;
+}
+
+.react-flow__node.selectable.selected span {
+  color: rgba(255, 255, 255, 0.70);
+}
+
+.react-flow__node.selectable.selected .iconWrapper {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.react-flow__handle {
+  background: rgba(115, 189, 81, 1)!important
+}
