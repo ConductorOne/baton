@@ -1,6 +1,7 @@
 import { styled } from "@mui/material/styles";
 import MuiDrawer from "@mui/material/Drawer";
 import { IconButton, Typography } from "@mui/material";
+import { Link } from "react-router-dom";
 
 export const ResourceDetailsDrawer = styled(MuiDrawer)(({ theme }) => ({
   "& .MuiDrawer-paper": {
@@ -54,4 +55,9 @@ export const Container = styled("div")(() => ({
 export const CloseButton = styled(IconButton)(() => ({
    border: "1px solid #D0D5DD", 
    borderRadius: "8px"
+}));
+
+export const StyledLink = styled(Link)(() => ({
+  textDecoration: 'none',
+  color: 'inherit'
 }));

@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import ReactFlow, { useEdgesState, useNodesState } from "reactflow";
+import ReactFlow, {
+  Controls,
+  useEdgesState,
+  useNodesInitialized,
+  useNodesState,
+  useReactFlow,
+} from "reactflow";
 import "reactflow/dist/style.css";
 import { CustomEdge } from "./components/customEdge";
 import { ChildNode, ParentNode } from "./components/customNode";
@@ -29,6 +35,8 @@ const nodeTypes = {
 
 const Explorer = ({ resourceList, closeResourceList }) => {
   const navigate = useNavigate();
+  const reactFlowInstance = useReactFlow();
+  const nodesInitialized = useNodesInitialized();
   const { id: resourceId } = useParams();
   const { type: resourceType } = useParams();
   const [nodes, setNodes] = useNodesState([]);
@@ -51,6 +59,12 @@ const Explorer = ({ resourceList, closeResourceList }) => {
     }
   }, [resourceId, resourceType]);
 
+  useEffect(() => {
+    if (nodesInitialized) {
+      reactFlowInstance.fitView();
+    }
+  }, [nodesInitialized]);
+
   const openEntitlementsDetails = (entitlement) => {
     setResourceDetailsOpen({
       entitlementOpened: true,
@@ -60,7 +74,6 @@ const Explorer = ({ resourceList, closeResourceList }) => {
 
   const openResourceDetails = async (resourceType: string, nodeId: string) => {
     const resourceDetails = await fetchResourceDetails(resourceType, nodeId);
-    console.log("resource details", resourceDetails)
     setResourceDetailsOpen({
       resourceOpened: true,
       resource: resourceDetails,
@@ -136,7 +149,9 @@ const Explorer = ({ resourceList, closeResourceList }) => {
             }
             fitView
             attributionPosition="bottom-left"
-          />
+          >
+            <Controls position="bottom-right" showInteractive={false} />
+          </ReactFlow>
         </TreeWrapper>
       )}
       {resourceDetails.resource && (

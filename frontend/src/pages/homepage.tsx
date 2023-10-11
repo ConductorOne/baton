@@ -3,6 +3,7 @@ import Footer from "../components/footer/footer";
 import "../components/explorer/index.css";
 import { Navigation } from "../components/navigation/navigation";
 import Explorer from "../components/explorer/explorer";
+import { ReactFlowProvider } from "reactflow";
 
 type ResourcesListState = {
   opened: boolean;
@@ -30,10 +31,12 @@ const Homepage = () => {
   return (
     <>
       <Navigation openResourceList={openResourceList} />
-      <Explorer
-        resourceList={resourceList}
-        closeResourceList={closeResourceList}
-      />
+      <ReactFlowProvider>
+        <Explorer
+          resourceList={resourceList}
+          closeResourceList={closeResourceList}
+        />
+      </ReactFlowProvider>
       <Footer />
     </>
   );

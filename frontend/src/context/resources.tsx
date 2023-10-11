@@ -24,6 +24,7 @@ export const ResourcesContextProvider = ({ children }) => {
         }
 
         map[type].push(resource);
+        map[type].sort((a, b) => a.resource.display_name.localeCompare(b.resource.display_name))
       });
 
       setResources({

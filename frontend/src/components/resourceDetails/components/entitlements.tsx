@@ -3,9 +3,9 @@ import { ListItem } from "..";
 import { Label, Value } from "../styles";
 
 const purposeMap = {
-  0: "PURPOSE_VALUE_UNSPECIFIED",
-  1: "PURPOSE_VALUE_ASSIGNMENT",
-  2: "PURPOSE_VALUE_PERMISSION",
+  0: "Unspecified",
+  1: "Assignment",
+  2: "Permission",
 };
 
 export const EntitlementDetails = ({

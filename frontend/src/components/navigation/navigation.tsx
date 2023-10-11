@@ -5,23 +5,17 @@ import { Tooltip, useTheme } from "@mui/material";
 import pluralize from "pluralize";
 import { Logo, StyledDrawer, CloseButton } from "./styles";
 
-interface ResourceTypesData {
-  resource_types: {
-    resource_type: {
-      id: string;
-      display_name: string;
-      traits?: number[];
-    };
-  }[];
-}
-
 export const Navigation = ({ openResourceList }) => {
   const theme = useTheme();
-  const [data, setData] = useState<ResourceTypesData>();
+  const [data, setData] = useState([]);
   useEffect(() => {
     const fetchData = async () => {
       const res = await (await fetch("/api/resourceTypes")).json();
-      setData(res.data);
+      const resourceTypes = res.data.resource_types
+      const sorted = resourceTypes.sort((a, b) =>
+        a.resource_type.display_name.localeCompare(b.resource_type.display_name)
+      );
+      setData(sorted);
     };
     fetchData();
   }, []);
@@ -33,7 +27,7 @@ export const Navigation = ({ openResourceList }) => {
       </Logo>
       <List>
         {data &&
-          data.resource_types.map((type) => (
+          data.map((type) => (
             <Tooltip
               key={type.resource_type.display_name}
               title={pluralize(type.resource_type.display_name)}

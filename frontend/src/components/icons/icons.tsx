@@ -155,7 +155,7 @@ export const ExplorerLogo = ({ color }) => {
   );
 };
 
-export const Link = ({ color }) => {
+export const LinkIcon = ({ color }) => {
   return (
     <SvgIcon color={color}>
       <svg

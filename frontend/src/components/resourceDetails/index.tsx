@@ -1,5 +1,5 @@
 import React, { Fragment } from "react";
-import { Close, Link } from "../icons/icons";
+import { Close, LinkIcon } from "../icons/icons";
 import { useTheme } from "@mui/material/styles";
 import { Button, Typography } from "@mui/material";
 import {
@@ -11,6 +11,7 @@ import {
   Value,
   CloseButton,
   ModalHeader,
+  StyledLink,
 } from "./styles";
 import { normalizeString } from "../../common/helpers";
 import { EntitlementDetails } from "./components/entitlements";
@@ -29,14 +30,27 @@ export const ListItem = ({ label, value }) => {
   );
 };
 
-export const ResourceDetailsModal = ({ resource, resourceDetails, closeDetails }) => {
+export const ResourceDetailsModal = ({
+  resource,
+  resourceDetails,
+  closeDetails,
+}) => {
   const theme = useTheme();
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(`http://localhost:3000/${resource.resource_type.id}/${resource.resource.id.resource}`)
-  }
+
+  const handleClose = (event, reason) => {
+    if (reason && reason === "backdropClick") {
+      closeDetails();
+    }
+  };
 
   return (
-    <ResourceDetailsDrawer theme={theme} variant="permanent" anchor="right">
+    <ResourceDetailsDrawer
+      theme={theme}
+      variant="temporary"
+      open={resourceDetails.resourceOpened || resourceDetails.entitlementOpened}
+      anchor="right"
+      ModalProps={{ onClose: handleClose }}
+    >
       <ModalHeader>
         <StyledDiv>
           <Typography variant="h5">
@@ -50,11 +64,14 @@ export const ResourceDetailsModal = ({ resource, resourceDetails, closeDetails }
           <Button
             variant="text"
             color="secondary"
-            startIcon={<Link color="secondary" />}
+            startIcon={<LinkIcon color="secondary" />}
             disableElevation
-            onClick={copyToClipboard}
           >
-            Copy Link
+            <StyledLink
+              to={`http://localhost:3000/${resource.resource_type.id}/${resource.resource.id.resource}`}
+            >
+              focus
+            </StyledLink>
           </Button>
         )}
       </ModalHeader>
@@ -62,7 +79,7 @@ export const ResourceDetailsModal = ({ resource, resourceDetails, closeDetails }
         {resourceDetails.entitlementOpened && (
           <EntitlementDetails entitlement={resource} />
         )}
-        { resourceDetails.resourceOpened && (
+        {resourceDetails.resourceOpened && (
           <ResourceDetails resource={resource.resource} />
         )}
       </Details>
