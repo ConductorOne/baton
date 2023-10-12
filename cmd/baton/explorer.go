@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/conductorone/baton-sdk/pkg/dotc1z/manager"
 	"github.com/conductorone/baton/pkg/explorer"
 	"github.com/spf13/cobra"
 )
@@ -53,6 +54,8 @@ func startFrontendServer() error {
 }
 
 func startExplorerAPI(cmd *cobra.Command) {
+	ctx := cmd.Context()
+
 	filePath, err := cmd.Flags().GetString("file")
 	if err != nil {
 		log.Fatal("error fetching file path", err)
@@ -68,7 +71,19 @@ func startExplorerAPI(cmd *cobra.Command) {
 		log.Fatal("error fetching resourceType", err)
 	}
 
-	ctrl := explorer.NewController(filePath, syncID, resourceType)
+	m, err := manager.New(ctx, filePath)
+	if err != nil {
+		log.Fatal("error creating c1z manager", err)
+	}
+	defer m.Close(ctx)
+
+	store, err := m.LoadC1Z(ctx)
+	if err != nil {
+		log.Fatal("error loading c1z", err)
+	}
+	defer store.Close()
+
+	ctrl := explorer.NewController(ctx, store, syncID, resourceType)
 	e := ctrl.Run(":8080")
 	if e != nil {
 		log.Fatal("error running explorer", err)
