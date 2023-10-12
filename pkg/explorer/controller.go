@@ -1,16 +1,21 @@
 package explorer
 
 import (
+	"context"
+
+	"github.com/conductorone/baton-sdk/pkg/dotc1z"
+	"github.com/conductorone/baton/pkg/storecache"
 	"github.com/gin-gonic/gin"
 )
 
 type Controller struct {
-	baton BatonService
+	baton *BatonService
 }
 
-func NewController(filePath, syncID, resourceType string) Controller {
-	return Controller{BatonService{
-		filePath:     filePath,
+func NewController(ctx context.Context, store *dotc1z.C1File, syncID, resourceType string) Controller {
+	return Controller{&BatonService{
+		storeCache:   storecache.NewStoreCache(ctx, store),
+		store:        store,
 		syncID:       syncID,
 		resourceType: resourceType,
 	}}

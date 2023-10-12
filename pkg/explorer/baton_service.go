@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/conductorone/baton-sdk/pkg/connectorstore"
-	"github.com/conductorone/baton-sdk/pkg/dotc1z/manager"
+	"github.com/conductorone/baton-sdk/pkg/dotc1z"
 	v1 "github.com/conductorone/baton/pb/baton/v1"
 	"github.com/conductorone/baton/pkg/storecache"
 
@@ -14,50 +14,37 @@ import (
 )
 
 type BatonService struct {
-	filePath     string
 	syncID       string
 	resourceType string
+	store        *dotc1z.C1File
+	storeCache   *storecache.StoreCache
 }
 
-func (b BatonService) GetEntitlements(ctx context.Context) (*v1.EntitlementListOutput, error) {
-	c1zPath := b.filePath
-
-	m, err := manager.New(ctx, c1zPath)
-	if err != nil {
-		return nil, err
-	}
-	defer m.Close(ctx)
-
-	store, err := m.LoadC1Z(ctx)
-	if err != nil {
-		return nil, err
-	}
-
+func (b *BatonService) GetEntitlements(ctx context.Context) (*v1.EntitlementListOutput, error) {
+	var err error
 	if b.syncID != "" {
-		err = store.ViewSync(ctx, b.syncID)
+		err = b.store.ViewSync(ctx, b.syncID)
 		if err != nil {
 			return nil, err
 		}
 	}
-
-	sc := storecache.NewStoreCache(ctx, store)
 
 	var entitlements []*v1.EntitlementOutput
 	pageToken := ""
 	for {
 		req := &v2.EntitlementsServiceListEntitlementsRequest{PageToken: pageToken}
 
-		resp, err := store.ListEntitlements(ctx, req)
+		resp, err := b.store.ListEntitlements(ctx, req)
 		if err != nil {
 			return nil, err
 		}
 
 		for _, en := range resp.List {
-			rt, err := sc.GetResourceType(ctx, en.Resource.Id.ResourceType)
+			rt, err := b.storeCache.GetResourceType(ctx, en.Resource.Id.ResourceType)
 			if err != nil {
 				return nil, err
 			}
-			resource, err := sc.GetResource(ctx, en.Resource.Id)
+			resource, err := b.storeCache.GetResource(ctx, en.Resource.Id)
 			if err != nil {
 				return nil, err
 			}
@@ -81,29 +68,16 @@ func (b BatonService) GetEntitlements(ctx context.Context) (*v1.EntitlementListO
 	}, err
 }
 
-func (b BatonService) GetResources(ctx context.Context) (*v1.ResourceListOutput, error) {
-	m, err := manager.New(ctx, b.filePath)
+func (b *BatonService) GetResources(ctx context.Context) (*v1.ResourceListOutput, error) {
+	err := b.store.ViewSync(ctx, "")
 	if err != nil {
 		return nil, err
 	}
-	defer m.Close(ctx)
-
-	store, err := m.LoadC1Z(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	err = store.ViewSync(ctx, "")
-	if err != nil {
-		return nil, err
-	}
-
-	sc := storecache.NewStoreCache(ctx, store)
 
 	var resources []*v1.ResourceOutput
 	pageToken := ""
 	for {
-		resp, err := store.ListResources(ctx, &v2.ResourcesServiceListResourcesRequest{
+		resp, err := b.store.ListResources(ctx, &v2.ResourcesServiceListResourcesRequest{
 			ResourceTypeId: b.resourceType,
 			PageToken:      pageToken,
 		})
@@ -112,14 +86,14 @@ func (b BatonService) GetResources(ctx context.Context) (*v1.ResourceListOutput,
 		}
 
 		for _, r := range resp.List {
-			rt, err := sc.GetResourceType(ctx, r.Id.ResourceType)
+			rt, err := b.storeCache.GetResourceType(ctx, r.Id.ResourceType)
 			if err != nil {
 				return nil, err
 			}
 			var parent *v2.Resource
 
 			if r.ParentResourceId != nil {
-				parent, err = sc.GetResource(ctx, r.ParentResourceId)
+				parent, err = b.storeCache.GetResource(ctx, r.ParentResourceId)
 				if err != nil {
 					return nil, err
 				}
@@ -144,20 +118,11 @@ func (b BatonService) GetResources(ctx context.Context) (*v1.ResourceListOutput,
 	}, nil
 }
 
-func (b BatonService) GetResourceTypes(ctx context.Context) (*v1.ResourceTypeListOutput, error) {
-	m, err := manager.New(ctx, b.filePath)
-	if err != nil {
-		return nil, err
-	}
-	defer m.Close(ctx)
-
-	store, err := m.LoadC1Z(ctx)
-	if err != nil {
-		return nil, err
-	}
+func (b *BatonService) GetResourceTypes(ctx context.Context) (*v1.ResourceTypeListOutput, error) {
+	var err error
 
 	if b.syncID != "" {
-		err = store.ViewSync(ctx, b.syncID)
+		err = b.store.ViewSync(ctx, b.syncID)
 		if err != nil {
 			return nil, err
 		}
@@ -166,7 +131,7 @@ func (b BatonService) GetResourceTypes(ctx context.Context) (*v1.ResourceTypeLis
 	var resourceTypes []*v1.ResourceTypeOutput
 	pageToken := ""
 	for {
-		resp, err := store.ListResourceTypes(ctx, &v2.ResourceTypesServiceListResourceTypesRequest{PageToken: pageToken})
+		resp, err := b.store.ListResourceTypes(ctx, &v2.ResourceTypesServiceListResourceTypesRequest{PageToken: pageToken})
 		if err != nil {
 			return nil, err
 		}
@@ -187,21 +152,8 @@ func (b BatonService) GetResourceTypes(ctx context.Context) (*v1.ResourceTypeLis
 	}, nil
 }
 
-func (b BatonService) GetAccess(ctx context.Context, resourceType, resourceID string) (*v1.ResourceAccessListOutput, error) {
-	m, err := manager.New(ctx, b.filePath)
-	if err != nil {
-		return nil, err
-	}
-	defer m.Close(ctx)
-
-	store, err := m.LoadC1Z(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	sc := storecache.NewStoreCache(ctx, store)
-
-	principal, err := sc.GetResource(ctx, &v2.ResourceId{
+func (b *BatonService) GetAccess(ctx context.Context, resourceType, resourceID string) (*v1.ResourceAccessListOutput, error) {
+	principal, err := b.storeCache.GetResource(ctx, &v2.ResourceId{
 		ResourceType: resourceType,
 		Resource:     resourceID,
 	})
@@ -212,7 +164,7 @@ func (b BatonService) GetAccess(ctx context.Context, resourceType, resourceID st
 	var entitlements []*v2.Entitlement
 	pageToken := ""
 	for {
-		resp, err := store.ListGrants(ctx, &v2.GrantsServiceListGrantsRequest{
+		resp, err := b.store.ListGrants(ctx, &v2.GrantsServiceListGrantsRequest{
 			PageToken: pageToken,
 		})
 		if err != nil {
@@ -221,7 +173,7 @@ func (b BatonService) GetAccess(ctx context.Context, resourceType, resourceID st
 
 		for _, g := range resp.List {
 			if g.Principal.Id.ResourceType == resourceType && g.Principal.Id.Resource == resourceID {
-				en, err := sc.GetEntitlement(ctx, g.Entitlement.Id)
+				en, err := b.storeCache.GetEntitlement(ctx, g.Entitlement.Id)
 				if err != nil {
 					return nil, err
 				}
@@ -244,12 +196,12 @@ func (b BatonService) GetAccess(ctx context.Context, resourceType, resourceID st
 		if rAccess, ok := entitlementsByResource[rKey]; ok {
 			accessOutput = rAccess
 		} else {
-			resource, err := sc.GetResource(ctx, en.Resource.Id)
+			resource, err := b.storeCache.GetResource(ctx, en.Resource.Id)
 			if err != nil {
 				return nil, err
 			}
 
-			rType, err := sc.GetResourceType(ctx, en.Resource.Id.ResourceType)
+			rType, err := b.storeCache.GetResourceType(ctx, en.Resource.Id.ResourceType)
 			if err != nil {
 				return nil, err
 			}
@@ -275,26 +227,15 @@ func (b BatonService) GetAccess(ctx context.Context, resourceType, resourceID st
 	}, nil
 }
 
-func (b BatonService) GetResourceById(ctx context.Context, resourceType, resourceID string) (*v1.ResourceOutput, error) {
-	m, err := manager.New(ctx, b.filePath)
-	if err != nil {
-		return nil, err
-	}
-	defer m.Close(ctx)
+func (b *BatonService) GetResourceById(ctx context.Context, resourceType, resourceID string) (*v1.ResourceOutput, error) {
+	var err error
 
-	store, err := m.LoadC1Z(ctx)
+	err = b.store.ViewSync(ctx, "")
 	if err != nil {
 		return nil, err
 	}
 
-	err = store.ViewSync(ctx, "")
-	if err != nil {
-		return nil, err
-	}
-
-	sc := storecache.NewStoreCache(ctx, store)
-
-	r, err := sc.GetResource(ctx, &v2.ResourceId{
+	r, err := b.storeCache.GetResource(ctx, &v2.ResourceId{
 		ResourceType: resourceType,
 		Resource:     resourceID,
 	})
@@ -303,7 +244,7 @@ func (b BatonService) GetResourceById(ctx context.Context, resourceType, resourc
 		return nil, err
 	}
 
-	rt, err := sc.GetResourceType(ctx, resourceType)
+	rt, err := b.storeCache.GetResourceType(ctx, resourceType)
 	if err != nil {
 		return nil, err
 	}
@@ -353,21 +294,8 @@ type ResourceAccessListOutput struct {
 	PrincipalAccess []*ResourceAccessOutput `protobuf:"bytes,3,rep,name=access,proto3" json:"access,omitempty"`
 }
 
-func (b BatonService) GetAccessForResource(ctx context.Context, resourceType, resourceID string) (*ResourceAccessListOutput, error) {
-	m, err := manager.New(ctx, b.filePath)
-	if err != nil {
-		return nil, err
-	}
-	defer m.Close(ctx)
-
-	store, err := m.LoadC1Z(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	sc := storecache.NewStoreCache(ctx, store)
-
-	grantResource, err := sc.GetResource(ctx, &v2.ResourceId{
+func (b *BatonService) GetAccessForResource(ctx context.Context, resourceType, resourceID string) (*ResourceAccessListOutput, error) {
+	grantResource, err := b.storeCache.GetResource(ctx, &v2.ResourceId{
 		ResourceType: resourceType,
 		Resource:     resourceID,
 	})
@@ -375,7 +303,7 @@ func (b BatonService) GetAccessForResource(ctx context.Context, resourceType, re
 		return nil, err
 	}
 
-	grantResourceType, err := sc.GetResourceType(ctx, resourceType)
+	grantResourceType, err := b.storeCache.GetResourceType(ctx, resourceType)
 
 	if err != nil {
 		return nil, err
@@ -384,7 +312,7 @@ func (b BatonService) GetAccessForResource(ctx context.Context, resourceType, re
 	var resourceGrants []*v2.Grant
 	pageToken := ""
 	for {
-		grants, nextToken, err := listGrantsForResourceType(ctx, store, pageToken, resourceType)
+		grants, nextToken, err := listGrantsForResourceType(ctx, b.store, pageToken, resourceType)
 		if err != nil {
 			return nil, err
 		}
@@ -410,12 +338,12 @@ func (b BatonService) GetAccessForResource(ctx context.Context, resourceType, re
 		if rAccess, ok := grantsByResource[rKey]; ok {
 			accessOutput = rAccess
 		} else {
-			resource, err := sc.GetResource(ctx, g.Principal.Id)
+			resource, err := b.storeCache.GetResource(ctx, g.Principal.Id)
 			if err != nil {
 				return nil, err
 			}
 
-			rType, err := sc.GetResourceType(ctx, g.Principal.Id.ResourceType)
+			rType, err := b.storeCache.GetResourceType(ctx, g.Principal.Id.ResourceType)
 			if err != nil {
 				return nil, err
 			}
@@ -426,7 +354,7 @@ func (b BatonService) GetAccessForResource(ctx context.Context, resourceType, re
 			}
 		}
 
-		en, err := sc.GetEntitlement(ctx, g.Entitlement.Id)
+		en, err := b.storeCache.GetEntitlement(ctx, g.Entitlement.Id)
 		if err != nil {
 			return nil, err
 		}
