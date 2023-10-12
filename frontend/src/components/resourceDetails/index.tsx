@@ -37,19 +37,13 @@ export const ResourceDetailsModal = ({
 }) => {
   const theme = useTheme();
 
-  const handleClose = (event, reason) => {
-    if (reason && reason === "backdropClick") {
-      closeDetails();
-    }
-  };
-
   return (
     <ResourceDetailsDrawer
       theme={theme}
       variant="temporary"
       open={resourceDetails.resourceOpened || resourceDetails.entitlementOpened}
       anchor="right"
-      ModalProps={{ onClose: handleClose }}
+      ModalProps={{ hideBackdrop: true }}
     >
       <ModalHeader>
         <StyledDiv>

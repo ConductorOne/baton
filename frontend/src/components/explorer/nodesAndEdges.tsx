@@ -88,14 +88,14 @@ export const populateNodes = (
 export const populateNodesAndEdgesForGrants = (
   access,
   openEntitlementsDetails
-) => {
+  ) => {
   const edges: Edge[] = [];
   const nodes: Node[] = [
     {
-      id: `source:${access.resource.id.resource}`,
+      id: `source-${access.resource.id.resource}`,
       data: {
         label: access.resource.display_name,
-        sourceHandle: `${access.resource.id.resource}:handle`,
+        sourceHandle: `${access.resource.id.resource}-handle`,
         resourceTrait: access.resource_type?.traits
           ? access.resource_type.traits[0]
           : 0,
@@ -109,10 +109,10 @@ export const populateNodesAndEdgesForGrants = (
   access.access &&
     access.access.forEach((element, i) => {
       nodes.push({
-        id: `target:${element.resource.id.resource}`,
+        id: `target-${element.resource.id.resource}`,
         data: {
           label: element.resource.display_name,
-          targetHandle: `${element.resource.id.resource}:handle`,
+          targetHandle: `${element.resource.id.resource}-handle`,
           resourceType: element.resource_type.id,
           resourceTrait: element.resource_type.traits
             ? element.resource_type.traits[0]
@@ -123,11 +123,11 @@ export const populateNodesAndEdgesForGrants = (
       });
 
       edges.push({
-        id: `${access.resource.id.resource}:${element.resource.id.resource}`,
-        source: `source:${access.resource.id.resource}`,
-        target: `target:${element.resource.id.resource}`,
-        sourceHandle: `${access.resource.id.resource}:handle`,
-        targetHandle: `${element.resource.id.resource}:handle`,
+        id: `${access.resource.id.resource}-${element.resource.id.resource}`,
+        source: `source-${access.resource.id.resource}`,
+        target: `target-${element.resource.id.resource}`,
+        sourceHandle: `${access.resource.id.resource}-handle`,
+        targetHandle: `${element.resource.id.resource}-handle`,
         label: "placeholder",
         type: edgeType,
         style: EdgeStyle,
@@ -149,12 +149,12 @@ export const populateNodesAndEdgesForPrincipals = (
   const edges: Edge[] = [];
   const nodes: Node[] = [
     {
-      id: `source:${principal.id.resource}`,
+      id: `source-${principal.id.resource}`,
       data: {
         label: principal.display_name,
         resourceTrait: 1,
         resourceType: principal.id.resource_type,
-        sourceHandle: `${principal.id.resource}:handle`,
+        sourceHandle: `${principal.id.resource}-handle`,
       },
       position,
       type: nodeType.parent,
@@ -164,10 +164,10 @@ export const populateNodesAndEdgesForPrincipals = (
   access &&
     access.forEach((elem) => {
       nodes.push({
-        id: `target:${elem.resource.id.resource}`,
+        id: `target-${elem.resource.id.resource}`,
         data: {
           label: elem.resource.display_name,
-          targetHandle: `${elem.resource.id.resource}:handle`,
+          targetHandle: `${elem.resource.id.resource}-handle`,
           resourceType: elem.resource_type.id,
           resourceTrait: elem?.resource_type?.traits
             ? elem?.resource_type?.traits[0]
@@ -178,11 +178,11 @@ export const populateNodesAndEdgesForPrincipals = (
       });
 
       edges.push({
-        id: `${principal.id.resource}:${elem.resource.id.resource}`,
-        source: `source:${principal.id.resource}`,
-        target: `target:${elem.resource.id.resource}`,
-        sourceHandle: `${principal.id.resource}:handle`,
-        targetHandle: `${elem.resource.id.resource}:handle`,
+        id: `${principal.id.resource}-${elem.resource.id.resource}`,
+        source: `source-${principal.id.resource}`,
+        target: `target-${elem.resource.id.resource}`,
+        sourceHandle: `${principal.id.resource}-handle`,
+        targetHandle: `${elem.resource.id.resource}-handle`,
         label: "placeholder",
         type: edgeType,
         style: EdgeStyle,
