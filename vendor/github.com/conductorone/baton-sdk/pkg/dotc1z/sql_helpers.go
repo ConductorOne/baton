@@ -6,11 +6,12 @@ import (
 	"strconv"
 	"time"
 
-	c1zpb "github.com/conductorone/baton-sdk/pb/c1/c1z/v1"
-	"github.com/conductorone/baton-sdk/pkg/annotations"
 	"github.com/doug-martin/goqu/v9"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
+
+	c1zpb "github.com/conductorone/baton-sdk/pb/c1/c1z/v1"
+	"github.com/conductorone/baton-sdk/pkg/annotations"
 
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 )
@@ -57,6 +58,11 @@ type hasResourceListRequest interface {
 type hasEntitlementListRequest interface {
 	listRequest
 	GetEntitlement() *v2.Entitlement
+}
+
+type hasPrincipalIdListRequest interface {
+	listRequest
+	GetPrincipalId() *v2.ResourceId
 }
 
 type protoHasID interface {
@@ -114,22 +120,36 @@ func (c *C1File) listConnectorObjects(ctx context.Context, tableName string, req
 		if rt != "" {
 			q = q.Where(goqu.C("resource_type_id").Eq(rt))
 		}
-	} else if resourceIdReq, ok := req.(hasResourceIdListRequest); ok {
+	}
+
+	if resourceIdReq, ok := req.(hasResourceIdListRequest); ok {
 		r := resourceIdReq.GetResourceId()
 		if r != nil && r.Resource != "" {
 			q = q.Where(goqu.C("resource_id").Eq(r.Resource))
 			q = q.Where(goqu.C("resource_type_id").Eq(r.ResourceType))
 		}
-	} else if resourceReq, ok := req.(hasResourceListRequest); ok {
+	}
+
+	if resourceReq, ok := req.(hasResourceListRequest); ok {
 		r := resourceReq.GetResource()
 		if r != nil {
 			q = q.Where(goqu.C("resource_id").Eq(r.Id.Resource))
 			q = q.Where(goqu.C("resource_type_id").Eq(r.Id.ResourceType))
 		}
-	} else if entitlementReq, ok := req.(hasEntitlementListRequest); ok {
+	}
+
+	if entitlementReq, ok := req.(hasEntitlementListRequest); ok {
 		e := entitlementReq.GetEntitlement()
 		if e != nil {
 			q = q.Where(goqu.C("entitlement_id").Eq(e.Id))
+		}
+	}
+
+	if principalIdReq, ok := req.(hasPrincipalIdListRequest); ok {
+		p := principalIdReq.GetPrincipalId()
+		if p != nil {
+			q = q.Where(goqu.C("principal_resource_id").Eq(p.Resource))
+			q = q.Where(goqu.C("principal_resource_type_id").Eq(p.ResourceType))
 		}
 	}
 

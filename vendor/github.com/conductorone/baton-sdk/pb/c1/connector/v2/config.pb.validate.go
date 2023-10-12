@@ -496,9 +496,18 @@ func (m *Field) validate(all bool) error {
 
 	// no validation rules for Placeholder
 
-	switch m.Field.(type) {
-
+	switch v := m.Field.(type) {
 	case *Field_Str:
+		if v == nil {
+			err := FieldValidationError{
+				field:  "Field",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 
 		if all {
 			switch v := interface{}(m.GetStr()).(type) {
@@ -530,6 +539,16 @@ func (m *Field) validate(all bool) error {
 		}
 
 	case *Field_Select:
+		if v == nil {
+			err := FieldValidationError{
+				field:  "Field",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 
 		if all {
 			switch v := interface{}(m.GetSelect()).(type) {
@@ -561,6 +580,16 @@ func (m *Field) validate(all bool) error {
 		}
 
 	case *Field_Random:
+		if v == nil {
+			err := FieldValidationError{
+				field:  "Field",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 
 		if all {
 			switch v := interface{}(m.GetRandom()).(type) {
@@ -592,6 +621,16 @@ func (m *Field) validate(all bool) error {
 		}
 
 	case *Field_File:
+		if v == nil {
+			err := FieldValidationError{
+				field:  "Field",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 
 		if all {
 			switch v := interface{}(m.GetFile()).(type) {
@@ -622,6 +661,8 @@ func (m *Field) validate(all bool) error {
 			}
 		}
 
+	default:
+		_ = v // ensures v is used
 	}
 
 	if len(errors) > 0 {
