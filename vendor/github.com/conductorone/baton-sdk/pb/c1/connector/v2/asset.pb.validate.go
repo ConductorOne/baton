@@ -310,9 +310,20 @@ func (m *AssetServiceGetAssetResponse) validate(all bool) error {
 
 	var errors []error
 
-	switch m.Msg.(type) {
-
+	oneofMsgPresent := false
+	switch v := m.Msg.(type) {
 	case *AssetServiceGetAssetResponse_Metadata_:
+		if v == nil {
+			err := AssetServiceGetAssetResponseValidationError{
+				field:  "Msg",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+		oneofMsgPresent = true
 
 		if all {
 			switch v := interface{}(m.GetMetadata()).(type) {
@@ -344,6 +355,17 @@ func (m *AssetServiceGetAssetResponse) validate(all bool) error {
 		}
 
 	case *AssetServiceGetAssetResponse_Data_:
+		if v == nil {
+			err := AssetServiceGetAssetResponseValidationError{
+				field:  "Msg",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+		oneofMsgPresent = true
 
 		if all {
 			switch v := interface{}(m.GetData()).(type) {
@@ -375,6 +397,9 @@ func (m *AssetServiceGetAssetResponse) validate(all bool) error {
 		}
 
 	default:
+		_ = v // ensures v is used
+	}
+	if !oneofMsgPresent {
 		err := AssetServiceGetAssetResponseValidationError{
 			field:  "Msg",
 			reason: "value is required",
@@ -383,7 +408,6 @@ func (m *AssetServiceGetAssetResponse) validate(all bool) error {
 			return err
 		}
 		errors = append(errors, err)
-
 	}
 
 	if len(errors) > 0 {

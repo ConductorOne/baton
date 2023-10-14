@@ -69,12 +69,12 @@ func (c *C1File) ListGrants(ctx context.Context, request *v2.GrantsServiceListGr
 
 	ret := make([]*v2.Grant, 0, len(objs))
 	for _, o := range objs {
-		en := &v2.Grant{}
-		err = proto.Unmarshal(o, en)
+		g := &v2.Grant{}
+		err = proto.Unmarshal(o, g)
 		if err != nil {
 			return nil, err
 		}
-		ret = append(ret, en)
+		ret = append(ret, g)
 	}
 
 	return &v2.GrantsServiceListGrantsResponse{
@@ -99,6 +99,33 @@ func (c *C1File) GetGrant(ctx context.Context, request *reader_v2.GrantsReaderSe
 }
 
 func (c *C1File) ListGrantsForEntitlement(
+	ctx context.Context,
+	request *reader_v2.GrantsReaderServiceListGrantsForEntitlementRequest,
+) (*reader_v2.GrantsReaderServiceListGrantsForEntitlementResponse, error) {
+	ctxzap.Extract(ctx).Debug("listing grants for entitlement")
+
+	objs, nextPageToken, err := c.listConnectorObjects(ctx, grants.Name(), request)
+	if err != nil {
+		return nil, err
+	}
+
+	ret := make([]*v2.Grant, 0, len(objs))
+	for _, o := range objs {
+		en := &v2.Grant{}
+		err = proto.Unmarshal(o, en)
+		if err != nil {
+			return nil, err
+		}
+		ret = append(ret, en)
+	}
+
+	return &reader_v2.GrantsReaderServiceListGrantsForEntitlementResponse{
+		List:          ret,
+		NextPageToken: nextPageToken,
+	}, nil
+}
+
+func (c *C1File) ListGrantsForPrincipal(
 	ctx context.Context,
 	request *reader_v2.GrantsReaderServiceListGrantsForEntitlementRequest,
 ) (*reader_v2.GrantsReaderServiceListGrantsForEntitlementResponse, error) {

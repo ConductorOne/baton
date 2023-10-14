@@ -3,7 +3,7 @@ module github.com/conductorone/baton
 go 1.20
 
 require (
-	github.com/conductorone/baton-sdk v0.1.0
+	github.com/conductorone/baton-sdk v0.1.7
 	github.com/envoyproxy/protoc-gen-validate v1.0.1
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/pterm/pterm v0.12.60
