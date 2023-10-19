@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/conductorone/baton-sdk/pkg/dotc1z/manager"
 	"github.com/conductorone/baton-sdk/pkg/logging"
@@ -56,6 +57,6 @@ func runOptimizeDb(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Println("Optimized C1Z successfully.")
+	_, _ = fmt.Fprintf(os.Stdout, "Optimized C1Z successfully.")
 	return nil
 }
