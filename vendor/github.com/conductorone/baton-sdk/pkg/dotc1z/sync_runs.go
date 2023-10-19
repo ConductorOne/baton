@@ -424,6 +424,13 @@ func (c *C1File) Cleanup(ctx context.Context) error {
 		l.Info("Removed old sync data.", zap.String("sync_date", ret[i].EndedAt.Format(time.RFC3339)), zap.String("sync_id", ret[i].ID))
 	}
 
+	err = c.Vacuum(ctx)
+	if err != nil {
+		return err
+	}
+
+	c.dbUpdated = true
+
 	return nil
 }
 
@@ -453,6 +460,23 @@ func (c *C1File) DeleteSyncRun(ctx context.Context, syncID string) error {
 			return err
 		}
 	}
+	c.dbUpdated = true
+
+	return nil
+}
+
+// Vacuum runs a VACUUM on the database to reclaim space.
+func (c *C1File) Vacuum(ctx context.Context) error {
+	err := c.validateDb(ctx)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.rawDb.ExecContext(ctx, "VACUUM")
+	if err != nil {
+		return err
+	}
+
 	c.dbUpdated = true
 
 	return nil

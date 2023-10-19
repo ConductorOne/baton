@@ -21,10 +21,19 @@ type C1File struct {
 	outputFilePath string
 	dbFilePath     string
 	dbUpdated      bool
+	tempDir        string
+}
+
+type C1FOption func(*C1File)
+
+func WithC1FTmpDir(tempDir string) C1FOption {
+	return func(o *C1File) {
+		o.tempDir = tempDir
+	}
 }
 
 // Returns a C1File instance for the given db filepath.
-func NewC1File(ctx context.Context, dbFilePath string) (*C1File, error) {
+func NewC1File(ctx context.Context, dbFilePath string, opts ...C1FOption) (*C1File, error) {
 	rawDB, err := sql.Open("sqlite", dbFilePath)
 	if err != nil {
 		return nil, err
@@ -37,6 +46,10 @@ func NewC1File(ctx context.Context, dbFilePath string) (*C1File, error) {
 		dbFilePath: dbFilePath,
 	}
 
+	for _, opt := range opts {
+		opt(c1File)
+	}
+
 	err = c1File.validateDb(ctx)
 	if err != nil {
 		return nil, err
@@ -45,9 +58,25 @@ func NewC1File(ctx context.Context, dbFilePath string) (*C1File, error) {
 	return c1File, nil
 }
 
+type c1zOptions struct {
+	tmpDir string
+}
+type C1ZOption func(*c1zOptions)
+
+func WithTmpDir(tmpDir string) C1ZOption {
+	return func(o *c1zOptions) {
+		o.tmpDir = tmpDir
+	}
+}
+
 // Returns a new C1File instance with its state stored at the provided filename.
-func NewC1ZFile(ctx context.Context, outputFilePath string) (*C1File, error) {
-	dbFilePath, err := loadC1z(outputFilePath)
+func NewC1ZFile(ctx context.Context, outputFilePath string, opts ...C1ZOption) (*C1File, error) {
+	options := &c1zOptions{}
+	for _, opt := range opts {
+		opt(options)
+	}
+
+	dbFilePath, err := loadC1z(outputFilePath, options.tmpDir)
 	if err != nil {
 		return nil, err
 	}

@@ -18,10 +18,19 @@ type s3Manager struct {
 	client   *us3.S3Client
 	fileName string
 	tmpFile  string
+	tmpDir   string
+}
+
+type Option func(*s3Manager)
+
+func WithTmpDir(tmpDir string) Option {
+	return func(o *s3Manager) {
+		o.tmpDir = tmpDir
+	}
 }
 
 func (s *s3Manager) copyToTempFile(ctx context.Context, r io.Reader) error {
-	f, err := os.CreateTemp("", "sync-*.c1z")
+	f, err := os.CreateTemp(s.tmpDir, "sync-*.c1z")
 	if err != nil {
 		return err
 	}
@@ -94,7 +103,7 @@ func (s *s3Manager) LoadC1Z(ctx context.Context) (*dotc1z.C1File, error) {
 		return nil, err
 	}
 
-	return dotc1z.NewC1ZFile(ctx, s.tmpFile)
+	return dotc1z.NewC1ZFile(ctx, s.tmpFile, dotc1z.WithTmpDir(s.tmpDir))
 }
 
 // SaveC1Z saves a file to the AWS S3 bucket.
@@ -130,7 +139,7 @@ func (s *s3Manager) Close(ctx context.Context) error {
 }
 
 // NewS3Manager returns a new `s3Manager` that uses the given `s3Uri`.
-func NewS3Manager(ctx context.Context, s3Uri string) (*s3Manager, error) {
+func NewS3Manager(ctx context.Context, s3Uri string, opts ...Option) (*s3Manager, error) {
 	l := ctxzap.Extract(ctx)
 
 	fileName, s3Client, err := us3.NewClientFromURI(ctx, s3Uri)
@@ -141,6 +150,10 @@ func NewS3Manager(ctx context.Context, s3Uri string) (*s3Manager, error) {
 	manager := &s3Manager{
 		client:   s3Client,
 		fileName: fileName,
+	}
+
+	for _, opt := range opts {
+		opt(manager)
 	}
 
 	l.Debug("created new s3 file manager", zap.String("filename", fileName))

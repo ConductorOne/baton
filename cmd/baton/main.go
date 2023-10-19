@@ -33,6 +33,7 @@ func main() {
 	cliCmd.AddCommand(accessCmd())
 	cliCmd.AddCommand(dumpDBCmd())
 	cliCmd.AddCommand(syncsCmd())
+	cliCmd.AddCommand(optimizeDb())
 
 	err := cliCmd.ExecuteContext(ctx)
 	if err != nil {

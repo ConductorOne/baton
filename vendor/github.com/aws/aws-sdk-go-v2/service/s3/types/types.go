@@ -579,7 +579,7 @@ type DefaultRetention struct {
 // Container for the objects to delete.
 type Delete struct {
 
-	// The objects to delete.
+	// The object to delete.
 	//
 	// This member is required.
 	Objects []ObjectIdentifier
@@ -594,9 +594,10 @@ type Delete struct {
 // Information about the deleted object.
 type DeletedObject struct {
 
-	// Specifies whether the versioned object that was permanently deleted was (true)
-	// or was not (false) a delete marker. In a simple DELETE, this header indicates
-	// whether (true) or not (false) a delete marker was created.
+	// Indicates whether the specified object version that was permanently deleted was
+	// (true) or was not (false) a delete marker before deletion. In a simple DELETE,
+	// this header indicates whether (true) or not (false) the current version of the
+	// object is a delete marker.
 	DeleteMarker bool
 
 	// The version ID of the delete marker created as a result of the DELETE
@@ -721,7 +722,7 @@ type Encryption struct {
 	// If the encryption type is aws:kms , this optional value specifies the ID of the
 	// symmetric encryption customer managed key to use for encryption of job results.
 	// Amazon S3 only supports symmetric encryption KMS keys. For more information, see
-	// Asymmetric keys in Amazon Web Services KMS (https://docs.aws.amazon.com/kms/latest/developerguide/symmetric-asymmetric.html)
+	// Asymmetric keys in KMS (https://docs.aws.amazon.com/kms/latest/developerguide/symmetric-asymmetric.html)
 	// in the Amazon Web Services Key Management Service Developer Guide.
 	KMSKeyId *string
 
@@ -1806,10 +1807,10 @@ type LoggingEnabled struct {
 // A metadata key-value pair to store with an object.
 type MetadataEntry struct {
 
-	// Name of the Object.
+	// Name of the object.
 	Name *string
 
-	// Value of the Object.
+	// Value of the object.
 	Value *string
 
 	noSmithyDocumentSerde
@@ -2070,6 +2071,13 @@ type Object struct {
 	// The owner of the object
 	Owner *Owner
 
+	// Specifies the restoration status of an object. Objects in certain storage
+	// classes must be restored before they can be retrieved. For more information
+	// about these storage classes and how to work with archived objects, see Working
+	// with archived objects (https://docs.aws.amazon.com/AmazonS3/latest/userguide/archived-objects.html)
+	// in the Amazon S3 User Guide.
+	RestoreStatus *RestoreStatus
+
 	// Size in bytes of the object
 	Size int64
 
@@ -2207,6 +2215,13 @@ type ObjectVersion struct {
 
 	// Specifies the owner of the object.
 	Owner *Owner
+
+	// Specifies the restoration status of an object. Objects in certain storage
+	// classes must be restored before they can be retrieved. For more information
+	// about these storage classes and how to work with archived objects, see Working
+	// with archived objects (https://docs.aws.amazon.com/AmazonS3/latest/userguide/archived-objects.html)
+	// in the Amazon S3 User Guide.
+	RestoreStatus *RestoreStatus
 
 	// Size in bytes of the object.
 	Size int64
@@ -2770,6 +2785,31 @@ type RestoreRequest struct {
 	noSmithyDocumentSerde
 }
 
+// Specifies the restoration status of an object. Objects in certain storage
+// classes must be restored before they can be retrieved. For more information
+// about these storage classes and how to work with archived objects, see Working
+// with archived objects (https://docs.aws.amazon.com/AmazonS3/latest/userguide/archived-objects.html)
+// in the Amazon S3 User Guide.
+type RestoreStatus struct {
+
+	// Specifies whether the object is currently being restored. If the object
+	// restoration is in progress, the header returns the value TRUE . For example:
+	// x-amz-optional-object-attributes: IsRestoreInProgress="true" If the object
+	// restoration has completed, the header returns the value FALSE . For example:
+	// x-amz-optional-object-attributes: IsRestoreInProgress="false",
+	// RestoreExpiryDate="2012-12-21T00:00:00.000Z" If the object hasn't been restored,
+	// there is no header response.
+	IsRestoreInProgress bool
+
+	// Indicates when the restored copy will expire. This value is populated only if
+	// the object has already been restored. For example:
+	// x-amz-optional-object-attributes: IsRestoreInProgress="false",
+	// RestoreExpiryDate="2012-12-21T00:00:00.000Z"
+	RestoreExpiryDate *time.Time
+
+	noSmithyDocumentSerde
+}
+
 // Specifies the redirect behavior and when a redirect is applied. For more
 // information about routing rules, see Configuring advanced conditional redirects (https://docs.aws.amazon.com/AmazonS3/latest/dev/how-to-page-redirect.html#advanced-conditional-redirects)
 // in the Amazon S3 User Guide.
@@ -2958,17 +2998,17 @@ type ServerSideEncryptionByDefault struct {
 
 	// Amazon Web Services Key Management Service (KMS) customer Amazon Web Services
 	// KMS key ID to use for the default encryption. This parameter is allowed if and
-	// only if SSEAlgorithm is set to aws:kms . You can specify the key ID or the
-	// Amazon Resource Name (ARN) of the KMS key. If you use a key ID, you can run into
-	// a LogDestination undeliverable error when creating a VPC flow log. If you are
-	// using encryption with cross-account or Amazon Web Services service operations
-	// you must use a fully qualified KMS key ARN. For more information, see Using
-	// encryption for cross-account operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html#bucket-encryption-update-bucket-policy)
-	// .
+	// only if SSEAlgorithm is set to aws:kms . You can specify the key ID, key alias,
+	// or the Amazon Resource Name (ARN) of the KMS key.
 	//   - Key ID: 1234abcd-12ab-34cd-56ef-1234567890ab
 	//   - Key ARN:
 	//   arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab
-	// Amazon S3 only supports symmetric encryption KMS keys. For more information,
+	//   - Key Alias: alias/alias-name
+	// If you use a key ID, you can run into a LogDestination undeliverable error when
+	// creating a VPC flow log. If you are using encryption with cross-account or
+	// Amazon Web Services service operations you must use a fully qualified KMS key
+	// ARN. For more information, see Using encryption for cross-account operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html#bucket-encryption-update-bucket-policy)
+	// . Amazon S3 only supports symmetric encryption KMS keys. For more information,
 	// see Asymmetric keys in Amazon Web Services KMS (https://docs.aws.amazon.com/kms/latest/developerguide/symmetric-asymmetric.html)
 	// in the Amazon Web Services Key Management Service Developer Guide.
 	KMSMasterKeyID *string
@@ -3034,9 +3074,8 @@ type SourceSelectionCriteria struct {
 // Specifies the use of SSE-KMS to encrypt delivered inventory reports.
 type SSEKMS struct {
 
-	// Specifies the ID of the Amazon Web Services Key Management Service (Amazon Web
-	// Services KMS) symmetric encryption customer managed key to use for encrypting
-	// inventory reports.
+	// Specifies the ID of the Key Management Service (KMS) symmetric encryption
+	// customer managed key to use for encrypting inventory reports.
 	//
 	// This member is required.
 	KeyId *string
