@@ -17,15 +17,41 @@ type Manager interface {
 	Close(ctx context.Context) error
 }
 
+type managerOptions struct {
+	tmpDir string
+}
+
+type ManagerOption func(*managerOptions)
+
+func WithTmpDir(tmpDir string) ManagerOption {
+	return func(o *managerOptions) {
+		o.tmpDir = tmpDir
+	}
+}
+
 // Given a file path, return a Manager that can read and write files to that path.
 //
 // The first thing we do is check if the file path starts with "s3://". If it does, we return a new
 // S3Manager. If it doesn't, we return a new LocalManager.
-func New(ctx context.Context, filePath string) (Manager, error) {
+func New(ctx context.Context, filePath string, opts ...ManagerOption) (Manager, error) {
+	options := &managerOptions{}
+
+	for _, opt := range opts {
+		opt(options)
+	}
+
 	switch {
 	case strings.HasPrefix(filePath, "s3://"):
-		return s3.NewS3Manager(ctx, filePath)
+		var s3Opts []s3.Option
+		if options.tmpDir != "" {
+			s3Opts = append(s3Opts, s3.WithTmpDir(options.tmpDir))
+		}
+		return s3.NewS3Manager(ctx, filePath, s3Opts...)
 	default:
-		return local.New(ctx, filePath)
+		var localOpts []local.Option
+		if options.tmpDir != "" {
+			localOpts = append(localOpts, local.WithTmpDir(options.tmpDir))
+		}
+		return local.New(ctx, filePath, localOpts...)
 	}
 }

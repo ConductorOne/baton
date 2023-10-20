@@ -55,7 +55,7 @@ func (c *C1File) CloneSync(ctx context.Context, outPath string, syncID string) e
 		return fmt.Errorf("output path (%s) must not exist for cloning to proceed", outPath)
 	}
 
-	tmpDir, err := os.MkdirTemp("", "c1zclone")
+	tmpDir, err := os.MkdirTemp(c.tempDir, "c1zclone")
 	if err != nil {
 		return err
 	}
