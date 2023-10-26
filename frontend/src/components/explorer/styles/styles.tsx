@@ -8,6 +8,7 @@ export const TreeWrapper = styled("div")(() => ({
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
+  padding: "20px"
 }));
 
 export const ResourcesListWrapper = styled(List)(() => ({
@@ -32,6 +33,7 @@ export const ResourceLabel = styled(ListItemButton)(() => ({
   fontSize: "14px",
   padding: "8px 16px",
   marginBottom: "2px",
+  marginRight: "0px",
   "&:hover": {
     backgroundColor: "rgba(255, 255, 255, 0.10)",
   },
@@ -66,13 +68,14 @@ export const NodeWrapper = styled("div")(() => ({
 }));
 
 export const IconWrapper = styled("div")(({ theme }) => ({
-  backgroundColor: theme.palette.primary.main,
+  backgroundColor: theme.palette.primary.contrastText,
   borderRadius: "1000px",
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
   marginRight: "10px",
   padding: "6px",
+  border: "1px solid #E0E0E1",
 }));
 
 export const EmptyResourceLabel = styled(Typography)(() => ({

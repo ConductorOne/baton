@@ -1,25 +1,25 @@
 import React from "react";
 import { SvgIcon } from "@mui/material";
-import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
-import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined";
-import AppsOutlinedIcon from "@mui/icons-material/AppsOutlined";
+import PersonIcon from "@mui/icons-material/Person";
+import GroupsIcon from "@mui/icons-material/Groups";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
-import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
 import LibraryBooksOutlinedIcon from "@mui/icons-material/LibraryBooksOutlined";
+import WidgetsIcon from "@mui/icons-material/Widgets";
+import BadgeIcon from "@mui/icons-material/Badge";
 
 export const User = ({ color, size }) => {
-  return <PersonOutlineOutlinedIcon color={color} fontSize={size} />;
+  return <PersonIcon sx={{ color: "#6F6F71" }} fontSize={size} />;
 };
 
 export const Group = ({ color, size }) => {
-  return <PeopleAltOutlinedIcon color={color} fontSize={size} />;
+  return <GroupsIcon sx={{ color: "#342383"}} fontSize={size} />;
 };
 
 export const Apps = ({ color, size }) => {
-  return <AppsOutlinedIcon color={color} fontSize={size} />;
+  return <WidgetsIcon sx={{ color: "#7F1CB2" }} fontSize={size} />;
 };
 
 export const Back = ({ color, size }) => {
@@ -35,7 +35,7 @@ export const DarkMode = ({ color, size }) => {
 };
 
 export const Role = ({ color, size }) => {
-  return <AdminPanelSettingsOutlinedIcon color={color} fontSize={size} />;
+  return <BadgeIcon sx={{ color: "#A4198D" }} fontSize={size} />;
 };
 
 export const Default = ({ color, size }) => {

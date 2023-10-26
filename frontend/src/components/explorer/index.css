@@ -4,7 +4,6 @@
   padding: 16px 16px 16px 12px;
   align-items: center;
   border-radius: 12px;
-  border: none;
   max-width: 300px;
   min-width: 200px;
 }
@@ -23,9 +22,6 @@
   color: rgba(255, 255, 255, 0.70);
 }
 
-.react-flow__node.selectable.selected .iconWrapper {
-  background-color: rgba(255, 255, 255, 0.3);
-}
 
 .react-flow__handle {
   background: rgba(115, 189, 81, 1)!important

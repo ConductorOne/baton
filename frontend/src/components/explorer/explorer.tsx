@@ -8,7 +8,7 @@ import ReactFlow, {
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { CustomEdge } from "./components/customEdge";
-import { ChildNode, ParentNode } from "./components/customNode";
+import { ChildNode, ExpandableGrantNode, ParentNode } from "./components/customNode";
 import { ResourcesSidebar } from "./components/resourcesSidebar";
 import { useNavigate, useParams } from "react-router-dom";
 import { TreeWrapper } from "./styles/styles";
@@ -25,12 +25,14 @@ type ResourceDetailsState = {
   resourceOpened?: boolean;
   entitlementOpened?: boolean;
   resource?: any;
+  nodeId?: string;
 };
 
 const edgeTypes = { customEdge: CustomEdge };
 const nodeTypes = {
   parent: ParentNode,
   child: ChildNode,
+  expandable: ExpandableGrantNode,
 };
 
 const Explorer = ({ resourceList, closeResourceList }) => {
@@ -77,6 +79,7 @@ const Explorer = ({ resourceList, closeResourceList }) => {
     setResourceDetailsOpen({
       resourceOpened: true,
       resource: resourceDetails,
+      nodeId: nodeId,
     });
   };
 

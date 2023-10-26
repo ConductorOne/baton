@@ -366,10 +366,10 @@ func (m *EntitlementsServiceListEntitlementsRequest) validate(all bool) error {
 
 	if m.GetPageToken() != "" {
 
-		if l := len(m.GetPageToken()); l < 1 || l > 2048 {
+		if l := len(m.GetPageToken()); l < 1 || l > 4096 {
 			err := EntitlementsServiceListEntitlementsRequestValidationError{
 				field:  "PageToken",
-				reason: "value length must be between 1 and 2048 bytes, inclusive",
+				reason: "value length must be between 1 and 4096 bytes, inclusive",
 			}
 			if !all {
 				return err
@@ -555,10 +555,10 @@ func (m *EntitlementsServiceListEntitlementsResponse) validate(all bool) error {
 
 	if m.GetNextPageToken() != "" {
 
-		if l := len(m.GetNextPageToken()); l < 1 || l > 2048 {
+		if l := len(m.GetNextPageToken()); l < 1 || l > 4096 {
 			err := EntitlementsServiceListEntitlementsResponseValidationError{
 				field:  "NextPageToken",
-				reason: "value length must be between 1 and 2048 bytes, inclusive",
+				reason: "value length must be between 1 and 4096 bytes, inclusive",
 			}
 			if !all {
 				return err

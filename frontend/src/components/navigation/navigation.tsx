@@ -4,6 +4,7 @@ import { BatonLogo, ResourceTypeIcon } from "../icons/icons";
 import { Tooltip, useTheme } from "@mui/material";
 import pluralize from "pluralize";
 import { Logo, StyledDrawer, CloseButton } from "./styles";
+import { IconWrapper } from "../explorer/styles/styles";
 
 export const Navigation = ({ openResourceList }) => {
   const theme = useTheme();
@@ -36,6 +37,7 @@ export const Navigation = ({ openResourceList }) => {
               <CloseButton
                 onClick={() => openResourceList(type.resource_type.id)}
               >
+                <IconWrapper sx={{marginRight: 0}}>
                 <ResourceTypeIcon
                   size="medium"
                   resourceTrait={
@@ -45,6 +47,7 @@ export const Navigation = ({ openResourceList }) => {
                   }
                   color="icon"
                 />
+                </IconWrapper>
               </CloseButton>
             </Tooltip>
           ))}

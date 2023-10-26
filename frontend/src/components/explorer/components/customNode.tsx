@@ -12,6 +12,14 @@ export const ChildNode = ({ data }) => (
   </>
 );
 
+export const ExpandableGrantNode = ({ data }) => (
+  <>
+    <Handle type="target" position={Position.Left} id={data.targetHandle} />
+    <CustomNode data={data} />
+    <Handle type="source" position={Position.Right} id={data.sourceHandle} />
+  </>
+);
+
 export const ParentNode = ({ data }) => (
   <>
     <CustomNode data={data} />

@@ -40,10 +40,8 @@ export const ResourceDetailsModal = ({
   return (
     <ResourceDetailsDrawer
       theme={theme}
-      variant="temporary"
-      open={resourceDetails.resourceOpened || resourceDetails.entitlementOpened}
+      variant="permanent"
       anchor="right"
-      ModalProps={{ hideBackdrop: true }}
     >
       <ModalHeader>
         <StyledDiv>

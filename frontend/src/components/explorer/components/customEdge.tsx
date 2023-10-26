@@ -74,7 +74,7 @@ export const CustomEdge = ({
   targetY,
   sourcePosition,
   targetPosition,
-  style = {},
+  style,
   markerEnd,
   data,
 }: EdgeProps) => {
@@ -87,9 +87,14 @@ export const CustomEdge = ({
     targetPosition,
   });
 
+  const baseStyle = {
+    ...data.style,
+    stroke: "rgba(115, 189, 81, 1)",
+  };
+
   return (
     <>
-      <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} id={id} />
+      <BaseEdge path={edgePath} markerEnd={markerEnd} style={baseStyle} id={id} />
       <EdgeLabelRenderer>
         <div
           style={{
