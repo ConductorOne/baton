@@ -21,6 +21,9 @@ func explorerCmd() *cobra.Command {
 	addResourceTypeFlag(cmd)
 	addSyncIDFlag(cmd)
 
+	cmd.Flags().Bool("dev", false, "Runs the frontend in development mode")
+	cmd.Flags().MarkHidden("dev")
+
 	return cmd
 }
 
@@ -79,7 +82,7 @@ func startExplorerAPI(cmd *cobra.Command) {
 
 	store, err := m.LoadC1Z(ctx)
 	if err != nil {
-		log.Fatal("error loading c1z", err)
+		log.Fatal("error loading c1z", err) //nolint:gocritic // reason: in this case store is nil
 	}
 	defer store.Close()
 
@@ -91,8 +94,17 @@ func startExplorerAPI(cmd *cobra.Command) {
 }
 
 func runExplorer(cmd *cobra.Command, args []string) error {
+	isDev, err := cmd.Flags().GetBool("dev")
+	if err != nil {
+		return fmt.Errorf("error getting dev flag: %w", err)
+	}
+
+	if !isDev {
+		startExplorerAPI(cmd)
+	}
+
 	go startExplorerAPI(cmd)
-	err := startFrontendServer()
+	err = startFrontendServer()
 	if err != nil {
 		log.Fatal(err)
 	}
