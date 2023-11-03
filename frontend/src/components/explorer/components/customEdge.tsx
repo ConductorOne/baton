@@ -7,13 +7,13 @@ import {
 } from "reactflow";
 import { FormControl, Select } from "@mui/material";
 import MenuItem from "@mui/material/MenuItem";
-import "../index.css";
 import {
   EntitlementNumberLabel,
   SelectedEntitlementWrapper,
 } from "../styles/styles";
+import { colors } from "../../../style/colors"
 
-const EntitlementsMenu = ({ entitlements, openEntitlementsDetails }) => {
+const EntitlementsMenu = ({ entitlements, openEntitlementsDetails, opacity }) => {
   const [entitlement, setEntitlement] = React.useState<string>(
     entitlements[0].slug
   );
@@ -45,7 +45,7 @@ const EntitlementsMenu = ({ entitlements, openEntitlementsDetails }) => {
         MenuProps={multipleEntitlements ? {} : { open: false }}
         disableUnderline
         renderValue={() => (
-          <SelectedEntitlementWrapper>
+          <SelectedEntitlementWrapper sx={opacity}>
             {multipleEntitlements && (
               <EntitlementNumberLabel>
                 {entitlements.length}
@@ -89,7 +89,7 @@ export const CustomEdge = ({
 
   const baseStyle = {
     ...data.style,
-    stroke: "rgba(115, 189, 81, 1)",
+    stroke: colors.batonGreen600,
   };
 
   return (
@@ -107,6 +107,7 @@ export const CustomEdge = ({
             <EntitlementsMenu
               entitlements={data.entitlements}
               openEntitlementsDetails={data.openEntitlementsDetails}
+              opacity={data.style}
             />
           )}
         </div>

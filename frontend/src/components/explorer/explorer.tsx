@@ -5,10 +5,17 @@ import ReactFlow, {
   useNodesInitialized,
   useNodesState,
   useReactFlow,
+  getOutgoers,
+  getIncomers,
+  getConnectedEdges,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { CustomEdge } from "./components/customEdge";
-import { ChildNode, ExpandableGrantNode, ParentNode } from "./components/customNode";
+import {
+  ChildNode,
+  ExpandableGrantNode,
+  ParentNode,
+} from "./components/customNode";
 import { ResourcesSidebar } from "./components/resourcesSidebar";
 import { useNavigate, useParams } from "react-router-dom";
 import { TreeWrapper } from "./styles/styles";
@@ -20,12 +27,13 @@ import {
   fetchResourceDetails,
 } from "./api";
 import { populateNodes } from "./nodesAndEdges";
+import { useTheme } from "@mui/material";
+import { colors } from "../../style/colors";
 
 type ResourceDetailsState = {
   resourceOpened?: boolean;
   entitlementOpened?: boolean;
   resource?: any;
-  nodeId?: string;
 };
 
 const edgeTypes = { customEdge: CustomEdge };
@@ -37,12 +45,13 @@ const nodeTypes = {
 
 const Explorer = ({ resourceList, closeResourceList }) => {
   const navigate = useNavigate();
+  const theme = useTheme()
   const reactFlowInstance = useReactFlow();
   const nodesInitialized = useNodesInitialized();
   const { id: resourceId } = useParams();
   const { type: resourceType } = useParams();
-  const [nodes, setNodes] = useNodesState([]);
-  const [edges, setEdges] = useEdgesState([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [resourceDetails, setResourceDetailsOpen] =
     useState<ResourceDetailsState>({
       resourceOpened: false,
@@ -74,16 +83,82 @@ const Explorer = ({ resourceList, closeResourceList }) => {
     });
   };
 
-  const openResourceDetails = async (resourceType: string, nodeId: string) => {
-    const resourceDetails = await fetchResourceDetails(resourceType, nodeId);
+  const openResourceDetails = async (
+    resourceType: string,
+    principalId: string,
+    currentNode
+  ) => {
+    const resourceDetails = await fetchResourceDetails(
+      resourceType,
+      principalId
+    );
     setResourceDetailsOpen({
       resourceOpened: true,
       resource: resourceDetails,
-      nodeId: nodeId,
     });
+
+    const connectedEdges = getConnectedEdges([currentNode], edges);
+
+    if (connectedEdges.length > 0) {
+      connectedEdges.forEach((edge) => {
+        edge.data.style = { opacity: 0.3 };
+      });
+    }
+
+    edges &&
+      edges.forEach((edge) => {
+        edge.data.style = { opacity: 0.3 };
+        if (connectedEdges.includes(edge)) {
+          edge.data.style = { opacity: 1 };
+        }
+      });
+
+    const outgoers = getOutgoers(currentNode, nodes, edges);
+    const incomers = getIncomers(currentNode, nodes, edges);
+
+    const connectedNodes = [];
+    if (outgoers.length > 0) {
+      connectedNodes.push(...outgoers);
+    }
+
+    if (incomers.length > 0) {
+      connectedNodes.push(...incomers);
+    }
+
+    setNodes((nds) =>
+      nds.map((node) => {
+        node.style = { opacity: "0.3" };
+
+        if (connectedNodes.includes(node)) {
+          node.style = {
+            border: `1.2px solid ${
+              theme.palette.mode === "light" ? colors.batonGreen600 : colors.batonGreen500
+            }`,
+            borderRadius: "12px",
+            opacity: 1,
+          };
+        }
+        if (node.selected) {
+          node.style = { opacity: 1 };
+        }
+        return node;
+      })
+    );
   };
 
   const closeResourceDetails = () => {
+    edges.forEach((e) => {
+      e.data.style = {};
+    });
+
+    setNodes((nds) =>
+      nds.map((node) => {
+        node.style = { opacity: 1 };
+        node.selected = false;
+        return node;
+      })
+    );
+
     setResourceDetailsOpen({
       resourceOpened: false,
       entitlementOpened: false,
@@ -139,6 +214,8 @@ const Explorer = ({ resourceList, closeResourceList }) => {
           <ReactFlow
             nodes={nodes}
             edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
             edgeTypes={edgeTypes}
             nodeTypes={nodeTypes}
             onEdgeClick={(e, edge) =>
@@ -147,7 +224,8 @@ const Explorer = ({ resourceList, closeResourceList }) => {
             onNodeClick={(e, node) =>
               openResourceDetails(
                 node.data.resourceType,
-                extractPrincipalId(node.id)
+                extractPrincipalId(node.id),
+                node
               )
             }
             fitView

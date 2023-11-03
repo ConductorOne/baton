@@ -1,6 +1,6 @@
 import React, { Fragment } from "react";
 import { Back } from "../../icons/icons";
-import { Typography, useTheme } from "@mui/material";
+import { Divider, Typography, useTheme } from "@mui/material";
 import pluralize from "pluralize";
 import { normalizeString } from "../../../common/helpers";
 import {
@@ -20,10 +20,10 @@ export const ResourcesSidebar = ({
 }) => {
   const resources = useResources();
   const theme = useTheme();
-  const [selectedIndex, setSelectedIndex] = React.useState(null);
+  const [selectedResourceId, setSelectedResourceId] = React.useState(null);
 
-  const handleListItemClick = async (index: number, resource) => {
-    setSelectedIndex(index);
+  const handleListItemClick = async (resource) => {
+    setSelectedResourceId(resource.resource.id.resource);
     await openTreeView(resource);
   };
 
@@ -32,21 +32,22 @@ export const ResourcesSidebar = ({
       {resourceType && (
         <Sidebar theme={theme} variant="permanent">
           <SidebarHeader>
-            <Typography variant="h6" color="primary.contrastText">
+            <Typography variant="h5" color="primary.contrastText">
               {pluralize(normalizeString(resourceType, true))}
             </Typography>
             <StyledButton onClick={closeResourceList}>
-              <Back color="icon" size="medium" />
+              <Back />
             </StyledButton>
           </SidebarHeader>
+          <Divider />
           <ResourcesListWrapper>
             {resources.mappedResources[resourceType] ? (
-              resources.mappedResources[resourceType].map((resource, i) => (
+              resources.mappedResources[resourceType].map(resource => (
                 <ResourceLabel
                   disableGutters
                   key={resource.resource.id.resource}
-                  selected={selectedIndex === i}
-                  onClick={async () => await handleListItemClick(i, resource)}
+                  selected={selectedResourceId === resource.resource.id.resource}
+                  onClick={async () => await handleListItemClick(resource)}
                 >
                   <Typography color="primary.contrastText">
                     {resource.resource.display_name}

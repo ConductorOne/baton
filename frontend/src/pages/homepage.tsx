@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import Footer from "../components/footer/footer";
-import "../components/explorer/index.css";
 import { Navigation } from "../components/navigation/navigation";
 import Explorer from "../components/explorer/explorer";
 import { ReactFlowProvider } from "reactflow";
@@ -30,7 +29,7 @@ const Homepage = () => {
 
   return (
     <>
-      <Navigation openResourceList={openResourceList} />
+      <Navigation openResourceList={openResourceList} resourceState={resourceList}/>
       <ReactFlowProvider>
         <Explorer
           resourceList={resourceList}

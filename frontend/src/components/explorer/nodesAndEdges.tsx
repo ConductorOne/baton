@@ -14,16 +14,11 @@ const nodeType = {
 const createGraphLayout = (nodes, edges) => {
   const g = new dagre.graphlib.Graph();
   g.setGraph({ rankdir: "LR" });
-
   g.setDefaultEdgeLabel(() => ({}));
-  const nodeWidth = 200;
+  const nodeWidth = 450;
   const nodeHeight = 80;
-  const nodeTypes = [];
 
   nodes.forEach((node) => {
-    if (!nodeTypes.includes(node.data.resourceType)) {
-      nodeTypes.push(node.data.resourceType);
-    }
     g.setNode(node.id, { width: nodeWidth, height: nodeHeight });
   });
 
@@ -32,7 +27,6 @@ const createGraphLayout = (nodes, edges) => {
   });
 
   dagre.layout(g);
-  nodes.sort((a, b) => a.data.resourceType.localeCompare(b.data.resourceType));
 
   nodes.forEach((node) => {
     const nodeWithPosition = g.node(node.id);
@@ -41,13 +35,8 @@ const createGraphLayout = (nodes, edges) => {
     node.selectable = true;
     node.focusable = false;
 
-    const multiplier =
-      nodeTypes.indexOf(node.data.resourceType) !== -1
-        ? nodeTypes.indexOf(node.data.resourceType) + 1
-        : 1;
-
     node.position = {
-      x: (nodeWithPosition.x - nodeWidth / 2) * multiplier,
+      x: nodeWithPosition.x - nodeWidth / 2,
       y: nodeWithPosition.y - nodeHeight / 2,
     };
 
@@ -128,7 +117,6 @@ export const populateNodesAndEdgesForGrants = (
       ) {
         users.push(element);
       } else {
-        otherResources.push(element);
         const expandableGrantType =
           "type.googleapis.com/c1.connector.v2.GrantExpandable";
         const isGroup =
@@ -201,6 +189,7 @@ export const populateNodesAndEdgesForGrants = (
           label: user.resource.display_name,
           targetHandle: `${user.resource.id.resource}-handle`,
           resourceType: user.resource_type.id,
+          sourceHandle: parentHandle,
           resourceTrait: user.resource_type.traits
             ? user.resource_type.traits[0]
             : 0,
@@ -232,6 +221,8 @@ export const populateNodesAndEdgesForPrincipals = (
 ) => {
   const principal = userAccess?.principal;
   const access = userAccess?.access;
+  const users = [];
+  const otherResources = [];
   const edges: Edge[] = [];
   const nodes: Node[] = [
     {
@@ -249,33 +240,77 @@ export const populateNodesAndEdgesForPrincipals = (
 
   access &&
     access.forEach((elem) => {
-      nodes.push({
-        id: `target-${elem.resource.id.resource}`,
-        data: {
-          label: elem.resource.display_name,
-          targetHandle: `${elem.resource.id.resource}-handle`,
-          resourceType: elem.resource_type.id,
-          resourceTrait: elem?.resource_type?.traits
-            ? elem?.resource_type?.traits[0]
-            : 0,
-        },
-        position,
-        type: nodeType.child,
-      });
-
-      edges.push({
-        id: `${principal.id.resource}-${elem.resource.id.resource}`,
-        source: `source-${principal.id.resource}`,
-        target: `target-${elem.resource.id.resource}`,
-        sourceHandle: `${principal.id.resource}-handle`,
-        targetHandle: `${elem.resource.id.resource}-handle`,
-        label: "placeholder",
-        type: edgeType,
-        data: {
-          entitlements: elem.entitlements,
-          openEntitlementsDetails: openEntitlementsDetails,
-        },
-      });
+      if (elem.resource_type.traits && elem.resource_type.traits[0] === 1) {
+        users.push(elem);
+      } else {
+        otherResources.push(elem);
+      }
     });
+
+  otherResources.sort((a, b) =>
+    a.resource_type.id.localeCompare(b.resource_type.id)
+  );
+
+  otherResources.forEach((resource) => {
+    nodes.push({
+      id: `target-${resource.resource.id.resource}`,
+      data: {
+        label: resource.resource.display_name,
+        targetHandle: `${resource.resource.id.resource}-handle`,
+        sourceHandle: `${principal.id.resource}-handle`,
+        resourceType: resource.resource_type.id,
+        resourceTrait: resource?.resource_type?.traits
+          ? resource?.resource_type?.traits[0]
+          : 0,
+      },
+      position,
+      type: nodeType.child,
+    });
+
+    edges.push({
+      id: `${principal.id.resource}-${resource.resource.id.resource}`,
+      source: `source-${principal.id.resource}`,
+      target: `target-${resource.resource.id.resource}`,
+      sourceHandle: `${principal.id.resource}-handle`,
+      targetHandle: `${resource.resource.id.resource}-handle`,
+      label: "placeholder",
+      type: edgeType,
+      data: {
+        entitlements: resource.entitlements,
+        openEntitlementsDetails: openEntitlementsDetails,
+      },
+    });
+  });
+
+  users.forEach((user) => {
+    nodes.push({
+      id: `target-${user.resource.id.resource}`,
+      data: {
+        label: user.resource.display_name,
+        targetHandle: `${user.resource.id.resource}-handle`,
+        sourceHandle: `${principal.id.resource}-handle`,
+        resourceType: user.resource_type.id,
+        resourceTrait: user?.resource_type?.traits
+          ? user?.resource_type?.traits[0]
+          : 0,
+      },
+      position,
+      type: nodeType.child,
+    });
+
+    edges.push({
+      id: `${principal.id.resource}-${user.resource.id.resource}`,
+      source: `source-${principal.id.resource}`,
+      target: `target-${user.resource.id.resource}`,
+      sourceHandle: `${principal.id.resource}-handle`,
+      targetHandle: `${user.resource.id.resource}-handle`,
+      label: "placeholder",
+      type: edgeType,
+      data: {
+        entitlements: user.entitlements,
+        openEntitlementsDetails: openEntitlementsDetails,
+      },
+    });
+  });
   return { nodes, edges };
 };

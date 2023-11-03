@@ -49,14 +49,13 @@ export const ResourceDetailsModal = ({
             {resource.display_name || resource.resource?.display_name}
           </Typography>
           <CloseButton onClick={closeDetails}>
-            <Close color="secondary" />
+            <Close />
           </CloseButton>
         </StyledDiv>
         {resourceDetails.resourceOpened && (
           <Button
             variant="text"
-            color="secondary"
-            startIcon={<LinkIcon color="secondary" />}
+            startIcon={<LinkIcon />}
             disableElevation
           >
             <StyledLink

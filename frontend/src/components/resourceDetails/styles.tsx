@@ -2,6 +2,7 @@ import { styled } from "@mui/material/styles";
 import MuiDrawer from "@mui/material/Drawer";
 import { IconButton, Typography } from "@mui/material";
 import { Link } from "react-router-dom";
+import { colors } from "../../style/colors";
 
 export const ResourceDetailsDrawer = styled(MuiDrawer)(({ theme }) => ({
   "& .MuiDrawer-paper": {
@@ -17,6 +18,10 @@ export const ResourceDetailsDrawer = styled(MuiDrawer)(({ theme }) => ({
     border: "1px solid #EAECF0",
     boxShadow:
       "2px 0px 16px 0px rgba(0, 0, 0, 0.02), 3px 0px 8px 0px rgba(0, 0, 0, 0.03)",
+    backgroundColor:
+      theme.palette.mode === "light"
+        ? colors.white
+        : colors.gray800,
   },
 }));
 
@@ -41,11 +46,14 @@ export const Details = styled("div")(() => ({
 }));
 
 export const Label = styled(Typography)(({ theme }) => ({
-  color: theme.palette.secondary.main,
+  color:
+    theme.palette.mode === "light"
+      ? theme.palette.primary.dark
+      : colors.gray400,
 }));
 
 export const Value = styled(Typography)(({ theme }) => ({
-  color: theme.palette.secondary.dark,
+  color: theme.palette.primary.contrastText,
 }));
 
 export const Container = styled("div")(() => ({
@@ -53,11 +61,14 @@ export const Container = styled("div")(() => ({
 }));
 
 export const CloseButton = styled(IconButton)(() => ({
-   border: "1px solid #D0D5DD", 
-   borderRadius: "8px"
+  marginLeft: "5px",
+  borderRadius: "8px"
 }));
 
-export const StyledLink = styled(Link)(() => ({
-  textDecoration: 'none',
-  color: 'inherit'
+export const StyledLink = styled(Link)(({ theme }) => ({
+  textDecoration: "none",
+  color:
+    theme.palette.mode === "light"
+      ? theme.palette.primary.dark
+      : theme.palette.primary.contrastText,
 }));
