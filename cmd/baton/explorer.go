@@ -22,7 +22,10 @@ func explorerCmd() *cobra.Command {
 	addSyncIDFlag(cmd)
 
 	cmd.Flags().Bool("dev", false, "Runs the frontend in development mode")
-	cmd.Flags().MarkHidden("dev")
+	err := cmd.Flags().MarkHidden("dev")
+	if err != nil {
+		log.Default().Println("error marking dev flag hidden", err)
+	}
 
 	return cmd
 }
