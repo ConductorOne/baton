@@ -1,15 +1,20 @@
 import React, { useEffect, useState } from "react";
 import List from "@mui/material/List";
-import { Tooltip, useTheme } from "@mui/material";
+import { Divider, Tooltip, useTheme } from "@mui/material";
 import pluralize from "pluralize";
-import { StyledDrawer, CloseButton, IconWrapper, NavWrapper } from "./styles";
+import { StyledDrawer, CloseButton, IconWrapper, NavWrapper, StyledLink } from "./styles";
 import { ThemeSwitcher } from "./components/themeSwitcher";
 import { Logo } from "./components/logo";
 import { IconPerType } from "../icons/resourceTypeIcon";
+import { DashboardButton } from "./components/dashboardButton";
+import { useLocation } from "react-router-dom";
 
 export const Navigation = ({ openResourceList, resourceState }) => {
   const theme = useTheme();
   const [data, setData] = useState([]);
+  const location = useLocation();
+  const isDashboard = location.pathname === "/dashboard"; 
+
   useEffect(() => {
     const fetchData = async () => {
       const res = await (await fetch("/api/resourceTypes")).json();
@@ -26,9 +31,11 @@ export const Navigation = ({ openResourceList, resourceState }) => {
     <StyledDrawer variant="permanent" theme={theme}>
       <NavWrapper>
         <Logo />
+        <DashboardButton />
+        <Divider flexItem/>
         <List>
-          {data &&
-            data.map((type) => (
+          {
+            data?.map((type) => (
               <Tooltip
                 key={type.resource_type.display_name}
                 title={pluralize(type.resource_type.display_name)}
@@ -37,14 +44,15 @@ export const Navigation = ({ openResourceList, resourceState }) => {
                 <CloseButton
                   onClick={() => openResourceList(type.resource_type.id)}
                 >
+                  <StyledLink to="/">
                   <IconWrapper
                     isSelected={
-                      resourceState.resource === type.resource_type.id
+                      resourceState.resource === type.resource_type.id && !isDashboard
                     }
                   >
                     <IconPerType
                       color={
-                        resourceState.resource === type.resource_type.id
+                        resourceState.resource === type.resource_type.id && !isDashboard
                           ? theme.palette.secondary.main
                           : theme.palette.mode === "light"
                           ? theme.palette.primary.dark
@@ -58,6 +66,7 @@ export const Navigation = ({ openResourceList, resourceState }) => {
                       }
                     />
                   </IconWrapper>
+                  </StyledLink>
                 </CloseButton>
               </Tooltip>
             ))}

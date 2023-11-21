@@ -1,4 +1,4 @@
-import { colors } from "./colors"
+import { colors } from "./colors";
 
 export const themeModePalette = (mode) => ({
   palette: {
@@ -96,6 +96,22 @@ typography: {
       styleOverrides: {
         root: {
           border: `1px solid ${colors.gray300}`
+        },
+      }
+    },
+    MuiTab: {
+      styleOverrides: {
+        root: {
+          padding: "0 16px",
+          minHeight: "60px",
+          "&.Mui-selected": {
+            background: colors.gray50,
+            borderRadius: "16px 16px 0 0",
+            color: colors.batonGreen600,
+            svg: {
+              fill: colors.white,
+            }
+          },
         },
       }
     },

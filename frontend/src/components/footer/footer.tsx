@@ -5,8 +5,8 @@ import { Divider } from "@mui/material";
 import { colors } from "../../style/colors";
 
 const FooterWrapper = styled("div")(() => ({
-  position: "fixed",
-  bottom: "0",
+  position: "absolute",
+  bottom: "-30px",
   left: "78px",
   display: "flex",
   alignItems: "center",

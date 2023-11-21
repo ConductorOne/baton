@@ -1,6 +1,7 @@
 import MuiDrawer from "@mui/material/Drawer";
 import { styled } from "@mui/material/styles";
 import { ListItemButton } from "@mui/material";
+import { Link } from "react-router-dom";
 
 export const StyledDrawer = styled(MuiDrawer)(({ theme }) => ({
   display: "flex",
@@ -49,3 +50,11 @@ export const NavWrapper = styled("div")(() => ({
     flexDirection: "column",
     height: "100%",
 }))
+
+export const StyledLink = styled(Link)(({ theme }) => ({
+  textDecoration: "none",
+  color:
+    theme.palette.mode === "light"
+      ? theme.palette.primary.dark
+      : theme.palette.primary.contrastText,
+}));

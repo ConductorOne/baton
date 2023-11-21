@@ -59,7 +59,7 @@ export const ResourceDetailsModal = ({
             disableElevation
           >
             <StyledLink
-              to={`http://localhost:8080/${resource.resource_type.id}/${resource.resource.id.resource}`}
+              to={`/${resource.resource_type.id}/${resource.resource.id.resource}`}
             >
               focus
             </StyledLink>
