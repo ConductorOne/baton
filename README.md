@@ -54,7 +54,7 @@ We have also recorded a short video exploring some of the data Baton can extract
 
 # What connectors exist in Baton today?
 
-We're releasing five initial connectors with the open source launch of Baton. The ConductorOne team has dozens of more connectors written in our precursor proprietary project from before Baton, and is aggressively porting them to the Baton ecosystem.
+We released five initial connectors with the open source launch of Baton. The ConductorOne team has dozens more connectors written in our precursor proprietary project from before Baton, and is aggressively porting them to the Baton ecosystem.
 
 Additionally, making a new connector is really easy -- we wrap up many complexities in the SDK, letting a connector developer focus on translating to the Baton data model.
 
@@ -66,26 +66,33 @@ Additionally, making a new connector is really easy -- we wrap up many complexit
 - [Broadcom SAC](https://github.com/ConductorOne/baton-broadcom-sac)
 - [CloudAMQP](https://github.com/ConductorOne/baton-cloudamqp)
 - [CrowdStrike](https://github.com/ConductorOne/baton-crowdstrike)
+- [Discord](https://github.com/ConductorOne/baton-discord) 
 - [Duo](https://github.com/ConductorOne/baton-duo)
 - [Expensify](https://github.com/ConductorOne/baton-expensify)
 - [GitHub](https://github.com/ConductorOne/baton-github)
 - [Google Identity Platform](https://github.com/ConductorOne/baton-google-identity-platform)
+- [Hubspot](https://github.com/ConductorOne/baton-hubspot)
 - [Jamf](https://github.com/ConductorOne/baton-jamf)
 - [JumpCloud](https://github.com/ConductorOne/baton-jumpcloud)
 - [LDAP](https://github.com/ConductorOne/baton-ldap)
 - [Linear](https://github.com/ConductorOne/baton-linear)
 - [Microsoft SQL Server](https://github.com/ConductorOne/baton-sql-server)
 - [MySQL](https://github.com/ConductorOne/baton-mysql)
+- [New Relic](https://github.com/ConductorOne/baton-newrelic) 
 - [Notion](https://github.com/ConductorOne/baton-notion)
 - [Okta](https://github.com/ConductorOne/baton-okta)
+- [OneLogin](https://github.com/ConductorOne/baton-onelogin)   
 - [PagerDuty](https://github.com/ConductorOne/baton-pagerduty)
 - [Panther](https://github.com/ConductorOne/baton-panther)
 - [PostgreSQL](https://github.com/ConductorOne/baton-postgresql)
 - [Retool](https://github.com/ConductorOne/baton-retool)
+- [Segment](https://github.com/ConductorOne/baton-segment) 
+- [SentinelOne](https://github.com/ConductorOne/baton-sentinel-one) 
 - [ServiceNow](https://github.com/ConductorOne/baton-servicenow)
 - [Slack](https://github.com/ConductorOne/baton-slack)
 - [Splunk](https://github.com/ConductorOne/baton-splunk)
 - [Tableau](https://github.com/ConductorOne/baton-tableau)
+- [Xero](https://github.com/ConductorOne/baton-xero) 
 - [XSOAR](https://github.com/ConductorOne/baton-xsoar)
 - [Zoom](https://github.com/ConductorOne/baton-zoom)
 
