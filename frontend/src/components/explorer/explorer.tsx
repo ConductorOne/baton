@@ -17,7 +17,7 @@ import {
   ParentNode,
 } from "./components/customNode";
 import { ResourcesSidebar } from "./components/resourcesSidebar";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { TreeWrapper } from "./styles/styles";
 import { ResourceDetailsModal } from "../resourceDetails";
 import { extractPrincipalId, isObjectEmpty } from "../../common/helpers";
@@ -45,14 +45,16 @@ const nodeTypes = {
 
 const Explorer = ({ resourceList, closeResourceList }) => {
   const navigate = useNavigate();
-  const theme = useTheme()
+  const { state } = useLocation();
+  const fromDashboard = state?.from === "/dashboard";
+  const theme = useTheme();
   const reactFlowInstance = useReactFlow();
   const nodesInitialized = useNodesInitialized();
   const { id: resourceId } = useParams();
   const { type: resourceType } = useParams();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [resourceDetails, setResourceDetailsOpen] =
+  const [resourceDetailsOpen, setResourceDetailsOpen] =
     useState<ResourceDetailsState>({
       resourceOpened: false,
       entitlementOpened: false,
@@ -105,13 +107,12 @@ const Explorer = ({ resourceList, closeResourceList }) => {
       });
     }
 
-    edges &&
-      edges.forEach((edge) => {
-        edge.data.style = { opacity: 0.3 };
-        if (connectedEdges.includes(edge)) {
-          edge.data.style = { opacity: 1 };
-        }
-      });
+    edges?.forEach((edge) => {
+      edge.data.style = { opacity: 0.3 };
+      if (connectedEdges.includes(edge)) {
+        edge.data.style = { opacity: 1 };
+      }
+    });
 
     const outgoers = getOutgoers(currentNode, nodes, edges);
     const incomers = getIncomers(currentNode, nodes, edges);
@@ -132,7 +133,9 @@ const Explorer = ({ resourceList, closeResourceList }) => {
         if (connectedNodes.includes(node)) {
           node.style = {
             border: `1.2px solid ${
-              theme.palette.mode === "light" ? colors.batonGreen600 : colors.batonGreen500
+              theme.palette.mode === "light"
+                ? colors.batonGreen600
+                : colors.batonGreen500
             }`,
             borderRadius: "12px",
             opacity: 1,
@@ -166,7 +169,11 @@ const Explorer = ({ resourceList, closeResourceList }) => {
   };
 
   const openTreeView = async (resource) => {
-    navigate(`/${resource.resource_type.id}/${resource.resource.id.resource}`);
+    if (!fromDashboard) {
+      navigate(
+        `/${resource.resource_type.id}/${resource.resource.id.resource}`
+      );
+    }
     let grantsAccess;
     if (
       resource.resource_type.traits &&
@@ -235,11 +242,11 @@ const Explorer = ({ resourceList, closeResourceList }) => {
           </ReactFlow>
         </TreeWrapper>
       )}
-      {resourceDetails.resource && (
+      {resourceDetailsOpen.resource && (
         <ResourceDetailsModal
-          resource={resourceDetails?.resource}
+          resource={resourceDetailsOpen?.resource}
           closeDetails={closeResourceDetails}
-          resourceDetails={resourceDetails}
+          resourceDetails={resourceDetailsOpen}
         />
       )}
     </>

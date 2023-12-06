@@ -23,3 +23,10 @@ export const fetchResourceTypes = async () => {
   const res = await (await fetch("/api/resourceTypes")).json();
   return res.data;
 };
+
+export const fetchResourcesWithUserCount = async (resourceType) => {
+  const details = await (
+    await fetch(`/api/principals/${resourceType}`)
+  ).json();
+  return details.data;
+};

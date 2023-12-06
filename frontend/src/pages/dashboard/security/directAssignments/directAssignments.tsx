@@ -1,10 +1,10 @@
 import * as React from "react";
 import { DefaultContainer, DefaultWrapper } from "../../components/styles";
-import { useTheme } from "@mui/material";
 import { ChartWrapper } from "../../inventory/resourcesGraph/styles";
 import { BarTypeChart } from "../../components/charts/barChart";
 import { ResourcesTable } from "./table";
 
+// Placeholder data.
 const data = [
   {
     name: "Repositories",
@@ -35,8 +35,6 @@ const data = [
 
 
 export const DirectAssignments = () => {
-  const theme = useTheme();
-  const lightMode = theme.palette.mode === "light";
   return (
     <DefaultWrapper width={790}>
       <DefaultContainer>

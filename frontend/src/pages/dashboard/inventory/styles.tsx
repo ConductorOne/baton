@@ -9,5 +9,20 @@ export const IdentityWrapper = styled("div")(({ theme }) => ({
   background: theme.palette.mode === "light" ? colors.white : colors.gray700,
   padding: "16px",
   maxWidth: "fit-content",
+  height: "fit-content",
+  margin: "8px",
+}));
+
+export const ResourcesWrapper = styled("div")(() => ({
+  display: "flex",
+  "> div": {
+    margin: "8px"
+  }
+}));
+
+export const LoadingWrapper = styled("div")(() => ({
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
 }));
 

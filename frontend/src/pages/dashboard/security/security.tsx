@@ -5,30 +5,15 @@ import { DirectAssignments } from "./directAssignments/directAssignments";
 import { CardWithGraph } from "./cardWithGraph/cardWithGraph";
 import { styled } from "@mui/material";
 
+// Placeholder data.
 const inactiveUsers = [
   {
-    resource: { id: "bla", display_name: "Role 1" },
-    resource_type: { id: "role" },
+    resource: { id: "12345", display_name: "Test User" },
+    resource_type: { id: "user" },
   },
   {
-    resource: { id: "meh", display_name: "Role 2" },
-    resource_type: { id: "role" },
-  },
-  {
-    resource: { id: "wfg", display_name: "Role 3" },
-    resource_type: { id: "role" },
-  },
-  {
-    resource: { id: "wfg", display_name: "Role 4" },
-    resource_type: { id: "role" },
-  },
-  {
-    resource: { id: "wfg", display_name: "Role 5" },
-    resource_type: { id: "role" },
-  },
-  {
-    resource: { id: "wfg", display_name: "Role 6" },
-    resource_type: { id: "role" },
+    resource: { id: "54321", display_name: "Test User 2" },
+    resource_type: { id: "user" },
   },
 ];
 
@@ -39,16 +24,16 @@ const inactiveUsersData = [
 
 const nonMfaUsers = [
   {
-    resource: { id: "sdasda", display_name: "group 1" },
-    resource_type: { id: "role" },
+    resource: { id: "121212", display_name: "Test User 3" },
+    resource_type: { id: "user" },
   },
   {
-    resource: { id: "asdasd", display_name: "group 2" },
-    resource_type: { id: "role" },
+    resource: { id: "534534", display_name: "Test User 4" },
+    resource_type: { id: "user" },
   },
   {
-    resource: { id: "wasdasdfg", display_name: "group 3" },
-    resource_type: { id: "role" },
+    resource: { id: "32342", display_name: "Test User 5" },
+    resource_type: { id: "user" },
   },
 ];
 
@@ -57,19 +42,14 @@ const nonMfaUsersData = [
   { name: "nonMfa", value: 22 },
 ];
 
-
 const nonSsoUsers = [
   {
-    resource: { id: "sdasda", display_name: "group 1" },
-    resource_type: { id: "role" },
+    resource: { id: "543535", display_name: "Test User 6" },
+    resource_type: { id: "user" },
   },
   {
-    resource: { id: "asdasd", display_name: "group 2" },
-    resource_type: { id: "role" },
-  },
-  {
-    resource: { id: "wasdasdfg", display_name: "group 3" },
-    resource_type: { id: "role" },
+    resource: { id: "543535", display_name: "Test User 7" },
+    resource_type: { id: "user" },
   },
 ];
 
@@ -82,9 +62,11 @@ const Container = styled("div")(() => ({
   display: "flex",
   justifyContent: "center",
   flexWrap: "wrap",
+  width: "100%",
+  margin: "8px",
 
   "> div": {
-    marginRight: "16px"
+    margin: "8px"
   }
 }));
 
@@ -96,6 +78,7 @@ export const Security = () => {
         <SecurityScoreCard score={78} />
         <DirectAssignments />
       </Container>
+      <Container>
       <CardWithGraph
         header="inactive accounts"
         count={32}
@@ -117,6 +100,7 @@ export const Security = () => {
         chartData={nonSsoUsersData}
         text="12%"
       />
+      </Container>
     </LayoutWrapper>
   );
 };

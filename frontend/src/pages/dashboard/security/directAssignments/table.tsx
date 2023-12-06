@@ -8,6 +8,7 @@ import TableRow from "@mui/material/TableRow";
 import { Link } from "react-router-dom";
 import Arrow from "@mui/icons-material/ArrowCircleRightOutlined";
 
+// Placeholder data.
 const rows = [
   {
     resourceName: "Credentials",
@@ -36,7 +37,7 @@ export const ResourcesTable = () => {
         <TableHead>
           <TableRow>
             <TableCell>RESOURCE NAME</TableCell>
-            <TableCell align="right">TYPE</TableCell>
+            <TableCell align="center">TYPE</TableCell>
             <TableCell align="right">ASSIGNMENTS</TableCell>
           </TableRow>
         </TableHead>
@@ -49,7 +50,7 @@ export const ResourcesTable = () => {
               <TableCell component="th" scope="row">
                 {row.resourceName}
               </TableCell>
-              <TableCell align="right">{row.resourceType}</TableCell>
+              <TableCell align="center">{row.resourceType}</TableCell>
               <TableCell align="right">
                 <Link to={row.link} style={{ textDecoration: "none", display: "inline-flex", justifyContent: "center", color: "inherit", alignSelf: "flex-end"}}>
                   {row.assignments}

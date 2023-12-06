@@ -15,13 +15,12 @@ export const ResourceDetailsDrawer = styled(MuiDrawer)(({ theme }) => ({
     flexDirection: "column",
     alignItems: "flex-start",
     borderRadius: "16px",
-    border: "1px solid #EAECF0",
+    border:
+      theme.palette.mode === "light" ? `1px solid ${colors.gray200}` : "none",
     boxShadow:
       "2px 0px 16px 0px rgba(0, 0, 0, 0.02), 3px 0px 8px 0px rgba(0, 0, 0, 0.03)",
     backgroundColor:
-      theme.palette.mode === "light"
-        ? colors.white
-        : colors.gray800,
+      theme.palette.mode === "light" ? colors.white : colors.gray800,
   },
 }));
 
@@ -35,10 +34,10 @@ export const StyledDiv = styled("div")(() => ({
 
 export const ModalHeader = styled("div")(() => ({
   paddingBottom: "15px",
-  borderBottom: "1px solid #EAECF0",
+  borderBottom: `1px solid ${colors.gray200}`,
   width: "100%",
-  marginBottom: "20px"
-}))
+  marginBottom: "20px",
+}));
 
 export const Details = styled("div")(() => ({
   display: "flex",
@@ -62,7 +61,7 @@ export const Container = styled("div")(() => ({
 
 export const CloseButton = styled(IconButton)(() => ({
   marginLeft: "5px",
-  borderRadius: "8px"
+  borderRadius: "8px",
 }));
 
 export const StyledLink = styled(Link)(({ theme }) => ({

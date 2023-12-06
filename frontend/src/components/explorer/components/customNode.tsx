@@ -2,7 +2,12 @@ import React from "react";
 import { Handle, Position } from "reactflow";
 import { Typography, useTheme } from "@mui/material";
 import { normalizeString } from "../../../common/helpers";
-import { IconWrapper, Node, NodeInfoWrapper, NodeWrapper } from "../styles/styles";
+import {
+  IconWrapper,
+  Node,
+  NodeInfoWrapper,
+  NodeWrapper,
+} from "../styles/styles";
 import { colors } from "../../../style/colors";
 import { IconPerType, IconColors } from "../../icons/resourceTypeIcon";
 
@@ -13,16 +18,17 @@ export const ChildNode = ({ data, selected }) => {
       <CustomNode data={data} />
     </Node>
   );
-}
+};
 
-export const ExpandableGrantNode = ({ data, selected}) => {
+export const ExpandableGrantNode = ({ data, selected }) => {
   return (
-  <Node isSelected={selected}>
-    <Handle type="target" position={Position.Left} id={data.targetHandle} />
-    <CustomNode data={data} />
-    <Handle type="source" position={Position.Right} id={data.sourceHandle} />
-  </Node>
-)};
+    <Node isSelected={selected}>
+      <Handle type="target" position={Position.Left} id={data.targetHandle} />
+      <CustomNode data={data} />
+      <Handle type="source" position={Position.Right} id={data.sourceHandle} />
+    </Node>
+  );
+};
 
 export const ParentNode = ({ data, selected }) => {
   return (
@@ -30,19 +36,20 @@ export const ParentNode = ({ data, selected }) => {
       <CustomNode data={data} />
       <Handle type="source" position={Position.Right} id={data.sourceHandle} />
     </Node>
-  );};
-  
+  );
+};
+
 export const CustomNode = ({ data }) => {
-  const theme = useTheme()
-  const lightTheme = theme.palette.mode === "light"
+  const theme = useTheme();
+  const lightTheme = theme.palette.mode === "light";
   const colorPerType =
-    data.resourceTrait != 0
+    data.resourceTrait !== 0
       ? IconColors[data.resourceTrait]
       : IconColors[data.resourceType];
   return (
     <NodeWrapper>
       <IconWrapper
-        backgroundColor={colorPerType.light}
+        backgroundColor={lightTheme ? colorPerType.light : colors.black}
         borderColor={lightTheme ? colorPerType.light : colorPerType.dark}
       >
         <IconPerType

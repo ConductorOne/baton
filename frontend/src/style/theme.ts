@@ -38,11 +38,11 @@ export const themeModePalette = (mode) => ({
       }
     ),
   },
-typography: {
-  h5: {
-    fontSize: '18px',
-    fontWeight: 500,
-  },
+  typography: {
+    h5: {
+      fontSize: '18px',
+      fontWeight: 500,
+    },
   },
   components: {
     MuiMenu: {
@@ -104,10 +104,12 @@ typography: {
         root: {
           padding: "0 16px",
           minHeight: "60px",
+          color: mode === "light" ? colors.gray600 : colors.gray200,
+          fontWeight: 600,
           "&.Mui-selected": {
-            background: colors.gray50,
+            background: mode === "light" ? colors.gray50 : colors.black,
             borderRadius: "16px 16px 0 0",
-            color: colors.batonGreen600,
+            color: mode === "light" ? colors.batonGreen600 : colors.batonGreen500,
             svg: {
               fill: colors.white,
             }

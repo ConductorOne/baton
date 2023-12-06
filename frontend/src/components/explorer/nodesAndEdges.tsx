@@ -1,7 +1,6 @@
 import { Edge, Node } from "reactflow";
 import dagre from "@dagrejs/dagre";
 import { Position } from "reactflow";
-import { extractPrincipalId, isObjectEmpty } from "../../common/helpers";
 
 const position = { x: 0, y: 0 };
 const edgeType = "customEdge";
@@ -106,8 +105,7 @@ export const populateNodesAndEdgesForGrants = (
   ];
 
   const users = [];
-  const otherResources = [];
-  var expandableGrantResourceId;
+  let expandableGrantResourceId;
 
   resourceAccess &&
     resourceAccess.forEach((element, i) => {

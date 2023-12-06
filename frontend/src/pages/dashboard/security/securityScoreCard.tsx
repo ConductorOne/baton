@@ -3,6 +3,7 @@ import { DefaultContainer, DefaultWrapper } from "../components/styles";
 import { Card } from "../components/cards/cards";
 import { SuggestionsList } from "../components/list/list";
 
+// Placeholder data.
 const improvements = [
   {
     text: "Suggestion 1",

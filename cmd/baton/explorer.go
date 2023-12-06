@@ -59,7 +59,7 @@ func startFrontendServer() error {
 	return nil
 }
 
-func startExplorerAPI(cmd *cobra.Command) {
+func startExplorerAPI(cmd *cobra.Command, devMode bool) {
 	ctx := cmd.Context()
 
 	filePath, err := cmd.Flags().GetString("file")
@@ -89,7 +89,7 @@ func startExplorerAPI(cmd *cobra.Command) {
 	}
 	defer store.Close()
 
-	ctrl := explorer.NewController(ctx, store, syncID, resourceType)
+	ctrl := explorer.NewController(ctx, store, syncID, resourceType, devMode)
 	e := ctrl.Run(":8080")
 	if e != nil {
 		log.Fatal("error running explorer", err)
@@ -97,19 +97,19 @@ func startExplorerAPI(cmd *cobra.Command) {
 }
 
 func runExplorer(cmd *cobra.Command, args []string) error {
-	isDev, err := cmd.Flags().GetBool("dev")
+	isDevMode, err := cmd.Flags().GetBool("dev")
 	if err != nil {
 		return fmt.Errorf("error getting dev flag: %w", err)
 	}
 
-	if !isDev {
-		startExplorerAPI(cmd)
+	if isDevMode {
+		go startExplorerAPI(cmd, isDevMode)
+		err = startFrontendServer()
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
+	startExplorerAPI(cmd, isDevMode)
 
-	go startExplorerAPI(cmd)
-	err = startFrontendServer()
-	if err != nil {
-		log.Fatal(err)
-	}
 	return nil
 }

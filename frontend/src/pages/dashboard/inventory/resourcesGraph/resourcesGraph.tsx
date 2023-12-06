@@ -5,14 +5,11 @@ import { Card } from "../../components/cards/cards";
 import { DefaultContainer, DefaultWrapper } from "../../components/styles";
 import { colors } from "../../../../style/colors";
 import { useTheme } from "@mui/material";
+import { useResources } from "../../../../context/resources";
+import pluralize from "pluralize";
+import { normalizeString } from "../../../../common/helpers";
+import { Label } from "../../components/cards/styles";
 
-const data = [
-  { name: "repositories", value: 63 },
-  { name: "projects", value: 105 },
-  { name: "vaults", value: 2 },
-  { name: "websites", value: 63 },
-  { name: "idps", value: 105 },
-];
 const graphColors = [
   colors.batonGreen600,
   colors.batonGreen800,
@@ -21,72 +18,60 @@ const graphColors = [
   colors.purple400,
   colors.blue200,
   colors.cyan400,
-  colors.indigo500
+  colors.indigo500,
 ];
 
 export const Resources = () => {
-  const theme = useTheme()
-  const lightMode = theme.palette.mode === "light"
-  
+  const theme = useTheme();
+  const lightMode = theme.palette.mode === "light";
+  const { resources, mappedResources } = useResources();
+  let graphData = [];
+  Object.keys(mappedResources).forEach((type) =>
+    graphData.push({
+      name: pluralize(normalizeString(type, false)),
+      value: mappedResources[type].length,
+      type: type,
+    })
+  );
+
   return (
     <DefaultWrapper width={600}>
       <DefaultContainer>
         <ChartWrapper>
+          <Label
+            size={{
+              fontSize: "20px",
+            }}
+          >
+            Resources
+          </Label>
           <PieTypeChart
-            data={data}
+            data={graphData && graphData}
             colors={graphColors}
             width={568}
-            height={290}
+            height={250}
             textPositionX={283}
-            textPositionY={160}
+            textPositionY={140}
             textFillColor={
               lightMode ? colors.batonGreen900 : colors.batonGreen500
             }
             textSize={48}
-            text={354}
+            text={resources?.resources?.length}
           />
         </ChartWrapper>
         <DataWrapper>
-          <Card
-            isColumn
-            label="repositories"
-            count="63"
-            size="s"
-            noBorder
-            withoutBackground
-          />
-          <Card
-            isColumn
-            label="projects"
-            count="34"
-            size="s"
-            noBorder
-            withoutBackground
-          />
-          <Card
-            isColumn
-            label="vaults"
-            count="563"
-            size="s"
-            noBorder
-            withoutBackground
-          />
-          <Card
-            isColumn
-            label="websites"
-            count="643"
-            size="s"
-            noBorder
-            withoutBackground
-          />
-          <Card
-            isColumn
-            label="idps"
-            count="653"
-            size="s"
-            noBorder
-            withoutBackground
-          />
+          {graphData.map((d, i) => (
+            <Card
+              to={`/${d.type}`}
+              key={d.name}
+              isColumn
+              label={d.name}
+              count={d.value}
+              size="s"
+              noBorder
+              withoutBackground
+            />
+          ))}
         </DataWrapper>
       </DefaultContainer>
     </DefaultWrapper>

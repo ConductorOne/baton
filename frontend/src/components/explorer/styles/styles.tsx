@@ -1,7 +1,7 @@
 import MuiDrawer from "@mui/material/Drawer";
 import { styled } from "@mui/material/styles";
 import { IconButton, ListItemButton, List, Typography } from "@mui/material";
-import { colors } from "../../../style/colors"
+import { colors } from "../../../style/colors";
 
 export const TreeWrapper = styled("div")(() => ({
   width: "100vw",
@@ -9,7 +9,7 @@ export const TreeWrapper = styled("div")(() => ({
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
-  padding: "20px"
+  padding: "20px",
 }));
 
 export const ResourcesListWrapper = styled(List)(() => ({
@@ -95,7 +95,7 @@ export const IconWrapper = styled("div", {
     prop !== "backgroundColor" && prop !== "borderColor",
 })<{ backgroundColor?: string; borderColor?: string }>(
   ({ backgroundColor, borderColor, theme }) => ({
-    backgroundColor: theme.palette.mode === "light" ? backgroundColor : colors.black,
+    backgroundColor: backgroundColor,
     borderRadius: "1000px",
     display: "flex",
     justifyContent: "center",
@@ -142,9 +142,7 @@ export const Node = styled("div", {
           : colors.batonGreen500
       }`
     : `1.2px solid ${
-        theme.palette.mode === "light"
-          ? colors.white
-          : colors.gray700
+        theme.palette.mode === "light" ? colors.white : colors.gray700
       }`,
   display: "flex",
   padding: " 16px 16px 16px 12px",
@@ -164,7 +162,7 @@ export const Node = styled("div", {
     color:
       theme.palette.mode === "light"
         ? colors.batonGreen1000
-        : colors.batonGreen200
+        : colors.batonGreen200,
   },
 
   ".react-flow__handle": {

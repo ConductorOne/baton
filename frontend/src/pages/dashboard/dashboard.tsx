@@ -45,18 +45,18 @@ const tabs = {
     value: "inventory",
     tabPanel: <Inventory />,
   },
-  security: {
-    label: "Security",
-    icon: <Lock />,
-    value: "security",
-    tabPanel: <Security />,
-  },
-  nhidentities: {
-    label: "Non-Human Identity",
-    icon: <ServiceAccount />,
-    value: "nhidentities",
-    tabPanel: <NonHumanIdentity />
-  },
+  // security: {
+  //   label: "Security",
+  //   icon: <Lock />,
+  //   value: "security",
+  //   tabPanel: <Security />,
+  // },
+  // nhidentities: {
+  //   label: "Non-Human Identity",
+  //   icon: <ServiceAccount />,
+  //   value: "nhidentities",
+  //   tabPanel: <NonHumanIdentity />
+  // },
   // apps: {
   //   label: "Applications",
   //   icon: <Rocket />,
@@ -72,7 +72,7 @@ const tabs = {
 };
 
 export const Dashboard = () => {
-  const [selectedTab, setSelectedTab] = useState("inventory")
+  const [selectedTab, setSelectedTab] = useState("inventory");
 
   const handleChange = (e, tab) => {
     setSelectedTab(tab);
@@ -82,7 +82,11 @@ export const Dashboard = () => {
     <Wrapper>
       <Header>
         <Typography variant="h6">Dashboard</Typography>
-        <DashboardTabs tabs={tabs} value={selectedTab} handleChange={handleChange} />
+        <DashboardTabs
+          tabs={tabs}
+          value={selectedTab}
+          handleChange={handleChange}
+        />
       </Header>
       <Content>{tabs[selectedTab].tabPanel}</Content>
     </Wrapper>

@@ -6,8 +6,8 @@ import { colors } from "../../style/colors";
 
 const FooterWrapper = styled("div")(() => ({
   position: "absolute",
-  bottom: "-30px",
-  left: "78px",
+  top: "0",
+  right: "0",
   display: "flex",
   alignItems: "center",
   padding: "20px",

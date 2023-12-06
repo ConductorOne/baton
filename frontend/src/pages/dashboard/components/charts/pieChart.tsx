@@ -1,5 +1,5 @@
 import React from "react";
-import { PieChart, Pie, Cell } from "recharts";
+import { PieChart, Pie, Cell, Tooltip } from "recharts";
 
 type PieChartProps = {
   data: any,
@@ -30,6 +30,7 @@ export const PieTypeChart = (props: PieChartProps) => {
             <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
           ))}
         </Pie>
+        <Tooltip />
       </PieChart>
     );
 }
