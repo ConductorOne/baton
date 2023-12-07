@@ -1,6 +1,8 @@
 import MuiDrawer from "@mui/material/Drawer";
 import { styled } from "@mui/material/styles";
 import { ListItemButton } from "@mui/material";
+import { Link } from "react-router-dom";
+import { colors } from "../../style/colors";
 
 export const StyledDrawer = styled(MuiDrawer)(({ theme }) => ({
   display: "flex",
@@ -9,7 +11,9 @@ export const StyledDrawer = styled(MuiDrawer)(({ theme }) => ({
   "& .MuiDrawer-paper": {
     backgroundColor: theme.palette.primary.main,
     boxShadow:
-      "2px 0px 16px 0px rgba(0, 0, 0, 0.02), 3px 0px 8px 0px rgba(0, 0, 0, 0.03)",
+      theme.palette.mode === "light"
+        ? "2px 0px 16px 0px rgba(0, 0, 0, 0.02), 3px 0px 8px 0px rgba(0, 0, 0, 0.03)"
+        : `0px 0px 48px 5px ${colors.gray900}`,
     boxSizing: "border-box",
     alignItems: "center",
     padding: "0 20px 20px 20px",
@@ -17,6 +21,7 @@ export const StyledDrawer = styled(MuiDrawer)(({ theme }) => ({
     width: "100%",
     color: theme.palette.primary.contrastText,
     zIndex: 99999,
+    borderRight: "none",
   },
 }));
 
@@ -43,9 +48,17 @@ export const IconWrapper = styled("div", {
 }));
 
 export const NavWrapper = styled("div")(() => ({
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "start",
-    flexDirection: "column",
-    height: "100%",
-}))
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "start",
+  flexDirection: "column",
+  height: "100%",
+}));
+
+export const StyledLink = styled(Link)(({ theme }) => ({
+  textDecoration: "none",
+  color:
+    theme.palette.mode === "light"
+      ? theme.palette.primary.dark
+      : theme.palette.primary.contrastText,
+}));

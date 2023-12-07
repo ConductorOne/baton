@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 
 	"github.com/conductorone/baton-sdk/pkg/dotc1z"
@@ -17,12 +19,13 @@ type Controller struct {
 	baton *BatonService
 }
 
-func NewController(ctx context.Context, store *dotc1z.C1File, syncID, resourceType string) Controller {
+func NewController(ctx context.Context, store *dotc1z.C1File, syncID, resourceType string, devMode bool) Controller {
 	return Controller{&BatonService{
 		storeCache:   storecache.NewStoreCache(ctx, store),
 		store:        store,
 		syncID:       syncID,
 		resourceType: resourceType,
+		devMode:      devMode,
 	}}
 }
 
@@ -30,14 +33,57 @@ func (ctrl *Controller) Run(addr string) error {
 	return ctrl.router().Run(addr)
 }
 
+// TODO - this is a hack to get the frontend to work. Should be rewritten.
+func runNpmInstallAndBuild(projectPath string) error {
+	nodeModulesPath := filepath.Join(projectPath, "node_modules")
+	if _, err := os.Stat(nodeModulesPath); os.IsNotExist(err) {
+		log.Default().Print("node_modules folder not found. Running npm install...")
+		cmd := exec.Command("npm", "install")
+		cmd.Dir = projectPath
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			log.Default().Print("Error running npm install:", err)
+			log.Default().Print(string(output))
+			return fmt.Errorf("error running 'npm install': %w", err)
+		}
+
+		log.Default().Print("npm install completed successfully.")
+	}
+
+	buildPath := filepath.Join(projectPath, "build")
+	if _, err := os.Stat(buildPath); os.IsNotExist(err) {
+		log.Default().Print("Build folder not found. Running npm build...")
+
+		cmd := exec.Command("npm", "run", "build")
+		cmd.Dir = projectPath
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			log.Default().Print("Error running npm build:", err)
+			log.Default().Print(string(output))
+			return fmt.Errorf("error running 'npm run build': %w", err)
+		}
+
+		log.Default().Print("npm build completed successfully.")
+	}
+	return nil
+}
+
 func (ctrl *Controller) router() *gin.Engine {
 	router := gin.Default()
 	api := router.Group("/api")
+	if !ctrl.baton.devMode {
+		err := runNpmInstallAndBuild("frontend")
+		if err != nil {
+			log.Default().Println("error setting up frontend: ", err)
+		}
+	}
 	router.Use(static.Serve("/", static.LocalFile("frontend/build", true)))
 	// todo: make this configurable
-	err := openBrowser("http://localhost:8080")
-	if err != nil {
-		log.Default().Print("error opening browser: ", err)
+	if !ctrl.baton.devMode {
+		err := openBrowser("http://localhost:8080")
+		if err != nil {
+			log.Default().Print("error opening browser: ", err)
+		}
 	}
 
 	// on reload it throws 404, so we need to redirect to index.html.
@@ -52,6 +98,7 @@ func (ctrl *Controller) router() *gin.Engine {
 		api.GET("/grants/:resourceType/:resourceId", ctrl.GetGrantsForResourceHandler)
 		api.GET("/access/:resourceType/:resourceId", ctrl.GetAccessHandler)
 		api.GET("/:resourceType/:resourceId", ctrl.GetResourceHandler)
+		api.GET("/principals/:resourceType", ctrl.GetResourcesWithPrincipalCountHandler)
 	}
 	return router
 }
