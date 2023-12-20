@@ -50,7 +50,9 @@ export const ResourcesList = (props: ResourceListProps) => {
         );
       })}
       {props.remainingResources > 0 && (
-        <StyledListItem>{`${props.remainingResources} more...`}</StyledListItem>
+        <StyledListItem
+          to={`/${props.resourceType}`}
+        >{`${props.remainingResources} more...`}</StyledListItem>
       )}
     </StyledList>
   );

@@ -19,6 +19,7 @@ export type CardStyleProps = {
   withoutBackground?: boolean;
   fullWidth?: boolean;
   withMargin?: boolean;
+  marginRight?: boolean;
 };
 
 export const Card = (props: CardProps) => {
@@ -34,7 +35,7 @@ export const Card = (props: CardProps) => {
       fullWidth={props.fullWidth}
       withMargin={props.withMargin}
     >
-      <Label size={SizeMap[props.size].label}>
+      <Label marginRight={props.marginRight} size={SizeMap[props.size].label}>
         {pluralize(normalizeString(props.label, false))}
       </Label>
       {props.isScore ? (

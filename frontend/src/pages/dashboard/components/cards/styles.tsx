@@ -4,7 +4,7 @@ import { colors } from "../../../../style/colors";
 export const SizeMap = {
   s: {
     count: {
-      fontSize: "30px",
+      fontSize: "36px",
       fontWeight: 600,
     },
     label: {
@@ -32,11 +32,13 @@ export const SizeMap = {
 };
 
 export const Label = styled("span", {
-  shouldForwardProp: (prop) => prop !== "size",
-})<{ size?: any }>(({ size, theme }) => ({
+  shouldForwardProp: (prop) => prop !== "size" && prop !== "marginRight",
+})<{ size?: any, marginRight?: boolean }>(({ size, theme, marginRight }) => ({
   textTransform: "uppercase",
   fontSize: size.fontSize,
   color: theme.palette.mode === "light" ? colors.batonGreen1000 : colors.gray200,
+  marginBottom: marginRight ? "0" : "10px",
+  marginRight: marginRight ? "20px" : '0'
 }));
 
 export const Count = styled("span", {

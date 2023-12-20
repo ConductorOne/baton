@@ -56,6 +56,7 @@ export const Inventory = () => {
               size="l"
               label="Identities"
               withMargin
+              marginRight
             />
             {identities.resourcesByType &&
               Object.keys(identities.resourcesByType).map((type) => (
@@ -74,6 +75,7 @@ export const Inventory = () => {
             {!isObjectEmpty(roles) &&
               roleTraitTypes.map((type) => (
                 <ResourcesListCard
+                  key={type}
                   resourcesCount={roles[type]?.length}
                   resourceType={type}
                   resources={roles[type]}
@@ -82,6 +84,7 @@ export const Inventory = () => {
             {!isObjectEmpty(groups) &&
               groupTraitTypes.map((type) => (
                 <ResourcesListCard
+                  key={type}
                   resourcesCount={groups[type]?.length}
                   resourceType={type}
                   resources={groups[type]}

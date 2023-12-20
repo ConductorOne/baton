@@ -51,7 +51,7 @@ export const DataWrapper = styled(Link, {
   }) => ({
     display: "flex",
     textDecoration: "none",
-    justifyContent: isColumn ? "center" : "space-between",
+    justifyContent: isColumn ? "center" : "space-evenly",
     alignItems: "center",
     flexDirection: isColumn ? "column" : "row",
     borderRadius: topRadius ? "16px 16px 0 0" : "16px",
@@ -69,7 +69,7 @@ export const DataWrapper = styled(Link, {
         ? colors.gray900
         : colors.black,
     padding: "25px",
-    minWidth: size === "l" ? "350px" : "210px",
+    minWidth: size === "l" ? "auto" : "210px",
     width: fullWidth ? "100%" : "auto",
     margin: withMargin ? "0 8px" : 0,
 

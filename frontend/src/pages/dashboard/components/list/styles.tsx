@@ -40,13 +40,14 @@ export const ButtonWrapper = styled("div")(() => ({
   boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
 }));
 
-export const StyledListItem = styled("li")(({ theme }) => ({
+export const StyledListItem = styled(Link)(({ theme }) => ({
   fontSize: "16px",
   color: theme.palette.mode === "light" ? colors.batonGreen1000 : colors.white,
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
   padding: "8px",
+  textDecoration: "none",
 }));
 
 export const Title = styled("p")(({ theme }) => ({
