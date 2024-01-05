@@ -19,3 +19,6 @@ build/
 # Dependency directories (remove the comment below to include it)
 # vendor/
 dist/
+
+# Copied frontend build for use with golang's embed
+pkg/explorer/frontend/

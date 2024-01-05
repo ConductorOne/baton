@@ -2,8 +2,11 @@ package explorer
 
 import (
 	"context"
+	"embed"
 	"fmt"
+	"io/fs"
 	"log"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -14,6 +17,28 @@ import (
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 )
+
+//go:embed frontend/*
+var frontend embed.FS
+
+type EmbededFS struct {
+	http.FileSystem
+}
+
+func (efs EmbededFS) Exists(prefix string, path string) bool {
+	_, err := efs.Open(path)
+	return err == nil
+}
+
+func newEmbeddedFS(efs embed.FS) EmbededFS {
+	httpfs, err := fs.Sub(efs, "frontend")
+	if err != nil {
+		panic(err)
+	}
+	return EmbededFS{
+		FileSystem: http.FS(httpfs),
+	}
+}
 
 type Controller struct {
 	baton *BatonService
@@ -77,7 +102,10 @@ func (ctrl *Controller) router() *gin.Engine {
 			log.Default().Println("error setting up frontend: ", err)
 		}
 	}
-	router.Use(static.Serve("/", static.LocalFile("frontend/build", true)))
+
+	// router.Use(static.Serve("/", static.LocalFile("frontend/build", true)))
+	router.Use(static.Serve("/", newEmbeddedFS(frontend)))
+
 	// todo: make this configurable
 	if !ctrl.baton.devMode {
 		err := openBrowser("http://localhost:8080")
