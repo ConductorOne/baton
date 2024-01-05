@@ -103,8 +103,8 @@ func (ctrl *Controller) router() *gin.Engine {
 		}
 	}
 
-	// router.Use(static.Serve("/", static.LocalFile("frontend/build", true)))
-	router.Use(static.Serve("/", newEmbeddedFS(frontend)))
+	efs := newEmbeddedFS(frontend)
+	router.Use(static.Serve("/", efs))
 
 	// todo: make this configurable
 	if !ctrl.baton.devMode {
@@ -116,7 +116,7 @@ func (ctrl *Controller) router() *gin.Engine {
 
 	// on reload it throws 404, so we need to redirect to index.html.
 	router.NoRoute(func(ctx *gin.Context) {
-		ctx.File("frontend/build/index.html")
+		ctx.FileFromFS("index.html", efs)
 	})
 
 	{
