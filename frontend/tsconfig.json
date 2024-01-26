@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "lib": ["es2017", "dom"],
+    "resolveJsonModule": true,
+    "target": "ES6",
+    "module": "ESNext",
+    "jsx": "react",
+  },
+  "exclude": [
+    "node_modules",
+    "build",
+  ]
+}
