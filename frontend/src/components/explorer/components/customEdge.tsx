@@ -17,7 +17,7 @@ const EntitlementsMenu = ({ entitlements, openEntitlementsDetails, opacity }) =>
   const [entitlement, setEntitlement] = React.useState<string>(
     entitlements[0].slug
   );
-  const handleChange = (event) => {
+  const handleChange = (event: { target: { value: React.SetStateAction<string>; }; }) => {
     setEntitlement(event.target.value);
   };
 
@@ -31,7 +31,7 @@ const EntitlementsMenu = ({ entitlements, openEntitlementsDetails, opacity }) =>
         openEntitlementsDetails(selectedEntitlement);
       }
     }
-  }, [entitlement]);
+  }, [entitlement, entitlements, openEntitlementsDetails]);
 
   const multipleEntitlements = entitlements.length > 1;
   return (
@@ -44,23 +44,22 @@ const EntitlementsMenu = ({ entitlements, openEntitlementsDetails, opacity }) =>
         onChange={handleChange}
         MenuProps={multipleEntitlements ? {} : { open: false }}
         disableUnderline
-        renderValue={() => (
+        renderValue={(v: string) => (
           <SelectedEntitlementWrapper sx={opacity}>
             {multipleEntitlements && (
               <EntitlementNumberLabel>
                 {entitlements.length}
               </EntitlementNumberLabel>
             )}
-            {entitlement}
+            {v}
           </SelectedEntitlementWrapper>
         )}
       >
-        {multipleEntitlements &&
-          entitlements.map((ent) => (
+        { entitlements.map((ent) => (
             <MenuItem key={ent.id} value={ent.slug}>
               {ent.slug}
             </MenuItem>
-          ))}
+          )) }
       </Select>
     </FormControl>
   );

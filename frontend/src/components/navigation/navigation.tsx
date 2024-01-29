@@ -34,17 +34,21 @@ export const Navigation = ({ openResourceList, resourceState, closeResourceList 
   }, []);
 
     useEffect(() => {
+      // Filter slashes so that trailing slashes behave the same as no trailing slash
+      const splitPath = location.pathname.split("/").filter((x) => x !== "");
+      const type = splitPath[0];
+      if (type === resourceState.resource) {
+        // Prevent infinite loop of opening/closing resource list
+        return;
+      }
       if (resourceState.opened) {
         closeResourceList()
       }
-      const splitPath = location.pathname.split("/");
-      const type = splitPath[1];
-      const hasResourceId = splitPath.length > 2
-      
+      const hasResourceId = splitPath.length > 1
       if (!isDashboard && !hasResourceId) {
         openResourceList(type);
       }
-    }, [location.pathname]);
+    }, [location.pathname, closeResourceList, openResourceList, isDashboard, resourceState.resource, resourceState.opened]);
 
 
   return (
