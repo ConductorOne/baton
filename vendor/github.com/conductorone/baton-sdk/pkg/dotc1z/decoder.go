@@ -179,7 +179,9 @@ func (d *decoder) Read(p []byte) (int, error) {
 }
 
 func (d *decoder) Close() error {
-	d.zd.Close()
+	if d.zd != nil {
+		d.zd.Close()
+	}
 	return nil
 }
 

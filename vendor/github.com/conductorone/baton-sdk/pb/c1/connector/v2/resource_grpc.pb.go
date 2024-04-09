@@ -185,3 +185,291 @@ var ResourcesService_ServiceDesc = grpc.ServiceDesc{
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "c1/connector/v2/resource.proto",
 }
+
+// ResourceManagerServiceClient is the client API for ResourceManagerService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type ResourceManagerServiceClient interface {
+	CreateResource(ctx context.Context, in *CreateResourceRequest, opts ...grpc.CallOption) (*CreateResourceResponse, error)
+	DeleteResource(ctx context.Context, in *DeleteResourceRequest, opts ...grpc.CallOption) (*DeleteResourceResponse, error)
+}
+
+type resourceManagerServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewResourceManagerServiceClient(cc grpc.ClientConnInterface) ResourceManagerServiceClient {
+	return &resourceManagerServiceClient{cc}
+}
+
+func (c *resourceManagerServiceClient) CreateResource(ctx context.Context, in *CreateResourceRequest, opts ...grpc.CallOption) (*CreateResourceResponse, error) {
+	out := new(CreateResourceResponse)
+	err := c.cc.Invoke(ctx, "/c1.connector.v2.ResourceManagerService/CreateResource", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *resourceManagerServiceClient) DeleteResource(ctx context.Context, in *DeleteResourceRequest, opts ...grpc.CallOption) (*DeleteResourceResponse, error) {
+	out := new(DeleteResourceResponse)
+	err := c.cc.Invoke(ctx, "/c1.connector.v2.ResourceManagerService/DeleteResource", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// ResourceManagerServiceServer is the server API for ResourceManagerService service.
+// All implementations should embed UnimplementedResourceManagerServiceServer
+// for forward compatibility
+type ResourceManagerServiceServer interface {
+	CreateResource(context.Context, *CreateResourceRequest) (*CreateResourceResponse, error)
+	DeleteResource(context.Context, *DeleteResourceRequest) (*DeleteResourceResponse, error)
+}
+
+// UnimplementedResourceManagerServiceServer should be embedded to have forward compatible implementations.
+type UnimplementedResourceManagerServiceServer struct {
+}
+
+func (UnimplementedResourceManagerServiceServer) CreateResource(context.Context, *CreateResourceRequest) (*CreateResourceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateResource not implemented")
+}
+func (UnimplementedResourceManagerServiceServer) DeleteResource(context.Context, *DeleteResourceRequest) (*DeleteResourceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteResource not implemented")
+}
+
+// UnsafeResourceManagerServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ResourceManagerServiceServer will
+// result in compilation errors.
+type UnsafeResourceManagerServiceServer interface {
+	mustEmbedUnimplementedResourceManagerServiceServer()
+}
+
+func RegisterResourceManagerServiceServer(s grpc.ServiceRegistrar, srv ResourceManagerServiceServer) {
+	s.RegisterService(&ResourceManagerService_ServiceDesc, srv)
+}
+
+func _ResourceManagerService_CreateResource_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateResourceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ResourceManagerServiceServer).CreateResource(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/c1.connector.v2.ResourceManagerService/CreateResource",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ResourceManagerServiceServer).CreateResource(ctx, req.(*CreateResourceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ResourceManagerService_DeleteResource_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteResourceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ResourceManagerServiceServer).DeleteResource(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/c1.connector.v2.ResourceManagerService/DeleteResource",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ResourceManagerServiceServer).DeleteResource(ctx, req.(*DeleteResourceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// ResourceManagerService_ServiceDesc is the grpc.ServiceDesc for ResourceManagerService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var ResourceManagerService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "c1.connector.v2.ResourceManagerService",
+	HandlerType: (*ResourceManagerServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "CreateResource",
+			Handler:    _ResourceManagerService_CreateResource_Handler,
+		},
+		{
+			MethodName: "DeleteResource",
+			Handler:    _ResourceManagerService_DeleteResource_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "c1/connector/v2/resource.proto",
+}
+
+// CredentialManagerServiceClient is the client API for CredentialManagerService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type CredentialManagerServiceClient interface {
+	RotateCredential(ctx context.Context, in *RotateCredentialRequest, opts ...grpc.CallOption) (*RotateCredentialResponse, error)
+}
+
+type credentialManagerServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewCredentialManagerServiceClient(cc grpc.ClientConnInterface) CredentialManagerServiceClient {
+	return &credentialManagerServiceClient{cc}
+}
+
+func (c *credentialManagerServiceClient) RotateCredential(ctx context.Context, in *RotateCredentialRequest, opts ...grpc.CallOption) (*RotateCredentialResponse, error) {
+	out := new(RotateCredentialResponse)
+	err := c.cc.Invoke(ctx, "/c1.connector.v2.CredentialManagerService/RotateCredential", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// CredentialManagerServiceServer is the server API for CredentialManagerService service.
+// All implementations should embed UnimplementedCredentialManagerServiceServer
+// for forward compatibility
+type CredentialManagerServiceServer interface {
+	RotateCredential(context.Context, *RotateCredentialRequest) (*RotateCredentialResponse, error)
+}
+
+// UnimplementedCredentialManagerServiceServer should be embedded to have forward compatible implementations.
+type UnimplementedCredentialManagerServiceServer struct {
+}
+
+func (UnimplementedCredentialManagerServiceServer) RotateCredential(context.Context, *RotateCredentialRequest) (*RotateCredentialResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RotateCredential not implemented")
+}
+
+// UnsafeCredentialManagerServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to CredentialManagerServiceServer will
+// result in compilation errors.
+type UnsafeCredentialManagerServiceServer interface {
+	mustEmbedUnimplementedCredentialManagerServiceServer()
+}
+
+func RegisterCredentialManagerServiceServer(s grpc.ServiceRegistrar, srv CredentialManagerServiceServer) {
+	s.RegisterService(&CredentialManagerService_ServiceDesc, srv)
+}
+
+func _CredentialManagerService_RotateCredential_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RotateCredentialRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CredentialManagerServiceServer).RotateCredential(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/c1.connector.v2.CredentialManagerService/RotateCredential",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CredentialManagerServiceServer).RotateCredential(ctx, req.(*RotateCredentialRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// CredentialManagerService_ServiceDesc is the grpc.ServiceDesc for CredentialManagerService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var CredentialManagerService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "c1.connector.v2.CredentialManagerService",
+	HandlerType: (*CredentialManagerServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "RotateCredential",
+			Handler:    _CredentialManagerService_RotateCredential_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "c1/connector/v2/resource.proto",
+}
+
+// AccountManagerServiceClient is the client API for AccountManagerService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type AccountManagerServiceClient interface {
+	CreateAccount(ctx context.Context, in *CreateAccountRequest, opts ...grpc.CallOption) (*CreateAccountResponse, error)
+}
+
+type accountManagerServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewAccountManagerServiceClient(cc grpc.ClientConnInterface) AccountManagerServiceClient {
+	return &accountManagerServiceClient{cc}
+}
+
+func (c *accountManagerServiceClient) CreateAccount(ctx context.Context, in *CreateAccountRequest, opts ...grpc.CallOption) (*CreateAccountResponse, error) {
+	out := new(CreateAccountResponse)
+	err := c.cc.Invoke(ctx, "/c1.connector.v2.AccountManagerService/CreateAccount", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// AccountManagerServiceServer is the server API for AccountManagerService service.
+// All implementations should embed UnimplementedAccountManagerServiceServer
+// for forward compatibility
+type AccountManagerServiceServer interface {
+	CreateAccount(context.Context, *CreateAccountRequest) (*CreateAccountResponse, error)
+}
+
+// UnimplementedAccountManagerServiceServer should be embedded to have forward compatible implementations.
+type UnimplementedAccountManagerServiceServer struct {
+}
+
+func (UnimplementedAccountManagerServiceServer) CreateAccount(context.Context, *CreateAccountRequest) (*CreateAccountResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateAccount not implemented")
+}
+
+// UnsafeAccountManagerServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to AccountManagerServiceServer will
+// result in compilation errors.
+type UnsafeAccountManagerServiceServer interface {
+	mustEmbedUnimplementedAccountManagerServiceServer()
+}
+
+func RegisterAccountManagerServiceServer(s grpc.ServiceRegistrar, srv AccountManagerServiceServer) {
+	s.RegisterService(&AccountManagerService_ServiceDesc, srv)
+}
+
+func _AccountManagerService_CreateAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateAccountRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AccountManagerServiceServer).CreateAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/c1.connector.v2.AccountManagerService/CreateAccount",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AccountManagerServiceServer).CreateAccount(ctx, req.(*CreateAccountRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// AccountManagerService_ServiceDesc is the grpc.ServiceDesc for AccountManagerService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var AccountManagerService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "c1.connector.v2.AccountManagerService",
+	HandlerType: (*AccountManagerServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "CreateAccount",
+			Handler:    _AccountManagerService_CreateAccount_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "c1/connector/v2/resource.proto",
+}

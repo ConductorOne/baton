@@ -13,6 +13,11 @@ import (
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 )
 
+type pragma struct {
+	name  string
+	value string
+}
+
 type C1File struct {
 	rawDb          *sql.DB
 	db             *goqu.Database
@@ -22,6 +27,7 @@ type C1File struct {
 	dbFilePath     string
 	dbUpdated      bool
 	tempDir        string
+	pragmas        []pragma
 }
 
 type C1FOption func(*C1File)
@@ -29,6 +35,12 @@ type C1FOption func(*C1File)
 func WithC1FTmpDir(tempDir string) C1FOption {
 	return func(o *C1File) {
 		o.tempDir = tempDir
+	}
+}
+
+func WithC1FPragma(name string, value string) C1FOption {
+	return func(o *C1File) {
+		o.pragmas = append(o.pragmas, pragma{name, value})
 	}
 }
 
@@ -59,13 +71,20 @@ func NewC1File(ctx context.Context, dbFilePath string, opts ...C1FOption) (*C1Fi
 }
 
 type c1zOptions struct {
-	tmpDir string
+	tmpDir  string
+	pragmas []pragma
 }
 type C1ZOption func(*c1zOptions)
 
 func WithTmpDir(tmpDir string) C1ZOption {
 	return func(o *c1zOptions) {
 		o.tmpDir = tmpDir
+	}
+}
+
+func WithPragma(name string, value string) C1ZOption {
+	return func(o *c1zOptions) {
+		o.pragmas = append(o.pragmas, pragma{name, value})
 	}
 }
 
@@ -81,7 +100,12 @@ func NewC1ZFile(ctx context.Context, outputFilePath string, opts ...C1ZOption) (
 		return nil, err
 	}
 
-	c1File, err := NewC1File(ctx, dbFilePath)
+	var c1fopts []C1FOption
+	for _, pragma := range options.pragmas {
+		c1fopts = append(c1fopts, WithC1FPragma(pragma.name, pragma.value))
+	}
+
+	c1File, err := NewC1File(ctx, dbFilePath, c1fopts...)
 	if err != nil {
 		return nil, err
 	}
@@ -138,6 +162,13 @@ func (c *C1File) init(ctx context.Context) error {
 		query, args := t.Schema()
 
 		_, err = c.db.ExecContext(ctx, fmt.Sprintf(query, args...))
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, pragma := range c.pragmas {
+		_, err := c.db.ExecContext(ctx, fmt.Sprintf("PRAGMA %s = %s", pragma.name, pragma.value))
 		if err != nil {
 			return err
 		}

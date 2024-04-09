@@ -2,8 +2,7 @@
   "source": ["./dist/macos-arm64_darwin_arm64/baton"],
   "bundle_id": "com.conductorone.baton",
   "apple_id": {
-    "username" : "justin.gallardo@conductorone.com",
-    "password":  "@env:AC_PASSWORD"
+    "username" : "justin.gallardo@conductorone.com"
   },
   "sign": {
     "application_identity": "Developer ID Application: Justin Gallardo (858DKH55XL)"

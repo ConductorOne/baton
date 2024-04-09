@@ -10,6 +10,16 @@ import (
 
 type Annotations []*anypb.Any
 
+// Convenience function to create annotations.
+func New(msgs ...proto.Message) Annotations {
+	annos := Annotations{}
+	for _, msg := range msgs {
+		annos.Update(msg)
+	}
+
+	return annos
+}
+
 // Append appends the proto message to the annotations slice.
 func (a *Annotations) Append(msgs ...proto.Message) {
 	for _, msg := range msgs {

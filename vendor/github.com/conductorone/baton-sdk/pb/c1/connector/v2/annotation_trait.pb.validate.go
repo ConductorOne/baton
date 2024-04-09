@@ -202,6 +202,122 @@ func (m *UserTrait) validate(all bool) error {
 
 	// no validation rules for Login
 
+	if all {
+		switch v := interface{}(m.GetCreatedAt()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UserTraitValidationError{
+					field:  "CreatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UserTraitValidationError{
+					field:  "CreatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCreatedAt()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UserTraitValidationError{
+				field:  "CreatedAt",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetLastLogin()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UserTraitValidationError{
+					field:  "LastLogin",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UserTraitValidationError{
+					field:  "LastLogin",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetLastLogin()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UserTraitValidationError{
+				field:  "LastLogin",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetMfaStatus()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UserTraitValidationError{
+					field:  "MfaStatus",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UserTraitValidationError{
+					field:  "MfaStatus",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMfaStatus()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UserTraitValidationError{
+				field:  "MfaStatus",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetSsoStatus()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UserTraitValidationError{
+					field:  "SsoStatus",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UserTraitValidationError{
+					field:  "SsoStatus",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetSsoStatus()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UserTraitValidationError{
+				field:  "SsoStatus",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return UserTraitMultiError(errors)
 	}
@@ -1086,3 +1202,211 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UserTrait_StatusValidationError{}
+
+// Validate checks the field values on UserTrait_MFAStatus with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UserTrait_MFAStatus) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UserTrait_MFAStatus with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UserTrait_MFAStatusMultiError, or nil if none found.
+func (m *UserTrait_MFAStatus) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UserTrait_MFAStatus) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for MfaEnabled
+
+	if len(errors) > 0 {
+		return UserTrait_MFAStatusMultiError(errors)
+	}
+
+	return nil
+}
+
+// UserTrait_MFAStatusMultiError is an error wrapping multiple validation
+// errors returned by UserTrait_MFAStatus.ValidateAll() if the designated
+// constraints aren't met.
+type UserTrait_MFAStatusMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UserTrait_MFAStatusMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UserTrait_MFAStatusMultiError) AllErrors() []error { return m }
+
+// UserTrait_MFAStatusValidationError is the validation error returned by
+// UserTrait_MFAStatus.Validate if the designated constraints aren't met.
+type UserTrait_MFAStatusValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UserTrait_MFAStatusValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UserTrait_MFAStatusValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UserTrait_MFAStatusValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UserTrait_MFAStatusValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UserTrait_MFAStatusValidationError) ErrorName() string {
+	return "UserTrait_MFAStatusValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UserTrait_MFAStatusValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUserTrait_MFAStatus.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UserTrait_MFAStatusValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UserTrait_MFAStatusValidationError{}
+
+// Validate checks the field values on UserTrait_SSOStatus with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UserTrait_SSOStatus) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UserTrait_SSOStatus with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UserTrait_SSOStatusMultiError, or nil if none found.
+func (m *UserTrait_SSOStatus) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UserTrait_SSOStatus) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for SsoEnabled
+
+	if len(errors) > 0 {
+		return UserTrait_SSOStatusMultiError(errors)
+	}
+
+	return nil
+}
+
+// UserTrait_SSOStatusMultiError is an error wrapping multiple validation
+// errors returned by UserTrait_SSOStatus.ValidateAll() if the designated
+// constraints aren't met.
+type UserTrait_SSOStatusMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UserTrait_SSOStatusMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UserTrait_SSOStatusMultiError) AllErrors() []error { return m }
+
+// UserTrait_SSOStatusValidationError is the validation error returned by
+// UserTrait_SSOStatus.Validate if the designated constraints aren't met.
+type UserTrait_SSOStatusValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UserTrait_SSOStatusValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UserTrait_SSOStatusValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UserTrait_SSOStatusValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UserTrait_SSOStatusValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UserTrait_SSOStatusValidationError) ErrorName() string {
+	return "UserTrait_SSOStatusValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UserTrait_SSOStatusValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUserTrait_SSOStatus.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UserTrait_SSOStatusValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UserTrait_SSOStatusValidationError{}
