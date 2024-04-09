@@ -409,7 +409,7 @@ func (s *S3Client) ObjectInfo(ctx context.Context, key string) (*ObjectInfo, err
 	}
 
 	ret.ETag = awsSdk.ToString(headOut.ETag)
-	ret.ContentLength = headOut.ContentLength
+	ret.ContentLength = awsSdk.ToInt64(headOut.ContentLength)
 	ret.Sha256Sum = awsSdk.ToString(headOut.ChecksumSHA256)
 	ret.LastModified = awsSdk.ToTime(headOut.LastModified)
 
