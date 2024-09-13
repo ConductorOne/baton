@@ -1,7 +1,7 @@
 
 ![Baton Logo](./docs/images/baton-logo.png)
 
-# Baton: A toolkit for auditing infrastructure access
+# Baton: A toolkit for adding identity governance to any application
 
 The Baton toolkit gives developers the ability to extract, normalize, and interact with workforce identity data such as user accounts, permissions, roles, groups, resources, and more. Through the Baton CLI, developers can audit infrastructure access on-demand, run diffs, and extract access data. This can be used for automating user access reviews, exports into SIEMs, real-time visibility, and many other use cases.
 
