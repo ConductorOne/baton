@@ -15,7 +15,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"syscall"
 	gotime "time"
 	"unicode"
 	"unsafe"
@@ -51,9 +50,14 @@ const (
 // )
 
 type (
-	long  = types.User_long_t
-	ulong = types.User_ulong_t
+	syscallErrno = unix.Errno
+	long         = types.User_long_t
+	ulong        = types.User_ulong_t
 )
+
+type pthreadAttr struct {
+	detachState int32
+}
 
 // // Keep these outside of the var block otherwise go generate will miss them.
 var X__stderrp = Xstdout
@@ -452,9 +456,11 @@ func Xsysconf(t *TLS, name int32) long {
 		return long(unix.Getpagesize())
 	case unistd.X_SC_NPROCESSORS_ONLN:
 		return long(runtime.NumCPU())
+	case unistd.X_SC_GETPW_R_SIZE_MAX:
+		return 128
 	}
 
-	panic(todo(""))
+	panic(todo("", name))
 }
 
 // int close(int fd);
@@ -1092,7 +1098,7 @@ func Xfileno(t *TLS, stream uintptr) int32 {
 	return -1
 }
 
-func newFtsent(t *TLS, info int, path string, stat *unix.Stat_t, err syscall.Errno) (r *fts.FTSENT) {
+func newFtsent(t *TLS, info int, path string, stat *unix.Stat_t, err syscallErrno) (r *fts.FTSENT) {
 	var statp uintptr
 	if stat != nil {
 		statp = Xmalloc(t, types.Size_t(unsafe.Sizeof(unix.Stat_t{})))
@@ -1116,7 +1122,7 @@ func newFtsent(t *TLS, info int, path string, stat *unix.Stat_t, err syscall.Err
 	}
 }
 
-func newCFtsent(t *TLS, info int, path string, stat *unix.Stat_t, err syscall.Errno) uintptr {
+func newCFtsent(t *TLS, info int, path string, stat *unix.Stat_t, err syscallErrno) uintptr {
 	p := Xcalloc(t, 1, types.Size_t(unsafe.Sizeof(fts.FTSENT{})))
 	if p == 0 {
 		panic("OOM")
@@ -1294,12 +1300,18 @@ func Xtzset(t *TLS) {
 	//TODO
 }
 
+var strerrorBuf [100]byte
+
 // char *strerror(int errnum);
 func Xstrerror(t *TLS, errnum int32) uintptr {
 	if __ccgo_strace {
 		trc("t=%v errnum=%v, (%v:)", t, errnum, origin(2))
 	}
-	panic(todo(""))
+	// 	if dmesgs {
+	// 		dmesg("%v: %v\n%s", origin(1), errnum, debug.Stack())
+	// 	}
+	copy(strerrorBuf[:], fmt.Sprintf("strerror(%d)\x00", errnum))
+	return uintptr(unsafe.Pointer(&strerrorBuf[0]))
 }
 
 // void *dlopen(const char *filename, int flags);
@@ -1470,14 +1482,6 @@ func Xrealpath(t *TLS, path, resolved_path uintptr) uintptr {
 	return resolved_path
 }
 
-// struct tm *gmtime_r(const time_t *timep, struct tm *result);
-func Xgmtime_r(t *TLS, timep, result uintptr) uintptr {
-	if __ccgo_strace {
-		trc("t=%v result=%v, (%v:)", t, result, origin(2))
-	}
-	panic(todo(""))
-}
-
 // char *inet_ntoa(struct in_addr in);
 func Xinet_ntoa(t *TLS, in1 in.In_addr) uintptr {
 	if __ccgo_strace {
@@ -1509,7 +1513,7 @@ func Xabort(t *TLS) {
 	(*signal.Sigaction)(unsafe.Pointer(p)).F__sigaction_u.F__sa_handler = signal.SIG_DFL
 	Xsigaction(t, signal.SIGABRT, p, 0)
 	Xfree(t, p)
-	unix.Kill(unix.Getpid(), syscall.Signal(signal.SIGABRT))
+	unix.Kill(unix.Getpid(), unix.Signal(signal.SIGABRT))
 	panic(todo("unrechable"))
 }
 
@@ -1761,7 +1765,7 @@ func Xgetservbyname(t *TLS, name, proto uintptr) uintptr {
 // //TODO- 	return Xreaddir(t, dir)
 // //TODO- }
 //
-// func __syscall(r, _ uintptr, errno syscall.Errno) long {
+// func __syscall(r, _ uintptr, errno syscallErrno) long {
 // 	if errno != 0 {
 // 		return long(-errno)
 // 	}
@@ -1951,12 +1955,12 @@ func Xsetattrlist(t *TLS, path, attrList, attrBuf uintptr, attrBufSize types.Siz
 }
 
 // int copyfile(const char *from, const char *to, copyfile_state_t state, copyfile_flags_t flags);
-func Xcopyfile(...interface{}) int32 {
+func Xcopyfile(t *TLS, _ ...interface{}) int32 {
 	panic(todo(""))
 }
 
 // int truncate(const char *path, off_t length);
-func Xtruncate(...interface{}) int32 {
+func Xtruncate(t *TLS, _ ...interface{}) int32 {
 	panic(todo(""))
 }
 
@@ -2051,7 +2055,7 @@ func Xpipe(t *TLS, pipefd uintptr) int32 {
 		trc("t=%v pipefd=%v, (%v:)", t, pipefd, origin(2))
 	}
 	var a [2]int
-	if err := syscall.Pipe(a[:]); err != nil {
+	if err := unix.Pipe(a[:]); err != nil {
 		if dmesgs {
 			dmesg("%v: %v FAIL", origin(1), err)
 		}
@@ -2160,7 +2164,7 @@ func X__ccgo_pthreadAttrGetDetachState(tls *TLS, a uintptr) int32 {
 	if __ccgo_strace {
 		trc("tls=%v a=%v, (%v:)", tls, a, origin(2))
 	}
-	panic(todo(""))
+	return (*pthreadAttr)(unsafe.Pointer(a)).detachState
 }
 
 func Xpthread_attr_getdetachstate(tls *TLS, a uintptr, state uintptr) int32 {
@@ -2230,39 +2234,39 @@ func Xpause(t *TLS) int32 {
 	}
 	c := make(chan os.Signal)
 	gosignal.Notify(c,
-		syscall.SIGABRT,
-		syscall.SIGALRM,
-		syscall.SIGBUS,
-		syscall.SIGCHLD,
-		syscall.SIGCONT,
-		syscall.SIGFPE,
-		syscall.SIGHUP,
-		syscall.SIGILL,
-		// syscall.SIGINT,
-		syscall.SIGIO,
-		syscall.SIGIOT,
-		syscall.SIGKILL,
-		syscall.SIGPIPE,
-		syscall.SIGPROF,
-		syscall.SIGQUIT,
-		syscall.SIGSEGV,
-		syscall.SIGSTOP,
-		syscall.SIGSYS,
-		syscall.SIGTERM,
-		syscall.SIGTRAP,
-		syscall.SIGTSTP,
-		syscall.SIGTTIN,
-		syscall.SIGTTOU,
-		syscall.SIGURG,
-		syscall.SIGUSR1,
-		syscall.SIGUSR2,
-		syscall.SIGVTALRM,
-		syscall.SIGWINCH,
-		syscall.SIGXCPU,
-		syscall.SIGXFSZ,
+		unix.SIGABRT,
+		unix.SIGALRM,
+		unix.SIGBUS,
+		unix.SIGCHLD,
+		unix.SIGCONT,
+		unix.SIGFPE,
+		unix.SIGHUP,
+		unix.SIGILL,
+		// unix.SIGINT,
+		unix.SIGIO,
+		unix.SIGIOT,
+		unix.SIGKILL,
+		unix.SIGPIPE,
+		unix.SIGPROF,
+		unix.SIGQUIT,
+		unix.SIGSEGV,
+		unix.SIGSTOP,
+		unix.SIGSYS,
+		unix.SIGTERM,
+		unix.SIGTRAP,
+		unix.SIGTSTP,
+		unix.SIGTTIN,
+		unix.SIGTTOU,
+		unix.SIGURG,
+		unix.SIGUSR1,
+		unix.SIGUSR2,
+		unix.SIGVTALRM,
+		unix.SIGWINCH,
+		unix.SIGXCPU,
+		unix.SIGXFSZ,
 	)
 	switch <-c {
-	case syscall.SIGINT:
+	case unix.SIGINT:
 		panic(todo(""))
 	default:
 		t.setErrno(errno.EINTR)
@@ -2422,4 +2426,95 @@ func X__swbuf(t *TLS, i int32, f uintptr) int32 {
 		trc("t=%v i=%v f=%v, (%v:)", t, i, f, origin(2))
 	}
 	panic(todo(""))
+}
+
+// int nanosleep(const struct timespec *req, struct timespec *rem);
+func Xnanosleep(t *TLS, req, rem uintptr) int32 {
+	if __ccgo_strace {
+		trc("t=%v rem=%v, (%v:)", t, rem, origin(2))
+	}
+	v := *(*time.Timespec)(unsafe.Pointer(req))
+	gotime.Sleep(gotime.Second*gotime.Duration(v.Ftv_sec) + gotime.Duration(v.Ftv_nsec))
+	return 0
+}
+
+// // void malloc_set_zone_name(malloc_zone_t *zone, const char *name)
+// func Xmalloc_set_zone_name(t *TLS, zone, name uintptr) {
+// 	if __ccgo_strace {
+// 		trc("t=%v zone=%v name=%v, (%v:)", t, zone, name, origin(2))
+// 	}
+// 	// nop
+// }
+
+// size_t malloc_size(const void *ptr);
+func Xmalloc_size(t *TLS, ptr uintptr) types.Size_t {
+	if __ccgo_strace {
+		trc("t=%v ptr=%v, (%v:)", t, ptr, origin(2))
+	}
+	panic(todo(""))
+}
+
+// int open(const char *pathname, int flags, ...);
+func Xopen64(t *TLS, pathname uintptr, flags int32, args uintptr) int32 {
+	if __ccgo_strace {
+		trc("t=%v pathname=%v flags=%v args=%v, (%v:)", t, pathname, flags, args, origin(2))
+	}
+	var mode types.Mode_t
+	if args != 0 {
+		mode = (types.Mode_t)(VaUint32(&args))
+	}
+	fdcwd := fcntl.AT_FDCWD
+	n, _, err := unix.Syscall6(unix.SYS_OPENAT, uintptr(fdcwd), pathname, uintptr(flags), uintptr(mode), 0, 0)
+	if err != 0 {
+		// if dmesgs {
+		// 	dmesg("%v: %q %#x: %v", origin(1), GoString(pathname), flags, err)
+		// }
+		t.setErrno(err)
+		return -1
+	}
+
+	// if dmesgs {
+	// 	dmesg("%v: %q flags %#x mode %#o: fd %v", origin(1), GoString(pathname), flags, mode, n)
+	// }
+	return int32(n)
+}
+
+// int getrlimit(int resource, struct rlimit *rlim);
+func Xgetrlimit(t *TLS, resource int32, rlim uintptr) int32 {
+	if __ccgo_strace {
+		trc("t=%v resource=%v rlim=%v, (%v:)", t, resource, rlim, origin(2))
+	}
+	if _, _, err := unix.Syscall(unix.SYS_GETRLIMIT, uintptr(resource), uintptr(rlim), 0); err != 0 {
+		t.setErrno(err)
+		return -1
+	}
+
+	return 0
+}
+
+// int setrlimit(int resource, const struct rlimit *rlim);
+func Xsetrlimit(t *TLS, resource int32, rlim uintptr) int32 {
+	if __ccgo_strace {
+		trc("t=%v resource=%v rlim=%v, (%v:)", t, resource, rlim, origin(2))
+	}
+	if _, _, err := unix.Syscall(unix.SYS_SETRLIMIT, uintptr(resource), uintptr(rlim), 0); err != 0 {
+		t.setErrno(err)
+		return -1
+	}
+
+	return 0
+}
+
+func X__fpclassifyd(tls *TLS, x float64) (r int32) {
+	return X__fpclassify(tls, x)
+}
+
+var Xin6addr_any = in6_addr{}
+
+func X__builtin_lround(tls *TLS, x float64) (r long) {
+	return Xlround(tls, x)
+}
+
+func Xlround(tls *TLS, x float64) (r long) {
+	return long(Xround(tls, x))
 }

@@ -21,6 +21,8 @@ func NewTransport(ctx context.Context, options ...Option) (*Transport, error) {
 	for _, opt := range options {
 		opt.Apply(t)
 	}
+	t.userAgent = t.userAgent + " baton-sdk/" + sdk.Version
+
 	_, err := t.cycle(ctx)
 	if err != nil {
 		return nil, err
@@ -83,7 +85,7 @@ func (uat *userAgentTripper) RoundTrip(req *http.Request) (*http.Response, error
 	return uat.next.RoundTrip(req)
 }
 
-func (t *Transport) make(ctx context.Context) (http.RoundTripper, error) {
+func (t *Transport) make(_ context.Context) (http.RoundTripper, error) {
 	// based on http.DefaultTransport
 	baseTransport := &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
@@ -104,7 +106,6 @@ func (t *Transport) make(ctx context.Context) (http.RoundTripper, error) {
 		return nil, err
 	}
 	var rv http.RoundTripper = baseTransport
-	t.userAgent = t.userAgent + " baton-sdk/" + sdk.Version
 	rv = &userAgentTripper{next: rv, userAgent: t.userAgent}
 	return rv, nil
 }

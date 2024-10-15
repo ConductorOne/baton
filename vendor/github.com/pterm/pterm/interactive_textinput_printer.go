@@ -6,35 +6,46 @@ import (
 	"atomicgo.dev/cursor"
 	"atomicgo.dev/keyboard"
 	"atomicgo.dev/keyboard/keys"
+	"github.com/mattn/go-runewidth"
 
 	"github.com/pterm/pterm/internal"
 )
 
-var (
-	// DefaultInteractiveTextInput is the default InteractiveTextInput printer.
-	DefaultInteractiveTextInput = InteractiveTextInputPrinter{
-		DefaultText: "Input text",
-		TextStyle:   &ThemeDefault.PrimaryStyle,
-		Mask:        "",
-	}
-)
+// DefaultInteractiveTextInput is the default InteractiveTextInput printer.
+var DefaultInteractiveTextInput = InteractiveTextInputPrinter{
+	DefaultText: "Input text",
+	Delimiter:   ": ",
+	TextStyle:   &ThemeDefault.PrimaryStyle,
+	Mask:        "",
+}
 
 // InteractiveTextInputPrinter is a printer for interactive select menus.
 type InteractiveTextInputPrinter struct {
-	TextStyle   *Style
-	DefaultText string
-	MultiLine   bool
-	Mask        string
+	TextStyle       *Style
+	DefaultText     string
+	DefaultValue    string
+	Delimiter       string
+	MultiLine       bool
+	Mask            string
+	OnInterruptFunc func()
 
-	input      []string
-	cursorXPos int
-	cursorYPos int
-	text       string
+	input         []string
+	cursorXPos    int
+	cursorYPos    int
+	text          string
+	startedTyping bool
+	valueStyle    *Style
 }
 
 // WithDefaultText sets the default text.
 func (p InteractiveTextInputPrinter) WithDefaultText(text string) *InteractiveTextInputPrinter {
 	p.DefaultText = text
+	return &p
+}
+
+// WithDefaultValue sets the default value.
+func (p InteractiveTextInputPrinter) WithDefaultValue(value string) *InteractiveTextInputPrinter {
+	p.DefaultValue = value
 	return &p
 }
 
@@ -56,38 +67,52 @@ func (p InteractiveTextInputPrinter) WithMask(mask string) *InteractiveTextInput
 	return &p
 }
 
+// WithOnInterruptFunc sets the function to execute on exit of the input reader
+func (p InteractiveTextInputPrinter) WithOnInterruptFunc(exitFunc func()) *InteractiveTextInputPrinter {
+	p.OnInterruptFunc = exitFunc
+	return &p
+}
+
+// WithDelimiter sets the delimiter between the message and the input.
+func (p InteractiveTextInputPrinter) WithDelimiter(delimiter string) *InteractiveTextInputPrinter {
+	p.Delimiter = delimiter
+	return &p
+}
+
 // Show shows the interactive select menu and returns the selected entry.
 func (p InteractiveTextInputPrinter) Show(text ...string) (string, error) {
 	// should be the first defer statement to make sure it is executed last
 	// and all the needed cleanup can be done before
-	cancel, exit := internal.NewCancelationSignal()
+	cancel, exit := internal.NewCancelationSignal(p.OnInterruptFunc)
 	defer exit()
 
 	var areaText string
 
-	if len(text) == 0 || Sprint(text[0]) == "" {
+	if len(text) == 0 || text[0] == "" {
 		text = []string{p.DefaultText}
 	}
 
 	if p.MultiLine {
-		areaText = p.TextStyle.Sprintfln("%s %s :", text[0], ThemeDefault.SecondaryStyle.Sprint("[Press tab to submit]"))
+		areaText = p.TextStyle.Sprintfln("%s %s %s", text[0], ThemeDefault.SecondaryStyle.Sprint("[Press tab to submit]"), p.Delimiter)
 	} else {
-		areaText = p.TextStyle.Sprintf("%s: ", text[0])
+		areaText = p.TextStyle.Sprintf("%s%s", text[0], p.Delimiter)
 	}
+
 	p.text = areaText
-	area, err := DefaultArea.Start(areaText)
-	defer area.Stop()
-	if err != nil {
-		return "", err
-	}
+	area := cursor.NewArea()
+	area.Update(areaText)
+	area.StartOfLine()
 
-	cursor.Up(1)
-	cursor.StartOfLine()
 	if !p.MultiLine {
-		cursor.Right(len(RemoveColorFromString(areaText)))
+		cursor.Right(runewidth.StringWidth(RemoveColorFromString(areaText)))
 	}
 
-	err = keyboard.Listen(func(key keys.Key) (stop bool, err error) {
+	if p.DefaultValue != "" {
+		p.input = append(p.input, Gray(p.DefaultValue))
+		p.updateArea(&area)
+	}
+
+	err := keyboard.Listen(func(key keys.Key) (stop bool, err error) {
 		if !p.MultiLine {
 			p.cursorYPos = 0
 		}
@@ -98,9 +123,21 @@ func (p InteractiveTextInputPrinter) Show(text ...string) (string, error) {
 		switch key.Code {
 		case keys.Tab:
 			if p.MultiLine {
+				area.Bottom()
 				return true, nil
 			}
 		case keys.Enter:
+			if p.DefaultValue != "" && !p.startedTyping {
+				for i := range p.input {
+					p.input[i] = RemoveColorFromString(p.input[i])
+				}
+
+				if p.MultiLine {
+					area.Bottom()
+				}
+				return true, nil
+			}
+
 			if p.MultiLine {
 				if key.AltPressed {
 					p.cursorXPos = 0
@@ -112,16 +149,27 @@ func (p InteractiveTextInputPrinter) Show(text ...string) (string, error) {
 				p.input = append(p.input, appendAfterY...)
 				p.cursorYPos++
 				p.cursorXPos = -internal.GetStringMaxWidth(p.input[p.cursorYPos])
-				cursor.Down(1)
 				cursor.StartOfLine()
 			} else {
 				return true, nil
 			}
 		case keys.RuneKey:
+			if !p.startedTyping {
+				p.input = []string{""}
+				p.startedTyping = true
+			}
 			p.input[p.cursorYPos] = string(append([]rune(p.input[p.cursorYPos])[:len([]rune(p.input[p.cursorYPos]))+p.cursorXPos], append([]rune(key.String()), []rune(p.input[p.cursorYPos])[len([]rune(p.input[p.cursorYPos]))+p.cursorXPos:]...)...))
 		case keys.Space:
+			if !p.startedTyping {
+				p.input = []string{" "}
+				p.startedTyping = true
+			}
 			p.input[p.cursorYPos] = string(append([]rune(p.input[p.cursorYPos])[:len([]rune(p.input[p.cursorYPos]))+p.cursorXPos], append([]rune(" "), []rune(p.input[p.cursorYPos])[len([]rune(p.input[p.cursorYPos]))+p.cursorXPos:]...)...))
 		case keys.Backspace:
+			if !p.startedTyping {
+				p.input = []string{""}
+				p.startedTyping = true
+			}
 			if len([]rune(p.input[p.cursorYPos]))+p.cursorXPos > 0 {
 				p.input[p.cursorYPos] = string(append([]rune(p.input[p.cursorYPos])[:len([]rune(p.input[p.cursorYPos]))-1+p.cursorXPos], []rune(p.input[p.cursorYPos])[len([]rune(p.input[p.cursorYPos]))+p.cursorXPos:]...))
 			} else if p.cursorYPos > 0 {
@@ -132,6 +180,11 @@ func (p InteractiveTextInputPrinter) Show(text ...string) (string, error) {
 				p.cursorYPos--
 			}
 		case keys.Delete:
+			if !p.startedTyping {
+				p.input = []string{""}
+				p.startedTyping = true
+				return false, nil
+			}
 			if len([]rune(p.input[p.cursorYPos]))+p.cursorXPos < len([]rune(p.input[p.cursorYPos])) {
 				p.input[p.cursorYPos] = string(append([]rune(p.input[p.cursorYPos])[:len([]rune(p.input[p.cursorYPos]))+p.cursorXPos], []rune(p.input[p.cursorYPos])[len([]rune(p.input[p.cursorYPos]))+p.cursorXPos+1:]...))
 				p.cursorXPos++
@@ -145,6 +198,10 @@ func (p InteractiveTextInputPrinter) Show(text ...string) (string, error) {
 			cancel()
 			return true, nil
 		case keys.Down:
+			if !p.startedTyping {
+				p.input = []string{""}
+				p.startedTyping = true
+			}
 			if p.cursorYPos+1 < len(p.input) {
 				p.cursorXPos = (internal.GetStringMaxWidth(p.input[p.cursorYPos]) + p.cursorXPos) - internal.GetStringMaxWidth(p.input[p.cursorYPos+1])
 				if p.cursorXPos > 0 {
@@ -153,6 +210,10 @@ func (p InteractiveTextInputPrinter) Show(text ...string) (string, error) {
 				p.cursorYPos++
 			}
 		case keys.Up:
+			if !p.startedTyping {
+				p.input = []string{""}
+				p.startedTyping = true
+			}
 			if p.cursorYPos > 0 {
 				p.cursorXPos = (internal.GetStringMaxWidth(p.input[p.cursorYPos]) + p.cursorXPos) - internal.GetStringMaxWidth(p.input[p.cursorYPos-1])
 				if p.cursorXPos > 0 {
@@ -181,7 +242,7 @@ func (p InteractiveTextInputPrinter) Show(text ...string) (string, error) {
 			}
 		}
 
-		p.updateArea(area)
+		p.updateArea(&area)
 
 		return false, nil
 	})
@@ -200,10 +261,14 @@ func (p InteractiveTextInputPrinter) Show(text ...string) (string, error) {
 		}
 	}
 
+	if !p.startedTyping {
+		return p.DefaultValue, nil
+	}
+
 	return strings.ReplaceAll(areaText, p.text, ""), nil
 }
 
-func (p InteractiveTextInputPrinter) updateArea(area *AreaPrinter) string {
+func (p InteractiveTextInputPrinter) updateArea(area *cursor.Area) string {
 	if !p.MultiLine {
 		p.cursorYPos = 0
 	}
@@ -225,10 +290,10 @@ func (p InteractiveTextInputPrinter) updateArea(area *AreaPrinter) string {
 		p.cursorXPos = -internal.GetStringMaxWidth(p.input[p.cursorYPos])
 	}
 
-	cursor.StartOfLine()
 	area.Update(areaText)
-	cursor.Up(len(p.input) - p.cursorYPos)
-	cursor.StartOfLine()
+	area.Top()
+	area.Down(p.cursorYPos + 1)
+	area.StartOfLine()
 	if p.MultiLine {
 		cursor.Right(internal.GetStringMaxWidth(p.input[p.cursorYPos]) + p.cursorXPos)
 	} else {

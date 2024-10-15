@@ -9,22 +9,36 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 	s3cust "github.com/aws/aws-sdk-go-v2/service/s3/internal/customizations"
 	"github.com/aws/smithy-go/middleware"
+	"github.com/aws/smithy-go/ptr"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
+// This operation is not supported by directory buckets.
+//
 // Deletes the lifecycle configuration from the specified bucket. Amazon S3
 // removes all the lifecycle configuration rules in the lifecycle subresource
 // associated with the bucket. Your objects never expire, and Amazon S3 no longer
 // automatically deletes any objects on the basis of rules contained in the deleted
-// lifecycle configuration. To use this operation, you must have permission to
-// perform the s3:PutLifecycleConfiguration action. By default, the bucket owner
-// has this permission and the bucket owner can grant this permission to others.
+// lifecycle configuration.
+//
+// To use this operation, you must have permission to perform the
+// s3:PutLifecycleConfiguration action. By default, the bucket owner has this
+// permission and the bucket owner can grant this permission to others.
+//
 // There is usually some time lag before lifecycle configuration deletion is fully
-// propagated to all the Amazon S3 systems. For more information about the object
-// expiration, see Elements to Describe Lifecycle Actions (https://docs.aws.amazon.com/AmazonS3/latest/dev/intro-lifecycle-rules.html#intro-lifecycle-rules-actions)
-// . Related actions include:
-//   - PutBucketLifecycleConfiguration (https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketLifecycleConfiguration.html)
-//   - GetBucketLifecycleConfiguration (https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLifecycleConfiguration.html)
+// propagated to all the Amazon S3 systems.
+//
+// For more information about the object expiration, see [Elements to Describe Lifecycle Actions].
+//
+// Related actions include:
+//
+// [PutBucketLifecycleConfiguration]
+//
+// [GetBucketLifecycleConfiguration]
+//
+// [PutBucketLifecycleConfiguration]: https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketLifecycleConfiguration.html
+// [Elements to Describe Lifecycle Actions]: https://docs.aws.amazon.com/AmazonS3/latest/dev/intro-lifecycle-rules.html#intro-lifecycle-rules-actions
+// [GetBucketLifecycleConfiguration]: https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLifecycleConfiguration.html
 func (c *Client) DeleteBucketLifecycle(ctx context.Context, params *DeleteBucketLifecycleInput, optFns ...func(*Options)) (*DeleteBucketLifecycleOutput, error) {
 	if params == nil {
 		params = &DeleteBucketLifecycleInput{}
@@ -47,17 +61,18 @@ type DeleteBucketLifecycleInput struct {
 	// This member is required.
 	Bucket *string
 
-	// The account ID of the expected bucket owner. If the bucket is owned by a
-	// different account, the request fails with the HTTP status code 403 Forbidden
-	// (access denied).
+	// The account ID of the expected bucket owner. If the account ID that you provide
+	// does not match the actual owner of the bucket, the request fails with the HTTP
+	// status code 403 Forbidden (access denied).
 	ExpectedBucketOwner *string
 
 	noSmithyDocumentSerde
 }
 
 func (in *DeleteBucketLifecycleInput) bindEndpointParams(p *EndpointParameters) {
-	p.Bucket = in.Bucket
 
+	p.Bucket = in.Bucket
+	p.UseS3ExpressControlEndpoint = ptr.Bool(true)
 }
 
 type DeleteBucketLifecycleOutput struct {
@@ -89,25 +104,28 @@ func (c *Client) addOperationDeleteBucketLifecycleMiddlewares(stack *middleware.
 	if err = addSetLoggerMiddleware(stack, options); err != nil {
 		return err
 	}
-	if err = awsmiddleware.AddClientRequestIDMiddleware(stack); err != nil {
+	if err = addClientRequestID(stack); err != nil {
 		return err
 	}
-	if err = smithyhttp.AddComputeContentLengthMiddleware(stack); err != nil {
+	if err = addComputeContentLength(stack); err != nil {
 		return err
 	}
 	if err = addResolveEndpointMiddleware(stack, options); err != nil {
 		return err
 	}
-	if err = v4.AddComputePayloadSHA256Middleware(stack); err != nil {
+	if err = addComputePayloadSHA256(stack); err != nil {
 		return err
 	}
-	if err = addRetryMiddlewares(stack, options); err != nil {
+	if err = addRetry(stack, options); err != nil {
 		return err
 	}
-	if err = awsmiddleware.AddRawResponseToMetadata(stack); err != nil {
+	if err = addRawResponseToMetadata(stack); err != nil {
 		return err
 	}
-	if err = awsmiddleware.AddRecordResponseTiming(stack); err != nil {
+	if err = addRecordResponseTiming(stack); err != nil {
+		return err
+	}
+	if err = addSpanRetryLoop(stack, options); err != nil {
 		return err
 	}
 	if err = addClientUserAgent(stack, options); err != nil {
@@ -122,6 +140,18 @@ func (c *Client) addOperationDeleteBucketLifecycleMiddlewares(stack *middleware.
 	if err = addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
 		return err
 	}
+	if err = addPutBucketContextMiddleware(stack); err != nil {
+		return err
+	}
+	if err = addTimeOffsetBuild(stack, c); err != nil {
+		return err
+	}
+	if err = addUserAgentRetryMode(stack, options); err != nil {
+		return err
+	}
+	if err = addIsExpressUserAgent(stack); err != nil {
+		return err
+	}
 	if err = addOpDeleteBucketLifecycleValidationMiddleware(stack); err != nil {
 		return err
 	}
@@ -131,7 +161,7 @@ func (c *Client) addOperationDeleteBucketLifecycleMiddlewares(stack *middleware.
 	if err = addMetadataRetrieverMiddleware(stack); err != nil {
 		return err
 	}
-	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
+	if err = addRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addDeleteBucketLifecycleUpdateEndpoint(stack, options); err != nil {
@@ -153,6 +183,18 @@ func (c *Client) addOperationDeleteBucketLifecycleMiddlewares(stack *middleware.
 		return err
 	}
 	if err = addSerializeImmutableHostnameBucketMiddleware(stack, options); err != nil {
+		return err
+	}
+	if err = addSpanInitializeStart(stack); err != nil {
+		return err
+	}
+	if err = addSpanInitializeEnd(stack); err != nil {
+		return err
+	}
+	if err = addSpanBuildRequestStart(stack); err != nil {
+		return err
+	}
+	if err = addSpanBuildRequestEnd(stack); err != nil {
 		return err
 	}
 	return nil

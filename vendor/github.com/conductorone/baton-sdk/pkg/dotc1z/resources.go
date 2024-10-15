@@ -4,12 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/doug-martin/goqu/v9"
+	"google.golang.org/protobuf/proto"
+
 	c1zpb "github.com/conductorone/baton-sdk/pb/c1/c1z/v1"
 	"github.com/conductorone/baton-sdk/pkg/annotations"
-	"github.com/doug-martin/goqu/v9"
-	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
-	"go.uber.org/zap"
-	"google.golang.org/protobuf/proto"
 
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	reader_v2 "github.com/conductorone/baton-sdk/pb/c1/reader/v2"
@@ -57,11 +56,9 @@ func (r *resourcesTable) Schema() (string, []interface{}) {
 }
 
 func (c *C1File) ListResources(ctx context.Context, request *v2.ResourcesServiceListResourcesRequest) (*v2.ResourcesServiceListResourcesResponse, error) {
-	ctxzap.Extract(ctx).Debug("listing resources")
-
 	objs, nextPageToken, err := c.listConnectorObjects(ctx, resources.Name(), request)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error listing resources: %w", err)
 	}
 
 	ret := make([]*v2.Resource, 0, len(objs))
@@ -81,12 +78,6 @@ func (c *C1File) ListResources(ctx context.Context, request *v2.ResourcesService
 }
 
 func (c *C1File) GetResource(ctx context.Context, request *reader_v2.ResourcesReaderServiceGetResourceRequest) (*reader_v2.ResourcesReaderServiceGetResourceResponse, error) {
-	ctxzap.Extract(ctx).Debug(
-		"fetching resource",
-		zap.String("resource_id", request.ResourceId.Resource),
-		zap.String("resource_type_id", request.ResourceId.ResourceType),
-	)
-
 	ret := &v2.Resource{}
 	annos := annotations.Annotations(request.GetAnnotations())
 	syncDetails := &c1zpb.SyncDetails{}
@@ -98,7 +89,7 @@ func (c *C1File) GetResource(ctx context.Context, request *reader_v2.ResourcesRe
 
 	err := c.getResourceObject(ctx, request.ResourceId, ret, syncID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error fetching resource '%s': %w", request.ResourceId, err)
 	}
 
 	return &reader_v2.ResourcesReaderServiceGetResourceResponse{
@@ -106,34 +97,31 @@ func (c *C1File) GetResource(ctx context.Context, request *reader_v2.ResourcesRe
 	}, nil
 }
 
-func (c *C1File) PutResource(ctx context.Context, resource *v2.Resource) error {
-	ctxzap.Extract(ctx).Debug(
-		"syncing resource",
-		zap.String("resource_id", resource.Id.Resource),
-		zap.String("resource_type_id", resource.Id.ResourceType),
-	)
+func (c *C1File) PutResources(ctx context.Context, resourceObjs ...*v2.Resource) error {
+	err := c.db.WithTx(func(tx *goqu.TxDatabase) error {
+		err := bulkPutConnectorObjectTx(ctx, c, tx, resources.Name(),
+			func(resource *v2.Resource) (goqu.Record, error) {
+				fields := goqu.Record{
+					"resource_type_id": resource.Id.ResourceType,
+					"external_id":      fmt.Sprintf("%s:%s", resource.Id.ResourceType, resource.Id.Resource),
+				}
 
-	updateRecord := goqu.Record{
-		"resource_type_id": resource.Id.ResourceType,
-		"external_id":      fmt.Sprintf("%s:%s", resource.Id.ResourceType, resource.Id.Resource),
-	}
-
-	if resource.ParentResourceId != nil {
-		updateRecord["parent_resource_type_id"] = resource.ParentResourceId.ResourceType
-		updateRecord["parent_resource_id"] = resource.ParentResourceId.Resource
-	}
-
-	query, args, err := c.putConnectorObjectQuery(ctx, resources.Name(), resource, updateRecord)
+				if resource.ParentResourceId != nil {
+					fields["parent_resource_type_id"] = resource.ParentResourceId.ResourceType
+					fields["parent_resource_id"] = resource.ParentResourceId.Resource
+				}
+				return fields, nil
+			},
+			resourceObjs...,
+		)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
-
-	_, err = c.db.ExecContext(ctx, query, args...)
-	if err != nil {
-		return err
-	}
-
 	c.dbUpdated = true
-
 	return nil
 }

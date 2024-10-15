@@ -9,7 +9,6 @@ import (
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
-	"go.uber.org/zap"
 
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 )
@@ -64,8 +63,6 @@ func (c *C1File) PutAsset(ctx context.Context, assetRef *v2.AssetRef, contentTyp
 		contentType = "unknown"
 	}
 
-	l.Debug("syncing asset", zap.String("content_type", contentType), zap.Int("asset_size", len(data)))
-
 	err := c.validateSyncDb(ctx)
 	if err != nil {
 		return err
@@ -101,8 +98,6 @@ func (c *C1File) PutAsset(ctx context.Context, assetRef *v2.AssetRef, contentTyp
 // GetAsset fetches the specified asset from the database, and returns the content type and an io.Reader for the caller to
 // read the asset from.
 func (c *C1File) GetAsset(ctx context.Context, request *v2.AssetServiceGetAssetRequest) (string, io.Reader, error) {
-	ctxzap.Extract(ctx).Debug("fetching asset", zap.String("id", request.Asset.Id))
-
 	err := c.validateDb(ctx)
 	if err != nil {
 		return "", nil, err

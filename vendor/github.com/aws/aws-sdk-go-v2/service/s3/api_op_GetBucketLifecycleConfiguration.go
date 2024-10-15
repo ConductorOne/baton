@@ -10,34 +10,55 @@ import (
 	s3cust "github.com/aws/aws-sdk-go-v2/service/s3/internal/customizations"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/smithy-go/middleware"
+	"github.com/aws/smithy-go/ptr"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
+// This operation is not supported by directory buckets.
+//
 // Bucket lifecycle configuration now supports specifying a lifecycle rule using
-// an object key name prefix, one or more object tags, or a combination of both.
-// Accordingly, this section describes the latest API. The response describes the
-// new filter element that you can use to specify a filter to select a subset of
-// objects to which the rule applies. If you are using a previous version of the
-// lifecycle configuration, it still works. For the earlier action, see
-// GetBucketLifecycle (https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLifecycle.html)
-// . Returns the lifecycle configuration information set on the bucket. For
-// information about lifecycle configuration, see Object Lifecycle Management (https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html)
-// . To use this operation, you must have permission to perform the
+// an object key name prefix, one or more object tags, object size, or any
+// combination of these. Accordingly, this section describes the latest API. The
+// previous version of the API supported filtering based only on an object key name
+// prefix, which is supported for backward compatibility. For the related API
+// description, see [GetBucketLifecycle]. Accordingly, this section describes the latest API. The
+// response describes the new filter element that you can use to specify a filter
+// to select a subset of objects to which the rule applies. If you are using a
+// previous version of the lifecycle configuration, it still works. For the earlier
+// action,
+//
+// Returns the lifecycle configuration information set on the bucket. For
+// information about lifecycle configuration, see [Object Lifecycle Management].
+//
+// To use this operation, you must have permission to perform the
 // s3:GetLifecycleConfiguration action. The bucket owner has this permission, by
 // default. The bucket owner can grant this permission to others. For more
-// information about permissions, see Permissions Related to Bucket Subresource
-// Operations (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
-// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html)
-// . GetBucketLifecycleConfiguration has the following special error:
+// information about permissions, see [Permissions Related to Bucket Subresource Operations]and [Managing Access Permissions to Your Amazon S3 Resources].
+//
+// GetBucketLifecycleConfiguration has the following special error:
+//
 //   - Error code: NoSuchLifecycleConfiguration
+//
 //   - Description: The lifecycle configuration does not exist.
+//
 //   - HTTP Status Code: 404 Not Found
+//
 //   - SOAP Fault Code Prefix: Client
 //
 // The following operations are related to GetBucketLifecycleConfiguration :
-//   - GetBucketLifecycle (https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLifecycle.html)
-//   - PutBucketLifecycle (https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketLifecycle.html)
-//   - DeleteBucketLifecycle (https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteBucketLifecycle.html)
+//
+// [GetBucketLifecycle]
+//
+// [PutBucketLifecycle]
+//
+// [DeleteBucketLifecycle]
+//
+// [GetBucketLifecycle]: https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLifecycle.html
+// [Object Lifecycle Management]: https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html
+// [Permissions Related to Bucket Subresource Operations]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources
+// [PutBucketLifecycle]: https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketLifecycle.html
+// [Managing Access Permissions to Your Amazon S3 Resources]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html
+// [DeleteBucketLifecycle]: https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteBucketLifecycle.html
 func (c *Client) GetBucketLifecycleConfiguration(ctx context.Context, params *GetBucketLifecycleConfigurationInput, optFns ...func(*Options)) (*GetBucketLifecycleConfigurationOutput, error) {
 	if params == nil {
 		params = &GetBucketLifecycleConfigurationInput{}
@@ -60,23 +81,40 @@ type GetBucketLifecycleConfigurationInput struct {
 	// This member is required.
 	Bucket *string
 
-	// The account ID of the expected bucket owner. If the bucket is owned by a
-	// different account, the request fails with the HTTP status code 403 Forbidden
-	// (access denied).
+	// The account ID of the expected bucket owner. If the account ID that you provide
+	// does not match the actual owner of the bucket, the request fails with the HTTP
+	// status code 403 Forbidden (access denied).
 	ExpectedBucketOwner *string
 
 	noSmithyDocumentSerde
 }
 
 func (in *GetBucketLifecycleConfigurationInput) bindEndpointParams(p *EndpointParameters) {
-	p.Bucket = in.Bucket
 
+	p.Bucket = in.Bucket
+	p.UseS3ExpressControlEndpoint = ptr.Bool(true)
 }
 
 type GetBucketLifecycleConfigurationOutput struct {
 
 	// Container for a lifecycle rule.
 	Rules []types.LifecycleRule
+
+	// Indicates which default minimum object size behavior is applied to the
+	// lifecycle configuration.
+	//
+	//   - all_storage_classes_128K - Objects smaller than 128 KB will not transition
+	//   to any storage class by default.
+	//
+	//   - varies_by_storage_class - Objects smaller than 128 KB will transition to
+	//   Glacier Flexible Retrieval or Glacier Deep Archive storage classes. By default,
+	//   all other storage classes will prevent transitions smaller than 128 KB.
+	//
+	// To customize the minimum object size for any transition you can add a filter
+	// that specifies a custom ObjectSizeGreaterThan or ObjectSizeLessThan in the body
+	// of your transition rule. Custom filters always take precedence over the default
+	// transition behavior.
+	TransitionDefaultMinimumObjectSize types.TransitionDefaultMinimumObjectSize
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
@@ -106,25 +144,28 @@ func (c *Client) addOperationGetBucketLifecycleConfigurationMiddlewares(stack *m
 	if err = addSetLoggerMiddleware(stack, options); err != nil {
 		return err
 	}
-	if err = awsmiddleware.AddClientRequestIDMiddleware(stack); err != nil {
+	if err = addClientRequestID(stack); err != nil {
 		return err
 	}
-	if err = smithyhttp.AddComputeContentLengthMiddleware(stack); err != nil {
+	if err = addComputeContentLength(stack); err != nil {
 		return err
 	}
 	if err = addResolveEndpointMiddleware(stack, options); err != nil {
 		return err
 	}
-	if err = v4.AddComputePayloadSHA256Middleware(stack); err != nil {
+	if err = addComputePayloadSHA256(stack); err != nil {
 		return err
 	}
-	if err = addRetryMiddlewares(stack, options); err != nil {
+	if err = addRetry(stack, options); err != nil {
 		return err
 	}
-	if err = awsmiddleware.AddRawResponseToMetadata(stack); err != nil {
+	if err = addRawResponseToMetadata(stack); err != nil {
 		return err
 	}
-	if err = awsmiddleware.AddRecordResponseTiming(stack); err != nil {
+	if err = addRecordResponseTiming(stack); err != nil {
+		return err
+	}
+	if err = addSpanRetryLoop(stack, options); err != nil {
 		return err
 	}
 	if err = addClientUserAgent(stack, options); err != nil {
@@ -139,6 +180,18 @@ func (c *Client) addOperationGetBucketLifecycleConfigurationMiddlewares(stack *m
 	if err = addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
 		return err
 	}
+	if err = addPutBucketContextMiddleware(stack); err != nil {
+		return err
+	}
+	if err = addTimeOffsetBuild(stack, c); err != nil {
+		return err
+	}
+	if err = addUserAgentRetryMode(stack, options); err != nil {
+		return err
+	}
+	if err = addIsExpressUserAgent(stack); err != nil {
+		return err
+	}
 	if err = addOpGetBucketLifecycleConfigurationValidationMiddleware(stack); err != nil {
 		return err
 	}
@@ -148,7 +201,7 @@ func (c *Client) addOperationGetBucketLifecycleConfigurationMiddlewares(stack *m
 	if err = addMetadataRetrieverMiddleware(stack); err != nil {
 		return err
 	}
-	if err = awsmiddleware.AddRecursionDetection(stack); err != nil {
+	if err = addRecursionDetection(stack); err != nil {
 		return err
 	}
 	if err = addGetBucketLifecycleConfigurationUpdateEndpoint(stack, options); err != nil {
@@ -170,6 +223,18 @@ func (c *Client) addOperationGetBucketLifecycleConfigurationMiddlewares(stack *m
 		return err
 	}
 	if err = addSerializeImmutableHostnameBucketMiddleware(stack, options); err != nil {
+		return err
+	}
+	if err = addSpanInitializeStart(stack); err != nil {
+		return err
+	}
+	if err = addSpanInitializeEnd(stack); err != nil {
+		return err
+	}
+	if err = addSpanBuildRequestStart(stack); err != nil {
+		return err
+	}
+	if err = addSpanBuildRequestEnd(stack); err != nil {
 		return err
 	}
 	return nil
