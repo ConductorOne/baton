@@ -131,6 +131,140 @@ func (x *GrantExpandable) GetResourceTypeIds() []string {
 	return nil
 }
 
+// Grant cannot be updated or revoked. For example, membership in an "all users" group.
+type GrantImmutable struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	SourceId string           `protobuf:"bytes,1,opt,name=source_id,json=sourceId,proto3" json:"source_id,omitempty"`
+	Metadata *structpb.Struct `protobuf:"bytes,2,opt,name=metadata,proto3" json:"metadata,omitempty"`
+}
+
+func (x *GrantImmutable) Reset() {
+	*x = GrantImmutable{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_c1_connector_v2_annotation_grant_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GrantImmutable) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GrantImmutable) ProtoMessage() {}
+
+func (x *GrantImmutable) ProtoReflect() protoreflect.Message {
+	mi := &file_c1_connector_v2_annotation_grant_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GrantImmutable.ProtoReflect.Descriptor instead.
+func (*GrantImmutable) Descriptor() ([]byte, []int) {
+	return file_c1_connector_v2_annotation_grant_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *GrantImmutable) GetSourceId() string {
+	if x != nil {
+		return x.SourceId
+	}
+	return ""
+}
+
+func (x *GrantImmutable) GetMetadata() *structpb.Struct {
+	if x != nil {
+		return x.Metadata
+	}
+	return nil
+}
+
+// Grant was not created because the entitlement already existed.
+type GrantAlreadyExists struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *GrantAlreadyExists) Reset() {
+	*x = GrantAlreadyExists{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_c1_connector_v2_annotation_grant_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GrantAlreadyExists) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GrantAlreadyExists) ProtoMessage() {}
+
+func (x *GrantAlreadyExists) ProtoReflect() protoreflect.Message {
+	mi := &file_c1_connector_v2_annotation_grant_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GrantAlreadyExists.ProtoReflect.Descriptor instead.
+func (*GrantAlreadyExists) Descriptor() ([]byte, []int) {
+	return file_c1_connector_v2_annotation_grant_proto_rawDescGZIP(), []int{3}
+}
+
+// Grant was not revoked because the entitlement does not exist.
+type GrantAlreadyRevoked struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *GrantAlreadyRevoked) Reset() {
+	*x = GrantAlreadyRevoked{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_c1_connector_v2_annotation_grant_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GrantAlreadyRevoked) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GrantAlreadyRevoked) ProtoMessage() {}
+
+func (x *GrantAlreadyRevoked) ProtoReflect() protoreflect.Message {
+	mi := &file_c1_connector_v2_annotation_grant_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GrantAlreadyRevoked.ProtoReflect.Descriptor instead.
+func (*GrantAlreadyRevoked) Descriptor() ([]byte, []int) {
+	return file_c1_connector_v2_annotation_grant_proto_rawDescGZIP(), []int{4}
+}
+
 var File_c1_connector_v2_annotation_grant_proto protoreflect.FileDescriptor
 
 var file_c1_connector_v2_annotation_grant_proto_rawDesc = []byte{
@@ -152,10 +286,20 @@ var file_c1_connector_v2_annotation_grant_proto_rawDesc = []byte{
 	0x6c, 0x6c, 0x6f, 0x77, 0x12, 0x2a, 0x0a, 0x11, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65,
 	0x5f, 0x74, 0x79, 0x70, 0x65, 0x5f, 0x69, 0x64, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x09, 0x52,
 	0x0f, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x54, 0x79, 0x70, 0x65, 0x49, 0x64, 0x73,
-	0x42, 0x36, 0x5a, 0x34, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63,
-	0x6f, 0x6e, 0x64, 0x75, 0x63, 0x74, 0x6f, 0x72, 0x6f, 0x6e, 0x65, 0x2f, 0x62, 0x61, 0x74, 0x6f,
-	0x6e, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x70, 0x62, 0x2f, 0x63, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x6e,
-	0x65, 0x63, 0x74, 0x6f, 0x72, 0x2f, 0x76, 0x32, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x22, 0x62, 0x0a, 0x0e, 0x47, 0x72, 0x61, 0x6e, 0x74, 0x49, 0x6d, 0x6d, 0x75, 0x74, 0x61, 0x62,
+	0x6c, 0x65, 0x12, 0x1b, 0x0a, 0x09, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x5f, 0x69, 0x64, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x49, 0x64, 0x12,
+	0x33, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x17, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x62, 0x75, 0x66, 0x2e, 0x53, 0x74, 0x72, 0x75, 0x63, 0x74, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61,
+	0x64, 0x61, 0x74, 0x61, 0x22, 0x14, 0x0a, 0x12, 0x47, 0x72, 0x61, 0x6e, 0x74, 0x41, 0x6c, 0x72,
+	0x65, 0x61, 0x64, 0x79, 0x45, 0x78, 0x69, 0x73, 0x74, 0x73, 0x22, 0x15, 0x0a, 0x13, 0x47, 0x72,
+	0x61, 0x6e, 0x74, 0x41, 0x6c, 0x72, 0x65, 0x61, 0x64, 0x79, 0x52, 0x65, 0x76, 0x6f, 0x6b, 0x65,
+	0x64, 0x42, 0x36, 0x5a, 0x34, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f,
+	0x63, 0x6f, 0x6e, 0x64, 0x75, 0x63, 0x74, 0x6f, 0x72, 0x6f, 0x6e, 0x65, 0x2f, 0x62, 0x61, 0x74,
+	0x6f, 0x6e, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x70, 0x62, 0x2f, 0x63, 0x31, 0x2f, 0x63, 0x6f, 0x6e,
+	0x6e, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x2f, 0x76, 0x32, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x33,
 }
 
 var (
@@ -170,19 +314,23 @@ func file_c1_connector_v2_annotation_grant_proto_rawDescGZIP() []byte {
 	return file_c1_connector_v2_annotation_grant_proto_rawDescData
 }
 
-var file_c1_connector_v2_annotation_grant_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_c1_connector_v2_annotation_grant_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_c1_connector_v2_annotation_grant_proto_goTypes = []interface{}{
-	(*GrantMetadata)(nil),   // 0: c1.connector.v2.GrantMetadata
-	(*GrantExpandable)(nil), // 1: c1.connector.v2.GrantExpandable
-	(*structpb.Struct)(nil), // 2: google.protobuf.Struct
+	(*GrantMetadata)(nil),       // 0: c1.connector.v2.GrantMetadata
+	(*GrantExpandable)(nil),     // 1: c1.connector.v2.GrantExpandable
+	(*GrantImmutable)(nil),      // 2: c1.connector.v2.GrantImmutable
+	(*GrantAlreadyExists)(nil),  // 3: c1.connector.v2.GrantAlreadyExists
+	(*GrantAlreadyRevoked)(nil), // 4: c1.connector.v2.GrantAlreadyRevoked
+	(*structpb.Struct)(nil),     // 5: google.protobuf.Struct
 }
 var file_c1_connector_v2_annotation_grant_proto_depIdxs = []int32{
-	2, // 0: c1.connector.v2.GrantMetadata.metadata:type_name -> google.protobuf.Struct
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	5, // 0: c1.connector.v2.GrantMetadata.metadata:type_name -> google.protobuf.Struct
+	5, // 1: c1.connector.v2.GrantImmutable.metadata:type_name -> google.protobuf.Struct
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_c1_connector_v2_annotation_grant_proto_init() }
@@ -215,6 +363,42 @@ func file_c1_connector_v2_annotation_grant_proto_init() {
 				return nil
 			}
 		}
+		file_c1_connector_v2_annotation_grant_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GrantImmutable); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_c1_connector_v2_annotation_grant_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GrantAlreadyExists); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_c1_connector_v2_annotation_grant_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GrantAlreadyRevoked); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -222,7 +406,7 @@ func file_c1_connector_v2_annotation_grant_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_c1_connector_v2_annotation_grant_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

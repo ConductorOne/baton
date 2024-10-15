@@ -30,6 +30,7 @@ func WithLogFormat(format string) Option {
 			c.Encoding = LogFormatJSON
 		case LogFormatConsole:
 			c.Encoding = LogFormatConsole
+			c.EncoderConfig = zap.NewDevelopmentEncoderConfig()
 		default:
 			c.Encoding = LogFormatJSON
 		}
@@ -39,6 +40,14 @@ func WithLogFormat(format string) Option {
 func WithOutputPaths(paths []string) Option {
 	return func(c *zap.Config) {
 		c.OutputPaths = paths
+	}
+}
+
+// WithInitialFields allows the logger to be configured with static fields at creation time.
+// This is useful for setting fields that are constant across all log messages.
+func WithInitialFields(fields map[string]interface{}) Option {
+	return func(c *zap.Config) {
+		c.InitialFields = fields
 	}
 }
 

@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	defaultMaxDecodedSize   = 2 * 1024 * 1024 * 1024 // 2GiB
-	defaultDecoderMaxMemory = 32 * 1024 * 1024       // 32MiB
+	defaultMaxDecodedSize   = 3 * 1024 * 1024 * 1024 // 3GiB
+	defaultDecoderMaxMemory = 128 * 1024 * 1024      // 128MiB
 	maxDecodedSizeEnvVar    = "BATON_DECODER_MAX_DECODED_SIZE_MB"
 	maxDecoderMemorySizeEnv = "BATON_DECODER_MAX_MEMORY_MB"
 )
@@ -24,8 +24,8 @@ var C1ZFileHeader = []byte("C1ZF\x00")
 
 var (
 	ErrInvalidFile        = fmt.Errorf("c1z: invalid file")
-	ErrMaxSizeExceeded    = errors.New("c1z: max decoded size exceeded, increase DecoderMaxDecodedSize")
-	ErrWindowSizeExceeded = errors.New("c1z: window size exceeded, increase DecoderMaxMemory")
+	ErrMaxSizeExceeded    = fmt.Errorf("c1z: max decoded size exceeded, increase DecoderMaxDecodedSize using %v environment variable", maxDecodedSizeEnvVar)
+	ErrWindowSizeExceeded = fmt.Errorf("c1z: window size exceeded, increase DecoderMaxMemory using %v  environment variable", maxDecoderMemorySizeEnv)
 )
 
 // ReadHeader reads len(C1ZFileHeader) bytes from the given io.Reader and compares them to C1ZFileHeader, returning an error if they don't match.
@@ -167,6 +167,7 @@ func (d *decoder) Read(p []byte) (int, error) {
 
 	// Do underlying read
 	n, err := d.zd.Read(p)
+	//nolint:gosec // No risk of overflow/underflow because n is always >= 0.
 	d.decodedBytes += uint64(n)
 	if err != nil {
 		// NOTE(morgabra) This happens if you set a small DecoderMaxMemory

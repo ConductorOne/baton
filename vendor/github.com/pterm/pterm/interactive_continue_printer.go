@@ -2,7 +2,6 @@ package pterm
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"atomicgo.dev/cursor"
@@ -14,24 +13,24 @@ import (
 	"github.com/pterm/pterm/internal"
 )
 
-var (
-	// DefaultInteractiveContinue is the default InteractiveContinue printer.
-	// Pressing "y" will return yes, "n" will return no, "a" returns all and "s" returns stop.
-	// Pressing enter without typing any letter will return the configured default value (by default set to "yes", the fisrt option).
-	DefaultInteractiveContinue = InteractiveContinuePrinter{
-		DefaultValueIndex: 0,
-		DefaultText:       "Do you want to continue",
-		TextStyle:         &ThemeDefault.PrimaryStyle,
-		Options:           []string{"yes", "no", "all", "cancel"},
-		OptionsStyle:      &ThemeDefault.SuccessMessageStyle,
-		SuffixStyle:       &ThemeDefault.SecondaryStyle,
-	}
-)
+// DefaultInteractiveContinue is the default InteractiveContinue printer.
+// Pressing "y" will return yes, "n" will return no, "a" returns all and "s" returns stop.
+// Pressing enter without typing any letter will return the configured default value (by default set to "yes", the fisrt option).
+var DefaultInteractiveContinue = InteractiveContinuePrinter{
+	DefaultValueIndex: 0,
+	DefaultText:       "Do you want to continue",
+	TextStyle:         &ThemeDefault.PrimaryStyle,
+	Options:           []string{"yes", "no", "all", "cancel"},
+	OptionsStyle:      &ThemeDefault.SuccessMessageStyle,
+	SuffixStyle:       &ThemeDefault.SecondaryStyle,
+	Delimiter:         ": ",
+}
 
 // InteractiveContinuePrinter is a printer for interactive continue prompts.
 type InteractiveContinuePrinter struct {
 	DefaultValueIndex int
 	DefaultText       string
+	Delimiter         string
 	TextStyle         *Style
 	Options           []string
 	OptionsStyle      *Style
@@ -108,6 +107,12 @@ func (p InteractiveContinuePrinter) WithSuffixStyle(style *Style) *InteractiveCo
 	return &p
 }
 
+// WithDelimiter sets the delimiter between the message and the input.
+func (p InteractiveContinuePrinter) WithDelimiter(delimiter string) *InteractiveContinuePrinter {
+	p.Delimiter = delimiter
+	return &p
+}
+
 // Show shows the continue prompt.
 //
 // Example:
@@ -121,7 +126,7 @@ func (p InteractiveContinuePrinter) Show(text ...string) (string, error) {
 		text = []string{p.DefaultText}
 	}
 
-	p.TextStyle.Print(text[0] + " " + p.getSuffix() + ": ")
+	p.TextStyle.Print(text[0] + " " + p.getSuffix() + p.Delimiter)
 
 	err := keyboard.Listen(func(keyInfo keys.Key) (stop bool, err error) {
 		if err != nil {
@@ -149,7 +154,7 @@ func (p InteractiveContinuePrinter) Show(text ...string) (string, error) {
 			result = p.Options[p.DefaultValueIndex]
 			return true, nil
 		case keys.CtrlC:
-			os.Exit(1)
+			internal.Exit(1)
 			return true, nil
 		}
 		return false, nil

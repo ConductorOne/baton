@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"net/http"
+	"time"
 
 	"go.uber.org/zap"
 )
@@ -61,11 +62,13 @@ type Option interface {
 
 // NewClient creates a new HTTP client that uses the given context and options to create a new transport layer.
 func NewClient(ctx context.Context, options ...Option) (*http.Client, error) {
+	httpClient := &http.Client{
+		Timeout: 300 * time.Second, // 5 minutes
+	}
 	t, err := NewTransport(ctx, options...)
 	if err != nil {
 		return nil, err
 	}
-	return &http.Client{
-		Transport: t,
-	}, nil
+	httpClient.Transport = t
+	return httpClient, nil
 }

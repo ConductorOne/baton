@@ -1,19 +1,20 @@
 package internal
 
-import (
-	"os"
-)
-
 // NewCancelationSignal for keeping track of a cancelation
-func NewCancelationSignal() (func(), func()) {
+func NewCancelationSignal(interruptFunc func()) (func(), func()) {
 	canceled := false
 
 	cancel := func() {
 		canceled = true
 	}
+
 	exit := func() {
 		if canceled {
-			os.Exit(1)
+			if interruptFunc != nil {
+				interruptFunc()
+			} else {
+				Exit(1)
+			}
 		}
 	}
 
