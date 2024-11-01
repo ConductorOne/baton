@@ -1,3 +1,4 @@
+version: 2
 project_name: baton
 builds:
   - binary: baton
@@ -83,10 +84,10 @@ checksum:
     - glob: ./dist/*-darwin-amd64.zip
     - glob: ./dist/*-darwin-arm64.zip
 brews:
-  - tap:
+  - repository:
       owner: conductorone
       name: homebrew-baton
-    folder: Formula
+    directory: Formula
     homepage: https://conductorone.com
     test: |
       system "#{bin}/baton -v"
