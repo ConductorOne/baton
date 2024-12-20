@@ -38,6 +38,37 @@ Baton can installed via Homebrew:
 brew install conductorone/baton/baton conductorone/baton/baton-github
 ```
 
+## Baton has also a flake available
+
+Add baton as an input and install it:
+
+```
+{
+  inputs = {
+    nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/*";
+
+    baton = "github:conductorOne/baton";
+  };
+
+  outputs =
+    {
+      nixpkgs,
+      baton,
+    }:
+    {
+      devShells = {
+        x86_64-linux = {
+          default = nixpkgs.mkShell {
+            packages = [
+              baton.packages.x86_64-linux.default
+            ];
+          };
+        };
+      };
+    };
+}
+```
+
 Once installed, you can audit GitHub access with the following:
 
 ```
