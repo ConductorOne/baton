@@ -47,7 +47,7 @@ Add baton as an input and install it:
   inputs = {
     nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/*";
 
-    baton = "github:conductorOne/baton";
+    baton.url = "github:conductorOne/baton";
   };
 
   outputs =
