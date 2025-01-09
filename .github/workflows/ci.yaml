@@ -5,11 +5,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: 1.21.x
+          go-version: 1.22.x
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Run linters
         uses: golangci/golangci-lint-action@v3
         with:
@@ -18,17 +18,17 @@ jobs:
   go-test:
     strategy:
       matrix:
-        go-version: [1.21.x]
+        go-version: [1.22.x]
         platform: [ubuntu-latest]
     runs-on: ${{ matrix.platform }}
     steps:
       - name: Install Go
         if: success()
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: go tests
         run: go test -v -covermode=count -json ./... > test.json
       - name: annotate go tests
@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Setup
         uses: bufbuild/buf-setup-action@v1
         with:
