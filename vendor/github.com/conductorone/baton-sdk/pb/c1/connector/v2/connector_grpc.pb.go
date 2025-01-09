@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type ConnectorServiceClient interface {
 	GetMetadata(ctx context.Context, in *ConnectorServiceGetMetadataRequest, opts ...grpc.CallOption) (*ConnectorServiceGetMetadataResponse, error)
 	Validate(ctx context.Context, in *ConnectorServiceValidateRequest, opts ...grpc.CallOption) (*ConnectorServiceValidateResponse, error)
+	Cleanup(ctx context.Context, in *ConnectorServiceCleanupRequest, opts ...grpc.CallOption) (*ConnectorServiceCleanupResponse, error)
 }
 
 type connectorServiceClient struct {
@@ -52,12 +53,22 @@ func (c *connectorServiceClient) Validate(ctx context.Context, in *ConnectorServ
 	return out, nil
 }
 
+func (c *connectorServiceClient) Cleanup(ctx context.Context, in *ConnectorServiceCleanupRequest, opts ...grpc.CallOption) (*ConnectorServiceCleanupResponse, error) {
+	out := new(ConnectorServiceCleanupResponse)
+	err := c.cc.Invoke(ctx, "/c1.connector.v2.ConnectorService/Cleanup", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ConnectorServiceServer is the server API for ConnectorService service.
 // All implementations should embed UnimplementedConnectorServiceServer
 // for forward compatibility
 type ConnectorServiceServer interface {
 	GetMetadata(context.Context, *ConnectorServiceGetMetadataRequest) (*ConnectorServiceGetMetadataResponse, error)
 	Validate(context.Context, *ConnectorServiceValidateRequest) (*ConnectorServiceValidateResponse, error)
+	Cleanup(context.Context, *ConnectorServiceCleanupRequest) (*ConnectorServiceCleanupResponse, error)
 }
 
 // UnimplementedConnectorServiceServer should be embedded to have forward compatible implementations.
@@ -69,6 +80,9 @@ func (UnimplementedConnectorServiceServer) GetMetadata(context.Context, *Connect
 }
 func (UnimplementedConnectorServiceServer) Validate(context.Context, *ConnectorServiceValidateRequest) (*ConnectorServiceValidateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Validate not implemented")
+}
+func (UnimplementedConnectorServiceServer) Cleanup(context.Context, *ConnectorServiceCleanupRequest) (*ConnectorServiceCleanupResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Cleanup not implemented")
 }
 
 // UnsafeConnectorServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -118,6 +132,24 @@ func _ConnectorService_Validate_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ConnectorService_Cleanup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConnectorServiceCleanupRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConnectorServiceServer).Cleanup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/c1.connector.v2.ConnectorService/Cleanup",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConnectorServiceServer).Cleanup(ctx, req.(*ConnectorServiceCleanupRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ConnectorService_ServiceDesc is the grpc.ServiceDesc for ConnectorService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -132,6 +164,10 @@ var ConnectorService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Validate",
 			Handler:    _ConnectorService_Validate_Handler,
+		},
+		{
+			MethodName: "Cleanup",
+			Handler:    _ConnectorService_Cleanup_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

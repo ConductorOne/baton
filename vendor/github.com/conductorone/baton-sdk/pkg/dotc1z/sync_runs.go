@@ -60,10 +60,13 @@ func (c *C1File) getLatestUnfinishedSync(ctx context.Context) (*syncRun, error) 
 		return nil, err
 	}
 
+	// Don't resume syncs that started over a week ago
+	oneWeekAgo := time.Now().AddDate(0, 0, -7)
 	ret := &syncRun{}
 	q := c.db.From(syncRuns.Name())
 	q = q.Select("sync_id", "started_at", "ended_at", "sync_token")
 	q = q.Where(goqu.C("ended_at").IsNull())
+	q = q.Where(goqu.C("started_at").Gte(oneWeekAgo))
 	q = q.Order(goqu.C("started_at").Desc())
 	q = q.Limit(1)
 

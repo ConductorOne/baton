@@ -98,27 +98,21 @@ func (c *C1File) GetResource(ctx context.Context, request *reader_v2.ResourcesRe
 }
 
 func (c *C1File) PutResources(ctx context.Context, resourceObjs ...*v2.Resource) error {
-	err := c.db.WithTx(func(tx *goqu.TxDatabase) error {
-		err := bulkPutConnectorObjectTx(ctx, c, tx, resources.Name(),
-			func(resource *v2.Resource) (goqu.Record, error) {
-				fields := goqu.Record{
-					"resource_type_id": resource.Id.ResourceType,
-					"external_id":      fmt.Sprintf("%s:%s", resource.Id.ResourceType, resource.Id.Resource),
-				}
+	err := bulkPutConnectorObject(ctx, c, resources.Name(),
+		func(resource *v2.Resource) (goqu.Record, error) {
+			fields := goqu.Record{
+				"resource_type_id": resource.Id.ResourceType,
+				"external_id":      fmt.Sprintf("%s:%s", resource.Id.ResourceType, resource.Id.Resource),
+			}
 
-				if resource.ParentResourceId != nil {
-					fields["parent_resource_type_id"] = resource.ParentResourceId.ResourceType
-					fields["parent_resource_id"] = resource.ParentResourceId.Resource
-				}
-				return fields, nil
-			},
-			resourceObjs...,
-		)
-		if err != nil {
-			return err
-		}
-		return nil
-	})
+			if resource.ParentResourceId != nil {
+				fields["parent_resource_type_id"] = resource.ParentResourceId.ResourceType
+				fields["parent_resource_id"] = resource.ParentResourceId.Resource
+			}
+			return fields, nil
+		},
+		resourceObjs...,
+	)
 	if err != nil {
 		return err
 	}

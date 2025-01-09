@@ -1,6 +1,8 @@
 package uhttp
 
-import "strings"
+import (
+	"strings"
+)
 
 var xmlContentTypes []string = []string{
 	"text/xml",
@@ -8,6 +10,7 @@ var xmlContentTypes []string = []string{
 }
 
 func IsJSONContentType(contentType string) bool {
+	contentType = strings.TrimSpace(strings.ToLower(contentType))
 	return strings.HasPrefix(contentType, "application") &&
 		strings.Contains(contentType, "json")
 }
