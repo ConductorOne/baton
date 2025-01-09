@@ -233,20 +233,21 @@ func (c *C1File) listConnectorObjects(ctx context.Context, tableName string, req
 
 var protoMarshaler = proto.MarshalOptions{Deterministic: true}
 
-func bulkPutConnectorObjectTx[T proto.Message](ctx context.Context, c *C1File,
-	tx *goqu.TxDatabase,
+func bulkPutConnectorObject[T proto.Message](ctx context.Context, c *C1File,
 	tableName string,
 	extractFields func(m T) (goqu.Record, error),
 	msgs ...T) error {
+	if len(msgs) == 0 {
+		return nil
+	}
+
 	err := c.validateSyncDb(ctx)
 	if err != nil {
 		return err
 	}
 
-	baseQ := tx.Insert(tableName).Prepared(true)
-	baseQ = baseQ.OnConflict(goqu.DoUpdate("external_id, sync_id", goqu.C("data").Set(goqu.I("EXCLUDED.data"))))
-
-	for _, m := range msgs {
+	rows := make([]*goqu.Record, len(msgs))
+	for i, m := range msgs {
 		messageBlob, err := protoMarshaler.Marshal(m)
 		if err != nil {
 			return err
@@ -270,16 +271,35 @@ func bulkPutConnectorObjectTx[T proto.Message](ctx context.Context, c *C1File,
 		fields["data"] = messageBlob
 		fields["sync_id"] = c.currentSyncID
 		fields["discovered_at"] = time.Now().Format("2006-01-02 15:04:05.999999999")
-		q := baseQ.Rows(fields)
-		query, args, err := q.ToSQL()
+		rows[i] = &fields
+	}
+	chunkSize := 100
+	chunks := len(rows) / chunkSize
+	if len(rows)%chunkSize != 0 {
+		chunks++
+	}
+
+	for i := 0; i < chunks; i++ {
+		start := i * chunkSize
+		end := (i + 1) * chunkSize
+		if end > len(rows) {
+			end = len(rows)
+		}
+		chunkedRows := rows[start:end]
+		query, args, err := c.db.Insert(tableName).
+			OnConflict(goqu.DoUpdate("external_id, sync_id", goqu.C("data").Set(goqu.I("EXCLUDED.data")))).
+			Rows(chunkedRows).
+			Prepared(true).
+			ToSQL()
 		if err != nil {
 			return err
 		}
-		_, err = tx.Exec(query, args...)
+		_, err = c.db.Exec(query, args...)
 		if err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 

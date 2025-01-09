@@ -26,6 +26,8 @@ type TicketsServiceClient interface {
 	GetTicket(ctx context.Context, in *TicketsServiceGetTicketRequest, opts ...grpc.CallOption) (*TicketsServiceGetTicketResponse, error)
 	ListTicketSchemas(ctx context.Context, in *TicketsServiceListTicketSchemasRequest, opts ...grpc.CallOption) (*TicketsServiceListTicketSchemasResponse, error)
 	GetTicketSchema(ctx context.Context, in *TicketsServiceGetTicketSchemaRequest, opts ...grpc.CallOption) (*TicketsServiceGetTicketSchemaResponse, error)
+	BulkCreateTickets(ctx context.Context, in *TicketsServiceBulkCreateTicketsRequest, opts ...grpc.CallOption) (*TicketsServiceBulkCreateTicketsResponse, error)
+	BulkGetTickets(ctx context.Context, in *TicketsServiceBulkGetTicketsRequest, opts ...grpc.CallOption) (*TicketsServiceBulkGetTicketsResponse, error)
 }
 
 type ticketsServiceClient struct {
@@ -72,6 +74,24 @@ func (c *ticketsServiceClient) GetTicketSchema(ctx context.Context, in *TicketsS
 	return out, nil
 }
 
+func (c *ticketsServiceClient) BulkCreateTickets(ctx context.Context, in *TicketsServiceBulkCreateTicketsRequest, opts ...grpc.CallOption) (*TicketsServiceBulkCreateTicketsResponse, error) {
+	out := new(TicketsServiceBulkCreateTicketsResponse)
+	err := c.cc.Invoke(ctx, "/c1.connector.v2.TicketsService/BulkCreateTickets", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ticketsServiceClient) BulkGetTickets(ctx context.Context, in *TicketsServiceBulkGetTicketsRequest, opts ...grpc.CallOption) (*TicketsServiceBulkGetTicketsResponse, error) {
+	out := new(TicketsServiceBulkGetTicketsResponse)
+	err := c.cc.Invoke(ctx, "/c1.connector.v2.TicketsService/BulkGetTickets", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // TicketsServiceServer is the server API for TicketsService service.
 // All implementations should embed UnimplementedTicketsServiceServer
 // for forward compatibility
@@ -80,6 +100,8 @@ type TicketsServiceServer interface {
 	GetTicket(context.Context, *TicketsServiceGetTicketRequest) (*TicketsServiceGetTicketResponse, error)
 	ListTicketSchemas(context.Context, *TicketsServiceListTicketSchemasRequest) (*TicketsServiceListTicketSchemasResponse, error)
 	GetTicketSchema(context.Context, *TicketsServiceGetTicketSchemaRequest) (*TicketsServiceGetTicketSchemaResponse, error)
+	BulkCreateTickets(context.Context, *TicketsServiceBulkCreateTicketsRequest) (*TicketsServiceBulkCreateTicketsResponse, error)
+	BulkGetTickets(context.Context, *TicketsServiceBulkGetTicketsRequest) (*TicketsServiceBulkGetTicketsResponse, error)
 }
 
 // UnimplementedTicketsServiceServer should be embedded to have forward compatible implementations.
@@ -97,6 +119,12 @@ func (UnimplementedTicketsServiceServer) ListTicketSchemas(context.Context, *Tic
 }
 func (UnimplementedTicketsServiceServer) GetTicketSchema(context.Context, *TicketsServiceGetTicketSchemaRequest) (*TicketsServiceGetTicketSchemaResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTicketSchema not implemented")
+}
+func (UnimplementedTicketsServiceServer) BulkCreateTickets(context.Context, *TicketsServiceBulkCreateTicketsRequest) (*TicketsServiceBulkCreateTicketsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BulkCreateTickets not implemented")
+}
+func (UnimplementedTicketsServiceServer) BulkGetTickets(context.Context, *TicketsServiceBulkGetTicketsRequest) (*TicketsServiceBulkGetTicketsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BulkGetTickets not implemented")
 }
 
 // UnsafeTicketsServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -182,6 +210,42 @@ func _TicketsService_GetTicketSchema_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TicketsService_BulkCreateTickets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TicketsServiceBulkCreateTicketsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TicketsServiceServer).BulkCreateTickets(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/c1.connector.v2.TicketsService/BulkCreateTickets",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TicketsServiceServer).BulkCreateTickets(ctx, req.(*TicketsServiceBulkCreateTicketsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TicketsService_BulkGetTickets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TicketsServiceBulkGetTicketsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TicketsServiceServer).BulkGetTickets(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/c1.connector.v2.TicketsService/BulkGetTickets",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TicketsServiceServer).BulkGetTickets(ctx, req.(*TicketsServiceBulkGetTicketsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // TicketsService_ServiceDesc is the grpc.ServiceDesc for TicketsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -204,6 +268,14 @@ var TicketsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetTicketSchema",
 			Handler:    _TicketsService_GetTicketSchema_Handler,
+		},
+		{
+			MethodName: "BulkCreateTickets",
+			Handler:    _TicketsService_BulkCreateTickets_Handler,
+		},
+		{
+			MethodName: "BulkGetTickets",
+			Handler:    _TicketsService_BulkGetTickets_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

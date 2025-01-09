@@ -79,18 +79,12 @@ func (c *C1File) GetResourceType(ctx context.Context, request *reader_v2.Resourc
 }
 
 func (c *C1File) PutResourceTypes(ctx context.Context, resourceTypesObjs ...*v2.ResourceType) error {
-	err := c.db.WithTx(func(tx *goqu.TxDatabase) error {
-		err := bulkPutConnectorObjectTx(ctx, c, tx, resourceTypes.Name(),
-			func(resource *v2.ResourceType) (goqu.Record, error) {
-				return nil, nil
-			},
-			resourceTypesObjs...,
-		)
-		if err != nil {
-			return err
-		}
-		return nil
-	})
+	err := bulkPutConnectorObject(ctx, c, resourceTypes.Name(),
+		func(resource *v2.ResourceType) (goqu.Record, error) {
+			return nil, nil
+		},
+		resourceTypesObjs...,
+	)
 	if err != nil {
 		return err
 	}
