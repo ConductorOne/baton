@@ -13,18 +13,21 @@ var limitHeaders = []string{
 	"X-Ratelimit-Limit",
 	"Ratelimit-Limit",
 	"X-RateLimit-Requests-Limit", // Linear uses a non-standard header
+	"X-Rate-Limit-Limit",         // Okta uses a non-standard header
 }
 
 var remainingHeaders = []string{
 	"X-Ratelimit-Remaining",
 	"Ratelimit-Remaining",
 	"X-RateLimit-Requests-Remaining", // Linear uses a non-standard header
+	"X-Rate-Limit-Remaining",         // Okta uses a non-standard header
 }
 
 var resetAtHeaders = []string{
 	"X-Ratelimit-Reset",
 	"Ratelimit-Reset",
 	"X-RateLimit-Requests-Reset", // Linear uses a non-standard header
+	"X-Rate-Limit-Reset",         // Okta uses a non-standard header
 	"Retry-After",                // Often returned with 429
 }
 
