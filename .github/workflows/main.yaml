@@ -2,55 +2,55 @@ name: main ci
 on:
   push:
     branches:
-      - main
+    - main
 jobs:
   go-lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Install Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: 1.22.x
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Run linters
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: latest
-          args: --timeout=3m
+    - name: Install Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: 1.23.x
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Run linters
+      uses: golangci/golangci-lint-action@v3
+      with:
+        version: latest
+        args: --timeout=3m
   go-test:
     strategy:
       matrix:
-        go-version: [ 1.22.x ]
+        go-version: [ 1.23.x ]
         platform: [ ubuntu-latest ]
     runs-on: ${{ matrix.platform }}
     steps:
-      - name: Install Go
-        if: success()
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ matrix.go-version }}
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: go tests
-        run: go test -v -covermode=count -json ./... > test.json
-      - name: annotate go tests
-        if: always()
-        uses: guyarb/golang-test-annotations@v0.6.0
-        with:
-          test-results: test.json
+    - name: Install Go
+      if: success()
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ matrix.go-version }}
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: go tests
+      run: go test -v -covermode=count -json ./... > test.json
+    - name: annotate go tests
+      if: always()
+      uses: guyarb/golang-test-annotations@v0.6.0
+      with:
+        test-results: test.json
   buf-lint-and-breaking-change-detection:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Setup
-        uses: bufbuild/buf-setup-action@v1
-        with:
-          version: '1.29.0'
-      - name: Lint
-        uses: bufbuild/buf-lint-action@v1
-      - name: Breaking change detection against `main`
-        uses: bufbuild/buf-breaking-action@v1
-        with:
-          against: 'https://github.com/conductorone/baton.git#branch=main,ref=HEAD~1'
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Setup
+      uses: bufbuild/buf-setup-action@v1
+      with:
+        version: '1.29.0'
+    - name: Lint
+      uses: bufbuild/buf-lint-action@v1
+    - name: Breaking change detection against `main`
+      uses: bufbuild/buf-breaking-action@v1
+      with:
+        against: 'https://github.com/conductorone/baton.git#branch=main,ref=HEAD~1'
