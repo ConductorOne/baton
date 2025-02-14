@@ -232,7 +232,7 @@ type EntitlementMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m EntitlementMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -428,7 +428,7 @@ type EntitlementsServiceListEntitlementsRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m EntitlementsServiceListEntitlementsRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -617,7 +617,7 @@ type EntitlementsServiceListEntitlementsResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m EntitlementsServiceListEntitlementsResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}

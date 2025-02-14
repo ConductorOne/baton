@@ -49,6 +49,9 @@ func cloneTableQuery(tableName string) (string, error) {
 // 4. Select directly from the cloned db and insert directly into the new database.
 // 5. Close and save the new database as a c1z at the configured path.
 func (c *C1File) CloneSync(ctx context.Context, outPath string, syncID string) error {
+	ctx, span := tracer.Start(ctx, "C1File.CloneSync")
+	defer span.End()
+
 	// Be sure that the output path is empty else return an error
 	_, err := os.Stat(outPath)
 	if err == nil || !errors.Is(err, fs.ErrNotExist) {

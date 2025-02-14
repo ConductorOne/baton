@@ -84,7 +84,7 @@ type GrantsReaderServiceGetGrantRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m GrantsReaderServiceGetGrantRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -218,7 +218,7 @@ type GrantsReaderServiceGetGrantResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m GrantsReaderServiceGetGrantResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -458,7 +458,7 @@ type GrantsReaderServiceListGrantsForEntitlementRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m GrantsReaderServiceListGrantsForEntitlementRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -621,7 +621,7 @@ type GrantsReaderServiceListGrantsForEntitlementResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m GrantsReaderServiceListGrantsForEntitlementResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -814,7 +814,7 @@ type GrantsReaderServiceListGrantsForResourceTypeRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m GrantsReaderServiceListGrantsForResourceTypeRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -977,7 +977,7 @@ type GrantsReaderServiceListGrantsForResourceTypeResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m GrantsReaderServiceListGrantsForResourceTypeResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}

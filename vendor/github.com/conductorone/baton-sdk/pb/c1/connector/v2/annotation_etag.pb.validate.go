@@ -73,7 +73,7 @@ type ETagMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ETagMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -201,7 +201,7 @@ type ETagMetadataMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ETagMetadataMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -302,7 +302,7 @@ type ETagMatchMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ETagMatchMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}

@@ -6,9 +6,10 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
+	"github.com/doug-martin/goqu/v9"
+
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	reader_v2 "github.com/conductorone/baton-sdk/pb/c1/reader/v2"
-	"github.com/doug-martin/goqu/v9"
 )
 
 const resourceTypesTableVersion = "1"
@@ -44,6 +45,9 @@ func (r *resourceTypesTable) Schema() (string, []interface{}) {
 }
 
 func (c *C1File) ListResourceTypes(ctx context.Context, request *v2.ResourceTypesServiceListResourceTypesRequest) (*v2.ResourceTypesServiceListResourceTypesResponse, error) {
+	ctx, span := tracer.Start(ctx, "C1File.ListResourceTypes")
+	defer span.End()
+
 	objs, nextPageToken, err := c.listConnectorObjects(ctx, resourceTypes.Name(), request)
 	if err != nil {
 		return nil, fmt.Errorf("error listing resource types: %w", err)
@@ -66,6 +70,9 @@ func (c *C1File) ListResourceTypes(ctx context.Context, request *v2.ResourceType
 }
 
 func (c *C1File) GetResourceType(ctx context.Context, request *reader_v2.ResourceTypesReaderServiceGetResourceTypeRequest) (*reader_v2.ResourceTypesReaderServiceGetResourceTypeResponse, error) {
+	ctx, span := tracer.Start(ctx, "C1File.GetResourceType")
+	defer span.End()
+
 	ret := &v2.ResourceType{}
 
 	err := c.getConnectorObject(ctx, resourceTypes.Name(), request.ResourceTypeId, ret)
@@ -79,6 +86,9 @@ func (c *C1File) GetResourceType(ctx context.Context, request *reader_v2.Resourc
 }
 
 func (c *C1File) PutResourceTypes(ctx context.Context, resourceTypesObjs ...*v2.ResourceType) error {
+	ctx, span := tracer.Start(ctx, "C1File.PutResourceTypes")
+	defer span.End()
+
 	err := bulkPutConnectorObject(ctx, c, resourceTypes.Name(),
 		func(resource *v2.ResourceType) (goqu.Record, error) {
 			return nil, nil
