@@ -56,6 +56,9 @@ func WithC1FPragma(name string, value string) C1FOption {
 
 // Returns a C1File instance for the given db filepath.
 func NewC1File(ctx context.Context, dbFilePath string, opts ...C1FOption) (*C1File, error) {
+	ctx, span := tracer.Start(ctx, "NewC1File")
+	defer span.End()
+
 	rawDB, err := sql.Open("sqlite", dbFilePath)
 	if err != nil {
 		return nil, err
@@ -101,6 +104,9 @@ func WithPragma(name string, value string) C1ZOption {
 
 // Returns a new C1File instance with its state stored at the provided filename.
 func NewC1ZFile(ctx context.Context, outputFilePath string, opts ...C1ZOption) (*C1File, error) {
+	ctx, span := tracer.Start(ctx, "NewC1ZFile")
+	defer span.End()
+
 	options := &c1zOptions{}
 	for _, opt := range opts {
 		opt(options)
@@ -164,6 +170,9 @@ func (c *C1File) Close() error {
 
 // init ensures that the database has all of the required schema.
 func (c *C1File) init(ctx context.Context) error {
+	ctx, span := tracer.Start(ctx, "C1File.init")
+	defer span.End()
+
 	err := c.validateDb(ctx)
 	if err != nil {
 		return err
@@ -190,6 +199,9 @@ func (c *C1File) init(ctx context.Context) error {
 
 // Stats introspects the database and returns the count of objects for the given sync run.
 func (c *C1File) Stats(ctx context.Context) (map[string]int64, error) {
+	ctx, span := tracer.Start(ctx, "C1File.Stats")
+	defer span.End()
+
 	counts := make(map[string]int64)
 
 	syncID, err := c.LatestSyncID(ctx)

@@ -81,7 +81,7 @@ type AssetRefMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m AssetRefMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -221,7 +221,7 @@ type AssetServiceGetAssetRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m AssetServiceGetAssetRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -424,7 +424,7 @@ type AssetServiceGetAssetResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m AssetServiceGetAssetResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -540,7 +540,7 @@ type AssetServiceGetAssetResponse_MetadataMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m AssetServiceGetAssetResponse_MetadataMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -656,7 +656,7 @@ type AssetServiceGetAssetResponse_DataMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m AssetServiceGetAssetResponse_DataMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}

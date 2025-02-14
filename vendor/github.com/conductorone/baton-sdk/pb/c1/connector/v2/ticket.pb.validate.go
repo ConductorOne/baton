@@ -222,7 +222,7 @@ type TicketSchemaMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m TicketSchemaMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -736,7 +736,7 @@ type TicketCustomFieldMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m TicketCustomFieldMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -842,7 +842,7 @@ type TicketCustomFieldStringValueMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m TicketCustomFieldStringValueMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -945,7 +945,7 @@ type TicketCustomFieldStringValuesMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m TicketCustomFieldStringValuesMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -1050,7 +1050,7 @@ type TicketCustomFieldBoolValueMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m TicketCustomFieldBoolValueMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -1210,7 +1210,7 @@ type TicketCustomFieldNumberValueMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m TicketCustomFieldNumberValueMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -1371,7 +1371,7 @@ type TicketCustomFieldTimestampValueMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m TicketCustomFieldTimestampValueMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -1480,7 +1480,7 @@ type TicketCustomFieldPickStringValueMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m TicketCustomFieldPickStringValueMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -1586,7 +1586,7 @@ type TicketCustomFieldPickMultipleStringValuesMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m TicketCustomFieldPickMultipleStringValuesMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -1783,7 +1783,7 @@ type TicketCustomFieldPickObjectValueMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m TicketCustomFieldPickObjectValueMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -1991,7 +1991,7 @@ type TicketCustomFieldPickMultipleObjectValuesMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m TicketCustomFieldPickMultipleObjectValuesMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -2098,7 +2098,7 @@ type TicketCustomFieldObjectValueMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m TicketCustomFieldObjectValueMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -2204,7 +2204,7 @@ type TicketStatusMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m TicketStatusMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -2342,7 +2342,7 @@ type TicketsServiceGetTicketSchemaRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m TicketsServiceGetTicketSchemaRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -2510,7 +2510,7 @@ type TicketsServiceGetTicketSchemaResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m TicketsServiceGetTicketSchemaResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -2680,7 +2680,7 @@ type TicketsServiceListTicketSchemasRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m TicketsServiceListTicketSchemasRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -2869,7 +2869,7 @@ type TicketsServiceListTicketSchemasResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m TicketsServiceListTicketSchemasResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -3261,7 +3261,7 @@ type TicketMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m TicketMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -3364,7 +3364,7 @@ type TicketTypeMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m TicketTypeMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -3601,7 +3601,7 @@ type TicketRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m TicketRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -3795,7 +3795,7 @@ type TicketsServiceCreateTicketRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m TicketsServiceCreateTicketRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -3965,7 +3965,7 @@ type TicketsServiceCreateTicketResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m TicketsServiceCreateTicketResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -4104,7 +4104,7 @@ type TicketsServiceGetTicketRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m TicketsServiceGetTicketRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -4272,7 +4272,7 @@ type TicketsServiceGetTicketResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m TicketsServiceGetTicketResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -4412,7 +4412,7 @@ type TicketsServiceBulkCreateTicketsRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m TicketsServiceBulkCreateTicketsRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -4552,7 +4552,7 @@ type TicketsServiceBulkCreateTicketsResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m TicketsServiceBulkCreateTicketsResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -4691,7 +4691,7 @@ type TicketsServiceBulkGetTicketsRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m TicketsServiceBulkGetTicketsRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -4830,7 +4830,7 @@ type TicketsServiceBulkGetTicketsResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m TicketsServiceBulkGetTicketsResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}

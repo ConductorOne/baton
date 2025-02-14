@@ -5,8 +5,12 @@ import (
 	"errors"
 	"io"
 
+	"go.opentelemetry.io/otel"
+
 	"github.com/conductorone/baton-sdk/pkg/connectorstore"
 )
+
+var tracer = otel.Tracer("baton-sdk/pkg.dotc1z")
 
 // NewC1FileReader returns a connectorstore.Reader implementation for the given sqlite db file path.
 func NewC1FileReader(ctx context.Context, dbFilePath string) (connectorstore.Reader, error) {

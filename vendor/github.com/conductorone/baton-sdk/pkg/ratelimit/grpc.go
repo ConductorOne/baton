@@ -9,7 +9,6 @@ import (
 	connectorV2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	ratelimitV1 "github.com/conductorone/baton-sdk/pb/c1/ratelimit/v1"
 	"github.com/conductorone/baton-sdk/pkg/annotations"
-	"github.com/golang/protobuf/ptypes/any"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -180,7 +179,7 @@ func reportRatelimit(
 	token string,
 	status ratelimitV1.RateLimitDescription_Status,
 	descriptors *ratelimitV1.RateLimitDescriptors,
-	anys []*any.Any,
+	anys []*anypb.Any,
 ) error {
 	l := ctxzap.Extract(ctx)
 	annos := annotations.Annotations(anys)

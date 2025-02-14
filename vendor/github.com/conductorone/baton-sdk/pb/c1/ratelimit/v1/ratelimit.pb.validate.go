@@ -108,7 +108,7 @@ type RateLimitDescriptionMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m RateLimitDescriptionMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -272,7 +272,7 @@ type ReportRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ReportRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -372,7 +372,7 @@ type ReportResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ReportResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -517,7 +517,7 @@ type RateLimitDescriptorsMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m RateLimitDescriptorsMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -651,7 +651,7 @@ type DoRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m DoRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -781,7 +781,7 @@ type DoResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m DoResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -881,7 +881,7 @@ type DisabledLimiterMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m DisabledLimiterMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -983,7 +983,7 @@ type SlidingMemoryLimiterMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m SlidingMemoryLimiterMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -1116,7 +1116,7 @@ type FixedMemoryLimiterMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m FixedMemoryLimiterMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -1222,7 +1222,7 @@ type ExternalLimiterMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ExternalLimiterMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -1491,7 +1491,7 @@ type RateLimiterConfigMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m RateLimiterConfigMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -1615,7 +1615,7 @@ type RateLimitDescriptors_EntryMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m RateLimitDescriptors_EntryMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}

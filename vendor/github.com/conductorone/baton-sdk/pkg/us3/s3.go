@@ -256,22 +256,6 @@ func NewClient(ctx context.Context, bucketName string, opts ...Option) (*S3Clien
 		)
 	}
 
-	if cfg.endpointURL != "" {
-		customResolver := awsSdk.EndpointResolverWithOptionsFunc(func(service string, region string, optFns ...interface{}) (awsSdk.Endpoint, error) {
-			if service == s3.ServiceID && region == cfg.region {
-				return awsSdk.Endpoint{
-					PartitionID:       "aws",
-					URL:               cfg.endpointURL,
-					SigningRegion:     cfg.region,
-					HostnameImmutable: true,
-				}, nil
-			}
-
-			return awsSdk.Endpoint{}, &awsSdk.EndpointNotFoundError{}
-		})
-		awsOpts = append(awsOpts, awsConfig.WithEndpointResolverWithOptions(customResolver))
-	}
-
 	baseConfig, err := awsConfig.LoadDefaultConfig(ctx, awsOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("error loading aws cfg: %w", err)
@@ -343,7 +327,14 @@ func (s *S3Client) newConfiguredS3Client(ctx context.Context) (*s3.Client, error
 		return nil, err
 	}
 
-	s3svc := s3.NewFromConfig(callingConfig)
+	s3svc := s3.NewFromConfig(callingConfig,
+		func(o *s3.Options) {
+			if s.cfg.endpointURL == "" {
+				ep := s.cfg.endpointURL
+				o.BaseEndpoint = &ep
+			}
+		},
+	)
 	location, err := s3svc.GetBucketLocation(ctx, &s3.GetBucketLocationInput{
 		Bucket: awsSdk.String(s.cfg.bucketName),
 	})

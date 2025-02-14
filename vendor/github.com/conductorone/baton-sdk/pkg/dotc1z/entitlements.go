@@ -49,6 +49,9 @@ func (r *entitlementsTable) Schema() (string, []interface{}) {
 }
 
 func (c *C1File) ListEntitlements(ctx context.Context, request *v2.EntitlementsServiceListEntitlementsRequest) (*v2.EntitlementsServiceListEntitlementsResponse, error) {
+	ctx, span := tracer.Start(ctx, "C1File.ListEntitlements")
+	defer span.End()
+
 	objs, nextPageToken, err := c.listConnectorObjects(ctx, entitlements.Name(), request)
 	if err != nil {
 		return nil, fmt.Errorf("error listing entitlements: %w", err)
@@ -71,6 +74,9 @@ func (c *C1File) ListEntitlements(ctx context.Context, request *v2.EntitlementsS
 }
 
 func (c *C1File) GetEntitlement(ctx context.Context, request *reader_v2.EntitlementsReaderServiceGetEntitlementRequest) (*reader_v2.EntitlementsReaderServiceGetEntitlementResponse, error) {
+	ctx, span := tracer.Start(ctx, "C1File.GetEntitlement")
+	defer span.End()
+
 	ret := &v2.Entitlement{}
 
 	err := c.getConnectorObject(ctx, entitlements.Name(), request.EntitlementId, ret)
@@ -84,6 +90,9 @@ func (c *C1File) GetEntitlement(ctx context.Context, request *reader_v2.Entitlem
 }
 
 func (c *C1File) PutEntitlements(ctx context.Context, entitlementObjs ...*v2.Entitlement) error {
+	ctx, span := tracer.Start(ctx, "C1File.PutEntitlements")
+	defer span.End()
+
 	err := bulkPutConnectorObject(ctx, c, entitlements.Name(),
 		func(entitlement *v2.Entitlement) (goqu.Record, error) {
 			return goqu.Record{
