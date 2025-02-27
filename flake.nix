@@ -5,7 +5,7 @@
   inputs = {
     flake-schemas.url = "https://flakehub.com/f/DeterminateSystems/flake-schemas/*";
 
-    nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/*";
+    nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1";
   };
 
   # Flake outputs that other flakes can use
@@ -45,6 +45,7 @@
             packages = with pkgs; [
               go
               buf
+
               self.packages.${pkgs.system}.default
             ];
           };
@@ -56,7 +57,7 @@
         {
           default = pkgs.buildGoModule {
             pname = "baton";
-            version = "0.1.4";
+            version = "0.1.7";
 
             src = ./.;
 
