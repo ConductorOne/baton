@@ -3,6 +3,7 @@ package dotc1z
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 
 	"go.opentelemetry.io/otel"
@@ -46,4 +47,13 @@ func C1ZFileCheckHeader(f io.ReadSeeker) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func NewExternalC1FileReader(ctx context.Context, tmpDir string, externalResourceC1ZPath string) (connectorstore.Reader, error) {
+	dbFilePath, err := loadC1z(externalResourceC1ZPath, tmpDir)
+	if err != nil {
+		return nil, fmt.Errorf("error loading external resource c1z file: %w", err)
+	}
+
+	return NewC1File(ctx, dbFilePath)
 }
