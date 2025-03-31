@@ -9,6 +9,7 @@ import (
 
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	reader_v2 "github.com/conductorone/baton-sdk/pb/c1/reader/v2"
+	"github.com/conductorone/baton-sdk/pkg/annotations"
 )
 
 const grantsTableVersion = "1"
@@ -46,7 +47,7 @@ func (r *grantsTable) Name() string {
 func (r *grantsTable) Schema() (string, []interface{}) {
 	return grantsTableSchema, []interface{}{
 		r.Name(),
-		fmt.Sprintf("idx_resource_types_external_sync_v%s", r.Version()),
+		fmt.Sprintf("idx_grants_resource_type_id_resource_id_v%s", r.Version()),
 		r.Name(),
 		fmt.Sprintf("idx_grants_principal_id_v%s", r.Version()),
 		r.Name(),
@@ -87,8 +88,11 @@ func (c *C1File) GetGrant(ctx context.Context, request *reader_v2.GrantsReaderSe
 	defer span.End()
 
 	ret := &v2.Grant{}
-
-	err := c.getConnectorObject(ctx, grants.Name(), request.GrantId, ret)
+	syncId, err := annotations.GetSyncIdFromAnnotations(request.GetAnnotations())
+	if err != nil {
+		return nil, fmt.Errorf("error getting sync id from annotations for grant '%s': %w", request.GrantId, err)
+	}
+	err = c.getConnectorObject(ctx, grants.Name(), request.GrantId, syncId, ret)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching grant '%s': %w", request.GetGrantId(), err)
 	}
@@ -202,5 +206,32 @@ func (c *C1File) PutGrants(ctx context.Context, bulkGrants ...*v2.Grant) error {
 		return err
 	}
 	c.dbUpdated = true
+	return nil
+}
+
+func (c *C1File) DeleteGrant(ctx context.Context, grantId string) error {
+	ctx, span := tracer.Start(ctx, "C1File.DeleteGrant")
+	defer span.End()
+
+	err := c.validateSyncDb(ctx)
+	if err != nil {
+		return err
+	}
+
+	q := c.db.Delete(grants.Name())
+	q = q.Where(goqu.C("external_id").Eq(grantId))
+	if c.currentSyncID != "" {
+		q = q.Where(goqu.C("sync_id").Eq(c.currentSyncID))
+	}
+	query, args, err := q.ToSQL()
+	if err != nil {
+		return err
+	}
+
+	_, err = c.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

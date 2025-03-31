@@ -9,6 +9,7 @@ import (
 
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	reader_v2 "github.com/conductorone/baton-sdk/pb/c1/reader/v2"
+	"github.com/conductorone/baton-sdk/pkg/annotations"
 )
 
 const entitlementsTableVersion = "1"
@@ -78,8 +79,11 @@ func (c *C1File) GetEntitlement(ctx context.Context, request *reader_v2.Entitlem
 	defer span.End()
 
 	ret := &v2.Entitlement{}
-
-	err := c.getConnectorObject(ctx, entitlements.Name(), request.EntitlementId, ret)
+	syncId, err := annotations.GetSyncIdFromAnnotations(request.GetAnnotations())
+	if err != nil {
+		return nil, fmt.Errorf("error getting sync id from annotations for entitlement '%s': %w", request.EntitlementId, err)
+	}
+	err = c.getConnectorObject(ctx, entitlements.Name(), request.EntitlementId, syncId, ret)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching entitlement '%s': %w", request.EntitlementId, err)
 	}

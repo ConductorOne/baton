@@ -357,6 +357,106 @@ var ResourceManagerService_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
+	ResourceDeleterService_DeleteResourceV2_FullMethodName = "/c1.connector.v2.ResourceDeleterService/DeleteResourceV2"
+)
+
+// ResourceDeleterServiceClient is the client API for ResourceDeleterService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type ResourceDeleterServiceClient interface {
+	DeleteResourceV2(ctx context.Context, in *DeleteResourceV2Request, opts ...grpc.CallOption) (*DeleteResourceV2Response, error)
+}
+
+type resourceDeleterServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewResourceDeleterServiceClient(cc grpc.ClientConnInterface) ResourceDeleterServiceClient {
+	return &resourceDeleterServiceClient{cc}
+}
+
+func (c *resourceDeleterServiceClient) DeleteResourceV2(ctx context.Context, in *DeleteResourceV2Request, opts ...grpc.CallOption) (*DeleteResourceV2Response, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteResourceV2Response)
+	err := c.cc.Invoke(ctx, ResourceDeleterService_DeleteResourceV2_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// ResourceDeleterServiceServer is the server API for ResourceDeleterService service.
+// All implementations should embed UnimplementedResourceDeleterServiceServer
+// for forward compatibility.
+type ResourceDeleterServiceServer interface {
+	DeleteResourceV2(context.Context, *DeleteResourceV2Request) (*DeleteResourceV2Response, error)
+}
+
+// UnimplementedResourceDeleterServiceServer should be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedResourceDeleterServiceServer struct{}
+
+func (UnimplementedResourceDeleterServiceServer) DeleteResourceV2(context.Context, *DeleteResourceV2Request) (*DeleteResourceV2Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteResourceV2 not implemented")
+}
+func (UnimplementedResourceDeleterServiceServer) testEmbeddedByValue() {}
+
+// UnsafeResourceDeleterServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ResourceDeleterServiceServer will
+// result in compilation errors.
+type UnsafeResourceDeleterServiceServer interface {
+	mustEmbedUnimplementedResourceDeleterServiceServer()
+}
+
+func RegisterResourceDeleterServiceServer(s grpc.ServiceRegistrar, srv ResourceDeleterServiceServer) {
+	// If the following call pancis, it indicates UnimplementedResourceDeleterServiceServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&ResourceDeleterService_ServiceDesc, srv)
+}
+
+func _ResourceDeleterService_DeleteResourceV2_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteResourceV2Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ResourceDeleterServiceServer).DeleteResourceV2(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ResourceDeleterService_DeleteResourceV2_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ResourceDeleterServiceServer).DeleteResourceV2(ctx, req.(*DeleteResourceV2Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// ResourceDeleterService_ServiceDesc is the grpc.ServiceDesc for ResourceDeleterService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var ResourceDeleterService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "c1.connector.v2.ResourceDeleterService",
+	HandlerType: (*ResourceDeleterServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "DeleteResourceV2",
+			Handler:    _ResourceDeleterService_DeleteResourceV2_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "c1/connector/v2/resource.proto",
+}
+
+const (
 	CredentialManagerService_RotateCredential_FullMethodName = "/c1.connector.v2.CredentialManagerService/RotateCredential"
 )
 

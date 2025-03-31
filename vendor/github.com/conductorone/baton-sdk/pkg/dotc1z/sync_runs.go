@@ -13,6 +13,9 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/segmentio/ksuid"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/types/known/timestamppb"
+
+	reader_v2 "github.com/conductorone/baton-sdk/pb/c1/reader/v2"
 )
 
 const syncRunsTableVersion = "1"
@@ -129,7 +132,7 @@ func (c *C1File) getFinishedSync(ctx context.Context, offset uint) (*syncRun, er
 	return ret, nil
 }
 
-func (c *C1File) ListSyncRuns(ctx context.Context, pageToken string, pageSize uint) ([]*syncRun, string, error) {
+func (c *C1File) ListSyncRuns(ctx context.Context, pageToken string, pageSize uint32) ([]*syncRun, string, error) {
 	ctx, span := tracer.Start(ctx, "C1File.ListSyncRuns")
 	defer span.End()
 
@@ -150,7 +153,7 @@ func (c *C1File) ListSyncRuns(ctx context.Context, pageToken string, pageSize ui
 	}
 
 	q = q.Order(goqu.C("id").Asc())
-	q = q.Limit(pageSize + 1)
+	q = q.Limit(uint(pageSize + 1))
 
 	var ret []*syncRun
 
@@ -165,7 +168,7 @@ func (c *C1File) ListSyncRuns(ctx context.Context, pageToken string, pageSize ui
 	}
 	defer rows.Close()
 
-	var count uint = 0
+	var count uint32 = 0
 	lastRow := 0
 	for rows.Next() {
 		count++
@@ -434,6 +437,7 @@ func (c *C1File) Cleanup(ctx context.Context) error {
 	l := ctxzap.Extract(ctx)
 
 	if skipCleanup, _ := strconv.ParseBool(os.Getenv("BATON_SKIP_CLEANUP")); skipCleanup {
+		l.Info("BATON_SKIP_CLEANUP is set, skipping cleanup of old syncs")
 		return nil
 	}
 
@@ -443,6 +447,7 @@ func (c *C1File) Cleanup(ctx context.Context) error {
 	}
 
 	if c.currentSyncID != "" {
+		l.Warn("current sync is running, skipping cleanup of old syncs", zap.String("current_sync_id", c.currentSyncID))
 		return nil
 	}
 
@@ -473,6 +478,7 @@ func (c *C1File) Cleanup(ctx context.Context) error {
 		syncLimit = int(customSyncLimit)
 	}
 
+	l.Debug("found syncs", zap.Int("count", len(ret)), zap.Int("sync_limit", syncLimit))
 	if len(ret) <= syncLimit {
 		return nil
 	}
@@ -548,4 +554,74 @@ func (c *C1File) Vacuum(ctx context.Context) error {
 	c.dbUpdated = true
 
 	return nil
+}
+
+func toTimeStamp(t *time.Time) *timestamppb.Timestamp {
+	if t == nil {
+		return nil
+	}
+	return timestamppb.New(*t)
+}
+
+func (c *C1File) GetSync(ctx context.Context, request *reader_v2.SyncsReaderServiceGetSyncRequest) (*reader_v2.SyncsReaderServiceGetSyncResponse, error) {
+	ctx, span := tracer.Start(ctx, "C1File.GetSync")
+	defer span.End()
+
+	sr, err := c.getSync(ctx, request.SyncId)
+	if err != nil {
+		return nil, fmt.Errorf("error getting sync '%s': %w", request.SyncId, err)
+	}
+
+	return &reader_v2.SyncsReaderServiceGetSyncResponse{
+		Sync: &reader_v2.SyncRun{
+			Id:        sr.ID,
+			StartedAt: toTimeStamp(sr.StartedAt),
+			EndedAt:   toTimeStamp(sr.EndedAt),
+			SyncToken: sr.SyncToken,
+		},
+	}, nil
+}
+
+func (c *C1File) ListSyncs(ctx context.Context, request *reader_v2.SyncsReaderServiceListSyncsRequest) (*reader_v2.SyncsReaderServiceListSyncsResponse, error) {
+	ctx, span := tracer.Start(ctx, "C1File.ListSyncs")
+	defer span.End()
+
+	syncs, nextPageToken, err := c.ListSyncRuns(ctx, request.PageToken, request.PageSize)
+	if err != nil {
+		return nil, fmt.Errorf("error listing syncs: %w", err)
+	}
+
+	syncRuns := make([]*reader_v2.SyncRun, len(syncs))
+	for i, sr := range syncs {
+		syncRuns[i] = &reader_v2.SyncRun{
+			Id:        sr.ID,
+			StartedAt: toTimeStamp(sr.StartedAt),
+			EndedAt:   toTimeStamp(sr.EndedAt),
+			SyncToken: sr.SyncToken,
+		}
+	}
+
+	return &reader_v2.SyncsReaderServiceListSyncsResponse{
+		Syncs:         syncRuns,
+		NextPageToken: nextPageToken,
+	}, nil
+}
+
+func (c *C1File) GetLatestFinishedSync(ctx context.Context, request *reader_v2.SyncsReaderServiceGetLatestFinishedSyncRequest) (*reader_v2.SyncsReaderServiceGetLatestFinishedSyncResponse, error) {
+	ctx, span := tracer.Start(ctx, "C1File.GetLatestFinishedSync")
+	defer span.End()
+
+	sync, err := c.getFinishedSync(ctx, 0)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching latest finished sync: %w", err)
+	}
+
+	return &reader_v2.SyncsReaderServiceGetLatestFinishedSyncResponse{
+		Sync: &reader_v2.SyncRun{
+			Id:        sync.ID,
+			StartedAt: toTimeStamp(sync.StartedAt),
+			EndedAt:   toTimeStamp(sync.EndedAt),
+			SyncToken: sync.SyncToken,
+		},
+	}, nil
 }

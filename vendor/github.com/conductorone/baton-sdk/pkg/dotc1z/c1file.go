@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
+	"time"
 
 	"github.com/doug-martin/goqu/v9"
 	// NOTE: required to register the dialect for goqu.
@@ -36,6 +38,12 @@ type C1File struct {
 	dbUpdated      bool
 	tempDir        string
 	pragmas        []pragma
+
+	// Slow query tracking
+	slowQueryLogTimes     map[string]time.Time
+	slowQueryLogTimesMu   sync.Mutex
+	slowQueryThreshold    time.Duration
+	slowQueryLogFrequency time.Duration
 }
 
 var _ connectorstore.Writer = (*C1File)(nil)
@@ -67,9 +75,13 @@ func NewC1File(ctx context.Context, dbFilePath string, opts ...C1FOption) (*C1Fi
 	db := goqu.New("sqlite3", rawDB)
 
 	c1File := &C1File{
-		rawDb:      rawDB,
-		db:         db,
-		dbFilePath: dbFilePath,
+		rawDb:                 rawDB,
+		db:                    db,
+		dbFilePath:            dbFilePath,
+		pragmas:               []pragma{},
+		slowQueryLogTimes:     make(map[string]time.Time),
+		slowQueryThreshold:    5 * time.Second,
+		slowQueryLogFrequency: 1 * time.Minute,
 	}
 
 	for _, opt := range opts {
