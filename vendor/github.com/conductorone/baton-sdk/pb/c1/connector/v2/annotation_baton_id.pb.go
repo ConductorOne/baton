@@ -125,6 +125,50 @@ func (x *ExternalResourceMatchAll) GetResourceType() ResourceType_Trait {
 	return ResourceType_TRAIT_UNSPECIFIED
 }
 
+type ExternalResourceMatchID struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ExternalResourceMatchID) Reset() {
+	*x = ExternalResourceMatchID{}
+	mi := &file_c1_connector_v2_annotation_baton_id_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ExternalResourceMatchID) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ExternalResourceMatchID) ProtoMessage() {}
+
+func (x *ExternalResourceMatchID) ProtoReflect() protoreflect.Message {
+	mi := &file_c1_connector_v2_annotation_baton_id_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ExternalResourceMatchID.ProtoReflect.Descriptor instead.
+func (*ExternalResourceMatchID) Descriptor() ([]byte, []int) {
+	return file_c1_connector_v2_annotation_baton_id_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *ExternalResourceMatchID) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
 type BatonID struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -133,7 +177,7 @@ type BatonID struct {
 
 func (x *BatonID) Reset() {
 	*x = BatonID{}
-	mi := &file_c1_connector_v2_annotation_baton_id_proto_msgTypes[2]
+	mi := &file_c1_connector_v2_annotation_baton_id_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -145,7 +189,7 @@ func (x *BatonID) String() string {
 func (*BatonID) ProtoMessage() {}
 
 func (x *BatonID) ProtoReflect() protoreflect.Message {
-	mi := &file_c1_connector_v2_annotation_baton_id_proto_msgTypes[2]
+	mi := &file_c1_connector_v2_annotation_baton_id_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -158,7 +202,7 @@ func (x *BatonID) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BatonID.ProtoReflect.Descriptor instead.
 func (*BatonID) Descriptor() ([]byte, []int) {
-	return file_c1_connector_v2_annotation_baton_id_proto_rawDescGZIP(), []int{2}
+	return file_c1_connector_v2_annotation_baton_id_proto_rawDescGZIP(), []int{3}
 }
 
 var File_c1_connector_v2_annotation_baton_id_proto protoreflect.FileDescriptor
@@ -184,12 +228,15 @@ var file_c1_connector_v2_annotation_baton_id_proto_rawDesc = string([]byte{
 	0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x23, 0x2e, 0x63, 0x31,
 	0x2e, 0x63, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x2e, 0x76, 0x32, 0x2e, 0x52, 0x65,
 	0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x54, 0x79, 0x70, 0x65, 0x2e, 0x54, 0x72, 0x61, 0x69, 0x74,
-	0x52, 0x0c, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x54, 0x79, 0x70, 0x65, 0x22, 0x09,
-	0x0a, 0x07, 0x42, 0x61, 0x74, 0x6f, 0x6e, 0x49, 0x44, 0x42, 0x36, 0x5a, 0x34, 0x67, 0x69, 0x74,
-	0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x6e, 0x64, 0x75, 0x63, 0x74, 0x6f,
-	0x72, 0x6f, 0x6e, 0x65, 0x2f, 0x62, 0x61, 0x74, 0x6f, 0x6e, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x70,
-	0x62, 0x2f, 0x63, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x2f, 0x76,
-	0x32, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x52, 0x0c, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x54, 0x79, 0x70, 0x65, 0x22, 0x29,
+	0x0a, 0x17, 0x45, 0x78, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72,
+	0x63, 0x65, 0x4d, 0x61, 0x74, 0x63, 0x68, 0x49, 0x44, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x22, 0x09, 0x0a, 0x07, 0x42, 0x61, 0x74,
+	0x6f, 0x6e, 0x49, 0x44, 0x42, 0x36, 0x5a, 0x34, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63,
+	0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x6e, 0x64, 0x75, 0x63, 0x74, 0x6f, 0x72, 0x6f, 0x6e, 0x65, 0x2f,
+	0x62, 0x61, 0x74, 0x6f, 0x6e, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x70, 0x62, 0x2f, 0x63, 0x31, 0x2f,
+	0x63, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x2f, 0x76, 0x32, 0x62, 0x06, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x33,
 })
 
 var (
@@ -204,16 +251,17 @@ func file_c1_connector_v2_annotation_baton_id_proto_rawDescGZIP() []byte {
 	return file_c1_connector_v2_annotation_baton_id_proto_rawDescData
 }
 
-var file_c1_connector_v2_annotation_baton_id_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_c1_connector_v2_annotation_baton_id_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_c1_connector_v2_annotation_baton_id_proto_goTypes = []any{
 	(*ExternalResourceMatch)(nil),    // 0: c1.connector.v2.ExternalResourceMatch
 	(*ExternalResourceMatchAll)(nil), // 1: c1.connector.v2.ExternalResourceMatchAll
-	(*BatonID)(nil),                  // 2: c1.connector.v2.BatonID
-	(ResourceType_Trait)(0),          // 3: c1.connector.v2.ResourceType.Trait
+	(*ExternalResourceMatchID)(nil),  // 2: c1.connector.v2.ExternalResourceMatchID
+	(*BatonID)(nil),                  // 3: c1.connector.v2.BatonID
+	(ResourceType_Trait)(0),          // 4: c1.connector.v2.ResourceType.Trait
 }
 var file_c1_connector_v2_annotation_baton_id_proto_depIdxs = []int32{
-	3, // 0: c1.connector.v2.ExternalResourceMatch.resource_type:type_name -> c1.connector.v2.ResourceType.Trait
-	3, // 1: c1.connector.v2.ExternalResourceMatchAll.resource_type:type_name -> c1.connector.v2.ResourceType.Trait
+	4, // 0: c1.connector.v2.ExternalResourceMatch.resource_type:type_name -> c1.connector.v2.ResourceType.Trait
+	4, // 1: c1.connector.v2.ExternalResourceMatchAll.resource_type:type_name -> c1.connector.v2.ResourceType.Trait
 	2, // [2:2] is the sub-list for method output_type
 	2, // [2:2] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name
@@ -233,7 +281,7 @@ func file_c1_connector_v2_annotation_baton_id_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_c1_connector_v2_annotation_baton_id_proto_rawDesc), len(file_c1_connector_v2_annotation_baton_id_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

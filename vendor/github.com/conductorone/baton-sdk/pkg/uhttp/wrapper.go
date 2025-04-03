@@ -436,6 +436,24 @@ func WithFormBody(body string) RequestOption {
 	}
 }
 
+func WithXMLBody(body interface{}) RequestOption {
+	return func() (io.ReadWriter, map[string]string, error) {
+		var buffer bytes.Buffer
+
+		err := xml.NewEncoder(&buffer).Encode(body)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		_, headers, err := WithContentTypeXMLHeader()()
+		if err != nil {
+			return nil, nil, err
+		}
+
+		return &buffer, headers, nil
+	}
+}
+
 func WithAcceptJSONHeader() RequestOption {
 	return WithAccept(applicationJSON)
 }
@@ -446,6 +464,10 @@ func WithContentTypeJSONHeader() RequestOption {
 
 func WithAcceptXMLHeader() RequestOption {
 	return WithAccept(applicationXML)
+}
+
+func WithContentTypeXMLHeader() RequestOption {
+	return WithContentType(applicationXML)
 }
 
 func WithContentTypeFormHeader() RequestOption {
