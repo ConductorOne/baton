@@ -72,8 +72,8 @@ github.com/cloudwego/base64x v0.1.5 h1:XPciSp1xaq2VCSt6lF0phncD4koWyULpl5bUxbfCy
 github.com/cloudwego/base64x v0.1.5/go.mod h1:0zlkT4Wn5C6NdauXdJRhSKRlJvmclQ1hhJgA0rcu/8w=
 github.com/cloudwego/iasm v0.2.0/go.mod h1:8rXZaNYT2n95jn+zTI1sDr+IgcD2GVs0nlbbQPiEFhY=
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
-github.com/conductorone/baton-sdk v0.2.90 h1:kCpJy20+b3ar4rNPb2mvz32xYKQUA4uklUSbHenomFE=
-github.com/conductorone/baton-sdk v0.2.90/go.mod h1:nUgHSAf9P0lfamti5NlOSpeh1t99UNzMjIwf0I7n4/g=
+github.com/conductorone/baton-sdk v0.2.94 h1:tF8z+Dnu2Q6ro67gYS0JabIi1MIihypo0+RjlWgI5jI=
+github.com/conductorone/baton-sdk v0.2.94/go.mod h1:nUgHSAf9P0lfamti5NlOSpeh1t99UNzMjIwf0I7n4/g=
 github.com/containerd/console v1.0.3/go.mod h1:7LqA/THxQ86k76b8c/EMSiaJ3h1eZkMkXar0TQ1gf3U=
 github.com/containerd/console v1.0.4 h1:F2g4+oChYvBTsASRTz8NP6iIAi97J3TtSAsLbIFn4ro=
 github.com/containerd/console v1.0.4/go.mod h1:YynlIjWYF8myEu6sdkwKIvGQq+cOckRm6So2avqoYAk=
