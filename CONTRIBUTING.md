@@ -6,9 +6,7 @@ Read our [Code of Conduct](./CODE_OF_CONDUCT.md) to keep our community approacha
 
 ## New contributor guide
 
-To get an overview of the project, read the [README](./README.md). Here are some resources to help you get started with open source contributions:
-
-- [Look at the Baton project wide Roadmap](https://github.com/orgs/ConductorOne/projects/1) to learn about where the project's upcoming focus.
+To get an overview of the project, read the [README](./README.md).
 
 ### Where are things?
 
