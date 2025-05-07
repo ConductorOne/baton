@@ -53,7 +53,7 @@ func (c *consoleManager) formatTimestamp(ts *timestamppb.Timestamp) string {
 
 func (c *consoleManager) outputSyncRuns(out *v1.SyncListOutput) error {
 	syncsTable := pterm.TableData{
-		{"ID", "Started At", "Ended At", "Token"},
+		{"ID", "Started At", "Ended At", "Type", "Parent ID", "Token"},
 	}
 
 	for _, o := range out.Syncs {
@@ -61,6 +61,8 @@ func (c *consoleManager) outputSyncRuns(out *v1.SyncListOutput) error {
 			o.Id,
 			c.formatTimestamp(o.StartedAt),
 			c.formatTimestamp(o.EndedAt),
+			o.SyncType,
+			o.ParentSyncId,
 			o.SyncToken,
 		})
 	}

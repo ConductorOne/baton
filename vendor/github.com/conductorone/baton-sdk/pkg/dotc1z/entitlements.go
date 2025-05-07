@@ -49,6 +49,10 @@ func (r *entitlementsTable) Schema() (string, []interface{}) {
 	}
 }
 
+func (r *entitlementsTable) Migrations(ctx context.Context, db *goqu.Database) error {
+	return nil
+}
+
 func (c *C1File) ListEntitlements(ctx context.Context, request *v2.EntitlementsServiceListEntitlementsRequest) (*v2.EntitlementsServiceListEntitlementsResponse, error) {
 	ctx, span := tracer.Start(ctx, "C1File.ListEntitlements")
 	defer span.End()

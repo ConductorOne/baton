@@ -67,10 +67,12 @@ func runSyncList(cmd *cobra.Command, args []string) error {
 				endTime = timestamppb.New(*sr.EndedAt)
 			}
 			syncRuns = append(syncRuns, &v1.SyncOutput{
-				Id:        sr.ID,
-				StartedAt: startTime,
-				EndedAt:   endTime,
-				SyncToken: sr.SyncToken,
+				Id:           sr.ID,
+				StartedAt:    startTime,
+				EndedAt:      endTime,
+				SyncToken:    sr.SyncToken,
+				SyncType:     string(sr.Type),
+				ParentSyncId: sr.ParentSyncID,
 			})
 		}
 

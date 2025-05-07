@@ -118,6 +118,10 @@ func (m *SyncRun) validate(all bool) error {
 
 	// no validation rules for SyncToken
 
+	// no validation rules for SyncType
+
+	// no validation rules for ParentSyncId
+
 	if len(errors) > 0 {
 		return SyncRunMultiError(errors)
 	}

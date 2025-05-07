@@ -49,6 +49,10 @@ func (r *assetsTable) Schema() (string, []interface{}) {
 	}
 }
 
+func (r *assetsTable) Migrations(ctx context.Context, db *goqu.Database) error {
+	return nil
+}
+
 // PutAsset stores the given asset in the database.
 func (c *C1File) PutAsset(ctx context.Context, assetRef *v2.AssetRef, contentType string, data []byte) error {
 	ctx, span := tracer.Start(ctx, "C1File.PutAsset")

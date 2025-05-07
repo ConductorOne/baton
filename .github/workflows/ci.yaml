@@ -44,7 +44,8 @@ jobs:
     - name: Setup
       uses: bufbuild/buf-setup-action@v1
       with:
-        version: '1.29.0'
+        version: '1.50.0'
+        github_token: ${{ secrets.GITHUB_TOKEN }}
     - name: Lint
       uses: bufbuild/buf-lint-action@v1
     - name: Breaking change detection against `main`
