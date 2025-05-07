@@ -194,7 +194,7 @@ type GrantMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m GrantMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -398,7 +398,7 @@ type GrantsServiceListGrantsRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m GrantsServiceListGrantsRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -584,7 +584,7 @@ type GrantsServiceListGrantsResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m GrantsServiceListGrantsResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -801,7 +801,7 @@ type GrantManagerServiceGrantRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m GrantManagerServiceGrantRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -940,7 +940,7 @@ type GrantManagerServiceGrantResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m GrantManagerServiceGrantResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -1119,7 +1119,7 @@ type GrantManagerServiceRevokeRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m GrantManagerServiceRevokeRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -1258,7 +1258,7 @@ type GrantManagerServiceRevokeResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m GrantManagerServiceRevokeResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}

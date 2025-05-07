@@ -26,7 +26,9 @@ create table if not exists %s (
     sync_id text not null,
     started_at datetime not null,
     ended_at datetime,
-    sync_token text not null
+    sync_token text not null,
+    sync_type text not null default 'full',
+    parent_sync_id text not null default ''
 );
 create unique index if not exists %s on %s (sync_id);`
 
@@ -50,11 +52,51 @@ func (r *syncRunsTable) Schema() (string, []interface{}) {
 	}
 }
 
+func (r *syncRunsTable) Migrations(ctx context.Context, db *goqu.Database) error {
+	// Check if sync_type column exists
+	var syncTypeExists int
+	err := db.QueryRowContext(ctx, fmt.Sprintf("select count(*) from pragma_table_info('%s') where name='sync_type'", r.Name())).Scan(&syncTypeExists)
+	if err != nil {
+		return err
+	}
+	if syncTypeExists == 0 {
+		_, err = db.ExecContext(ctx, fmt.Sprintf("alter table %s add column sync_type text not null default 'full'", r.Name()))
+		if err != nil {
+			return err
+		}
+	}
+
+	// Check if parent_sync_id column exists
+	var parentSyncIDExists int
+	err = db.QueryRowContext(ctx, fmt.Sprintf("select count(*) from pragma_table_info('%s') where name='parent_sync_id'", r.Name())).Scan(&parentSyncIDExists)
+	if err != nil {
+		return err
+	}
+	if parentSyncIDExists == 0 {
+		_, err = db.ExecContext(ctx, fmt.Sprintf("alter table %s add column parent_sync_id text not null default ''", r.Name()))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+type SyncType string
+
+const (
+	SyncTypeFull    SyncType = "full"
+	SyncTypePartial SyncType = "partial"
+	SyncTypeAny     SyncType = ""
+)
+
 type syncRun struct {
-	ID        string
-	StartedAt *time.Time
-	EndedAt   *time.Time
-	SyncToken string
+	ID           string
+	StartedAt    *time.Time
+	EndedAt      *time.Time
+	SyncToken    string
+	Type         SyncType
+	ParentSyncID string
 }
 
 func (c *C1File) getLatestUnfinishedSync(ctx context.Context) (*syncRun, error) {
@@ -70,7 +112,7 @@ func (c *C1File) getLatestUnfinishedSync(ctx context.Context) (*syncRun, error) 
 	oneWeekAgo := time.Now().AddDate(0, 0, -7)
 	ret := &syncRun{}
 	q := c.db.From(syncRuns.Name())
-	q = q.Select("sync_id", "started_at", "ended_at", "sync_token")
+	q = q.Select("sync_id", "started_at", "ended_at", "sync_token", "sync_type", "parent_sync_id")
 	q = q.Where(goqu.C("ended_at").IsNull())
 	q = q.Where(goqu.C("started_at").Gte(oneWeekAgo))
 	q = q.Order(goqu.C("started_at").Desc())
@@ -83,7 +125,7 @@ func (c *C1File) getLatestUnfinishedSync(ctx context.Context) (*syncRun, error) 
 
 	row := c.db.QueryRowContext(ctx, query, args...)
 
-	err = row.Scan(&ret.ID, &ret.StartedAt, &ret.EndedAt, &ret.SyncToken)
+	err = row.Scan(&ret.ID, &ret.StartedAt, &ret.EndedAt, &ret.SyncToken, &ret.Type, &ret.ParentSyncID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
@@ -94,7 +136,7 @@ func (c *C1File) getLatestUnfinishedSync(ctx context.Context) (*syncRun, error) 
 	return ret, nil
 }
 
-func (c *C1File) getFinishedSync(ctx context.Context, offset uint) (*syncRun, error) {
+func (c *C1File) getFinishedSync(ctx context.Context, offset uint, syncType SyncType) (*syncRun, error) {
 	ctx, span := tracer.Start(ctx, "C1File.getFinishedSync")
 	defer span.End()
 
@@ -103,10 +145,18 @@ func (c *C1File) getFinishedSync(ctx context.Context, offset uint) (*syncRun, er
 		return nil, err
 	}
 
+	// Validate syncType
+	if syncType != SyncTypeFull && syncType != SyncTypePartial && syncType != SyncTypeAny {
+		return nil, fmt.Errorf("invalid sync type: %s", syncType)
+	}
+
 	ret := &syncRun{}
 	q := c.db.From(syncRuns.Name())
-	q = q.Select("sync_id", "started_at", "ended_at", "sync_token")
+	q = q.Select("sync_id", "started_at", "ended_at", "sync_token", "sync_type", "parent_sync_id")
 	q = q.Where(goqu.C("ended_at").IsNotNull())
+	if syncType != SyncTypeAny {
+		q = q.Where(goqu.C("sync_type").Eq(syncType))
+	}
 	q = q.Order(goqu.C("ended_at").Desc())
 	q = q.Limit(1)
 
@@ -121,7 +171,7 @@ func (c *C1File) getFinishedSync(ctx context.Context, offset uint) (*syncRun, er
 
 	row := c.db.QueryRowContext(ctx, query, args...)
 
-	err = row.Scan(&ret.ID, &ret.StartedAt, &ret.EndedAt, &ret.SyncToken)
+	err = row.Scan(&ret.ID, &ret.StartedAt, &ret.EndedAt, &ret.SyncToken, &ret.Type, &ret.ParentSyncID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
@@ -142,7 +192,7 @@ func (c *C1File) ListSyncRuns(ctx context.Context, pageToken string, pageSize ui
 	}
 
 	q := c.db.From(syncRuns.Name()).Prepared(true)
-	q = q.Select("id", "sync_id", "started_at", "ended_at", "sync_token")
+	q = q.Select("id", "sync_id", "started_at", "ended_at", "sync_token", "sync_type", "parent_sync_id")
 
 	if pageToken != "" {
 		q = q.Where(goqu.C("id").Gte(pageToken))
@@ -177,7 +227,7 @@ func (c *C1File) ListSyncRuns(ctx context.Context, pageToken string, pageSize ui
 		}
 		rowId := 0
 		data := &syncRun{}
-		err := rows.Scan(&rowId, &data.ID, &data.StartedAt, &data.EndedAt, &data.SyncToken)
+		err := rows.Scan(&rowId, &data.ID, &data.StartedAt, &data.EndedAt, &data.SyncToken, &data.Type, &data.ParentSyncID)
 		if err != nil {
 			return nil, "", err
 		}
@@ -197,7 +247,7 @@ func (c *C1File) LatestSyncID(ctx context.Context) (string, error) {
 	ctx, span := tracer.Start(ctx, "C1File.LatestSyncID")
 	defer span.End()
 
-	s, err := c.getFinishedSync(ctx, 0)
+	s, err := c.getFinishedSync(ctx, 0, SyncTypeFull)
 	if err != nil {
 		return "", err
 	}
@@ -223,7 +273,7 @@ func (c *C1File) PreviousSyncID(ctx context.Context) (string, error) {
 	ctx, span := tracer.Start(ctx, "C1File.PreviousSyncID")
 	defer span.End()
 
-	s, err := c.getFinishedSync(ctx, 1)
+	s, err := c.getFinishedSync(ctx, 1, SyncTypeFull)
 	if err != nil {
 		return "", err
 	}
@@ -239,7 +289,7 @@ func (c *C1File) LatestFinishedSync(ctx context.Context) (string, error) {
 	ctx, span := tracer.Start(ctx, "C1File.LatestFinishedSync")
 	defer span.End()
 
-	s, err := c.getFinishedSync(ctx, 0)
+	s, err := c.getFinishedSync(ctx, 0, SyncTypeFull)
 	if err != nil {
 		return "", err
 	}
@@ -263,16 +313,15 @@ func (c *C1File) getSync(ctx context.Context, syncID string) (*syncRun, error) {
 	ret := &syncRun{}
 
 	q := c.db.From(syncRuns.Name())
-	q = q.Select("sync_id", "started_at", "ended_at", "sync_token")
+	q = q.Select("sync_id", "started_at", "ended_at", "sync_token", "sync_type", "parent_sync_id")
 	q = q.Where(goqu.C("sync_id").Eq(syncID))
 
 	query, args, err := q.ToSQL()
 	if err != nil {
 		return nil, err
 	}
-
 	row := c.db.QueryRowContext(ctx, query, args...)
-	err = row.Scan(&ret.ID, &ret.StartedAt, &ret.EndedAt, &ret.SyncToken)
+	err = row.Scan(&ret.ID, &ret.StartedAt, &ret.EndedAt, &ret.SyncToken, &ret.Type, &ret.ParentSyncID)
 	if err != nil {
 		return nil, err
 	}
@@ -355,6 +404,17 @@ func (c *C1File) StartNewSync(ctx context.Context) (string, error) {
 	ctx, span := tracer.Start(ctx, "C1File.StartNewSync")
 	defer span.End()
 
+	return c.startNewSyncInternal(ctx, SyncTypeFull)
+}
+
+func (c *C1File) StartNewPartialSync(ctx context.Context) (string, error) {
+	ctx, span := tracer.Start(ctx, "C1File.StartNewPartialSync")
+	defer span.End()
+
+	return c.startNewSyncInternal(ctx, SyncTypePartial)
+}
+
+func (c *C1File) startNewSyncInternal(ctx context.Context, syncType SyncType) (string, error) {
 	// Not sure if we want to do this here
 	if c.currentSyncID != "" {
 		return c.currentSyncID, nil
@@ -364,9 +424,11 @@ func (c *C1File) StartNewSync(ctx context.Context) (string, error) {
 
 	q := c.db.Insert(syncRuns.Name())
 	q = q.Rows(goqu.Record{
-		"sync_id":    syncID,
-		"started_at": time.Now().Format("2006-01-02 15:04:05.999999999"),
-		"sync_token": "",
+		"sync_id":        syncID,
+		"started_at":     time.Now().Format("2006-01-02 15:04:05.999999999"),
+		"sync_token":     "",
+		"sync_type":      syncType,
+		"parent_sync_id": "",
 	})
 
 	query, args, err := q.ToSQL()
@@ -452,6 +514,7 @@ func (c *C1File) Cleanup(ctx context.Context) error {
 	}
 
 	var ret []*syncRun
+	var partials []*syncRun
 
 	pageToken := ""
 	for {
@@ -464,7 +527,11 @@ func (c *C1File) Cleanup(ctx context.Context) error {
 			if sr.EndedAt == nil {
 				continue
 			}
-			ret = append(ret, sr)
+			if sr.Type == SyncTypePartial {
+				partials = append(partials, sr)
+			} else {
+				ret = append(ret, sr)
+			}
 		}
 
 		if nextPageToken == "" {
@@ -490,6 +557,25 @@ func (c *C1File) Cleanup(ctx context.Context) error {
 			return err
 		}
 		l.Info("Removed old sync data.", zap.String("sync_date", ret[i].EndedAt.Format(time.RFC3339)), zap.String("sync_id", ret[i].ID))
+	}
+
+	// Delete partial syncs that ended before the earliest-kept sync started
+	if len(ret) > syncLimit {
+		earliestKeptSync := ret[len(ret)-syncLimit]
+		l.Debug("Earliest kept sync", zap.String("sync_id", earliestKeptSync.ID), zap.Time("started_at", *earliestKeptSync.StartedAt))
+
+		for _, partial := range partials {
+			if partial.EndedAt != nil && partial.EndedAt.Before(*earliestKeptSync.StartedAt) {
+				err = c.DeleteSyncRun(ctx, partial.ID)
+				if err != nil {
+					return err
+				}
+				l.Info("Removed partial sync that ended before earliest kept sync.",
+					zap.String("partial_sync_end", partial.EndedAt.Format(time.RFC3339)),
+					zap.String("earliest_kept_sync_start", earliestKeptSync.StartedAt.Format(time.RFC3339)),
+					zap.String("sync_id", partial.ID))
+			}
+		}
 	}
 
 	err = c.Vacuum(ctx)
@@ -574,10 +660,12 @@ func (c *C1File) GetSync(ctx context.Context, request *reader_v2.SyncsReaderServ
 
 	return &reader_v2.SyncsReaderServiceGetSyncResponse{
 		Sync: &reader_v2.SyncRun{
-			Id:        sr.ID,
-			StartedAt: toTimeStamp(sr.StartedAt),
-			EndedAt:   toTimeStamp(sr.EndedAt),
-			SyncToken: sr.SyncToken,
+			Id:           sr.ID,
+			StartedAt:    toTimeStamp(sr.StartedAt),
+			EndedAt:      toTimeStamp(sr.EndedAt),
+			SyncToken:    sr.SyncToken,
+			SyncType:     string(sr.Type),
+			ParentSyncId: sr.ParentSyncID,
 		},
 	}, nil
 }
@@ -594,10 +682,12 @@ func (c *C1File) ListSyncs(ctx context.Context, request *reader_v2.SyncsReaderSe
 	syncRuns := make([]*reader_v2.SyncRun, len(syncs))
 	for i, sr := range syncs {
 		syncRuns[i] = &reader_v2.SyncRun{
-			Id:        sr.ID,
-			StartedAt: toTimeStamp(sr.StartedAt),
-			EndedAt:   toTimeStamp(sr.EndedAt),
-			SyncToken: sr.SyncToken,
+			Id:           sr.ID,
+			StartedAt:    toTimeStamp(sr.StartedAt),
+			EndedAt:      toTimeStamp(sr.EndedAt),
+			SyncToken:    sr.SyncToken,
+			SyncType:     string(sr.Type),
+			ParentSyncId: sr.ParentSyncID,
 		}
 	}
 
@@ -611,17 +701,19 @@ func (c *C1File) GetLatestFinishedSync(ctx context.Context, request *reader_v2.S
 	ctx, span := tracer.Start(ctx, "C1File.GetLatestFinishedSync")
 	defer span.End()
 
-	sync, err := c.getFinishedSync(ctx, 0)
+	sync, err := c.getFinishedSync(ctx, 0, SyncTypeFull)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching latest finished sync: %w", err)
 	}
 
 	return &reader_v2.SyncsReaderServiceGetLatestFinishedSyncResponse{
 		Sync: &reader_v2.SyncRun{
-			Id:        sync.ID,
-			StartedAt: toTimeStamp(sync.StartedAt),
-			EndedAt:   toTimeStamp(sync.EndedAt),
-			SyncToken: sync.SyncToken,
+			Id:           sync.ID,
+			StartedAt:    toTimeStamp(sync.StartedAt),
+			EndedAt:      toTimeStamp(sync.EndedAt),
+			SyncToken:    sync.SyncToken,
+			SyncType:     string(sync.Type),
+			ParentSyncId: sync.ParentSyncID,
 		},
 	}, nil
 }

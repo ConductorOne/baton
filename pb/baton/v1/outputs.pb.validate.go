@@ -172,7 +172,7 @@ type ResourceDiffMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ResourceDiffMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -374,7 +374,7 @@ type EntitlementDiffMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m EntitlementDiffMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -575,7 +575,7 @@ type GrantDiffMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m GrantDiffMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -762,7 +762,7 @@ type C1ZDiffOutputMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m C1ZDiffOutputMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -891,7 +891,7 @@ type ResourceTypeOutputMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ResourceTypeOutputMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -1080,7 +1080,7 @@ type ResourceOutputMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ResourceOutputMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -1267,7 +1267,7 @@ type EntitlementOutputMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m EntitlementOutputMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -1513,7 +1513,7 @@ type GrantOutputMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m GrantOutputMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -1705,7 +1705,7 @@ type ResourceAccessOutputMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ResourceAccessOutputMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -1841,7 +1841,7 @@ type ResourceTypeListOutputMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ResourceTypeListOutputMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -1977,7 +1977,7 @@ type ResourceListOutputMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ResourceListOutputMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -2113,7 +2113,7 @@ type EntitlementListOutputMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m EntitlementListOutputMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -2249,7 +2249,7 @@ type GrantListOutputMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m GrantListOutputMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -2412,7 +2412,7 @@ type ResourceAccessListOutputMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ResourceAccessListOutputMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -2650,7 +2650,7 @@ type PrincipalsCompareOutputMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m PrincipalsCompareOutputMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -2800,6 +2800,10 @@ func (m *SyncOutput) validate(all bool) error {
 
 	// no validation rules for SyncToken
 
+	// no validation rules for SyncType
+
+	// no validation rules for ParentSyncId
+
 	if len(errors) > 0 {
 		return SyncOutputMultiError(errors)
 	}
@@ -2813,7 +2817,7 @@ type SyncOutputMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m SyncOutputMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -2947,7 +2951,7 @@ type SyncListOutputMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m SyncListOutputMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}

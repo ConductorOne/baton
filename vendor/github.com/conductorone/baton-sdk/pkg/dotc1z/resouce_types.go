@@ -45,6 +45,10 @@ func (r *resourceTypesTable) Schema() (string, []interface{}) {
 	}
 }
 
+func (r *resourceTypesTable) Migrations(ctx context.Context, db *goqu.Database) error {
+	return nil
+}
+
 func (c *C1File) ListResourceTypes(ctx context.Context, request *v2.ResourceTypesServiceListResourceTypesRequest) (*v2.ResourceTypesServiceListResourceTypesResponse, error) {
 	ctx, span := tracer.Start(ctx, "C1File.ListResourceTypes")
 	defer span.End()

@@ -402,6 +402,12 @@ func WithHeader(key, value string) RequestOption {
 	}
 }
 
+func WithBody(body []byte) RequestOption {
+	return func() (io.ReadWriter, map[string]string, error) {
+		return bytes.NewBuffer(body), nil, nil
+	}
+}
+
 func WithJSONBody(body interface{}) RequestOption {
 	return func() (io.ReadWriter, map[string]string, error) {
 		buffer := new(bytes.Buffer)

@@ -1,16 +1,13 @@
-version: v1
+version: v2
 plugins:
-  - remote: buf.build/protocolbuffers/plugins/go:v1.28.0-1
+  - remote: buf.build/protocolbuffers/go:v1.36.4
     out: pb
     opt: paths=source_relative
-  - remote: buf.build/grpc/plugins/go:v1.2.0-1
+  - remote: buf.build/grpc/go:v1.5.1
     out: pb
     opt:
       - paths=source_relative
       - require_unimplemented_servers=false
-  - remote: buf.build/jirkad/plugins/protoc-gen-validate:v0.6.7
+  - remote: buf.build/bufbuild/validate-go:v1.2.1
     out: pb
-    opt:
-      - lang=go
-      - paths=source_relative
-
+    opt: paths=source_relative

@@ -161,7 +161,7 @@ type ResourceTypeMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ResourceTypeMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -357,7 +357,7 @@ type ResourceTypesServiceListResourceTypesRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ResourceTypesServiceListResourceTypesRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -547,7 +547,7 @@ type ResourceTypesServiceListResourceTypesResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ResourceTypesServiceListResourceTypesResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -674,7 +674,7 @@ type ResourceIdMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ResourceIdMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -880,7 +880,7 @@ type ResourceMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ResourceMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -1086,7 +1086,7 @@ type ResourcesServiceListResourcesRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ResourcesServiceListResourcesRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -1274,7 +1274,7 @@ type ResourcesServiceListResourcesResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ResourcesServiceListResourcesResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
