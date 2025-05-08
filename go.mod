@@ -3,7 +3,7 @@ module github.com/conductorone/baton
 go 1.23.6
 
 require (
-	github.com/conductorone/baton-sdk v0.3.0
+	github.com/conductorone/baton-sdk v0.3.2
 	github.com/envoyproxy/protoc-gen-validate v1.2.1
 	github.com/gin-gonic/contrib v0.0.0-20250113154928-93b827325fec
 	github.com/gin-gonic/gin v1.10.0

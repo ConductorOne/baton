@@ -923,6 +923,8 @@ func (m *SyncsReaderServiceGetLatestFinishedSyncRequest) validate(all bool) erro
 
 	}
 
+	// no validation rules for SyncType
+
 	if len(errors) > 0 {
 		return SyncsReaderServiceGetLatestFinishedSyncRequestMultiError(errors)
 	}

@@ -404,17 +404,26 @@ func (c *C1File) StartNewSync(ctx context.Context) (string, error) {
 	ctx, span := tracer.Start(ctx, "C1File.StartNewSync")
 	defer span.End()
 
-	return c.startNewSyncInternal(ctx, SyncTypeFull)
+	return c.startNewSyncInternal(ctx, SyncTypeFull, "")
 }
 
-func (c *C1File) StartNewPartialSync(ctx context.Context) (string, error) {
-	ctx, span := tracer.Start(ctx, "C1File.StartNewPartialSync")
+func (c *C1File) StartNewSyncV2(ctx context.Context, syncType string, parentSyncID string) (string, error) {
+	ctx, span := tracer.Start(ctx, "C1File.StartNewSyncV2")
 	defer span.End()
 
-	return c.startNewSyncInternal(ctx, SyncTypePartial)
+	var syncTypeEnum SyncType
+	switch syncType {
+	case "full":
+		syncTypeEnum = SyncTypeFull
+	case "partial":
+		syncTypeEnum = SyncTypePartial
+	default:
+		return "", fmt.Errorf("invalid sync type: %s", syncType)
+	}
+	return c.startNewSyncInternal(ctx, syncTypeEnum, parentSyncID)
 }
 
-func (c *C1File) startNewSyncInternal(ctx context.Context, syncType SyncType) (string, error) {
+func (c *C1File) startNewSyncInternal(ctx context.Context, syncType SyncType, parentSyncID string) (string, error) {
 	// Not sure if we want to do this here
 	if c.currentSyncID != "" {
 		return c.currentSyncID, nil
@@ -422,29 +431,36 @@ func (c *C1File) startNewSyncInternal(ctx context.Context, syncType SyncType) (s
 
 	syncID := ksuid.New().String()
 
+	if err := c.insertSyncRun(ctx, syncID, syncType, parentSyncID); err != nil {
+		return "", err
+	}
+
+	c.currentSyncID = syncID
+
+	return c.currentSyncID, nil
+}
+
+func (c *C1File) insertSyncRun(ctx context.Context, syncID string, syncType SyncType, parentSyncID string) error {
 	q := c.db.Insert(syncRuns.Name())
 	q = q.Rows(goqu.Record{
 		"sync_id":        syncID,
 		"started_at":     time.Now().Format("2006-01-02 15:04:05.999999999"),
 		"sync_token":     "",
 		"sync_type":      syncType,
-		"parent_sync_id": "",
+		"parent_sync_id": parentSyncID,
 	})
 
 	query, args, err := q.ToSQL()
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	_, err = c.db.ExecContext(ctx, query, args...)
 	if err != nil {
-		return "", err
+		return err
 	}
-
 	c.dbUpdated = true
-	c.currentSyncID = syncID
-
-	return c.currentSyncID, nil
+	return nil
 }
 
 func (c *C1File) CurrentSyncStep(ctx context.Context) (string, error) {
@@ -469,11 +485,21 @@ func (c *C1File) EndSync(ctx context.Context) error {
 		return err
 	}
 
+	if err := c.endSyncRun(ctx, c.currentSyncID); err != nil {
+		return err
+	}
+
+	c.currentSyncID = ""
+
+	return nil
+}
+
+func (c *C1File) endSyncRun(ctx context.Context, syncID string) error {
 	q := c.db.Update(syncRuns.Name())
 	q = q.Set(goqu.Record{
 		"ended_at": time.Now().Format("2006-01-02 15:04:05.999999999"),
 	})
-	q = q.Where(goqu.C("sync_id").Eq(c.currentSyncID))
+	q = q.Where(goqu.C("sync_id").Eq(syncID))
 	q = q.Where(goqu.C("ended_at").IsNull())
 
 	query, args, err := q.ToSQL()
@@ -485,8 +511,6 @@ func (c *C1File) EndSync(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-
-	c.currentSyncID = ""
 	c.dbUpdated = true
 
 	return nil
@@ -701,9 +725,20 @@ func (c *C1File) GetLatestFinishedSync(ctx context.Context, request *reader_v2.S
 	ctx, span := tracer.Start(ctx, "C1File.GetLatestFinishedSync")
 	defer span.End()
 
-	sync, err := c.getFinishedSync(ctx, 0, SyncTypeFull)
+	syncType := request.SyncType
+	if syncType == "" {
+		syncType = string(SyncTypeFull)
+	}
+
+	sync, err := c.getFinishedSync(ctx, 0, SyncType(syncType))
 	if err != nil {
 		return nil, fmt.Errorf("error fetching latest finished sync: %w", err)
+	}
+
+	if sync == nil {
+		return &reader_v2.SyncsReaderServiceGetLatestFinishedSyncResponse{
+			Sync: nil,
+		}, nil
 	}
 
 	return &reader_v2.SyncsReaderServiceGetLatestFinishedSyncResponse{
