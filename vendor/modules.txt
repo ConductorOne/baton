@@ -190,7 +190,7 @@ github.com/cloudwego/base64x/internal/native
 github.com/cloudwego/base64x/internal/native/avx2
 github.com/cloudwego/base64x/internal/native/sse
 github.com/cloudwego/base64x/internal/rt
-# github.com/conductorone/baton-sdk v0.3.0
+# github.com/conductorone/baton-sdk v0.3.2
 ## explicit; go 1.23.4
 github.com/conductorone/baton-sdk/pb/c1/c1z/v1
 github.com/conductorone/baton-sdk/pb/c1/config/v1
