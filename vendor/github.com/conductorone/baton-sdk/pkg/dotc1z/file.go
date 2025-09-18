@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func loadC1z(filePath string, tmpDir string) (string, error) {
+func loadC1z(filePath string, tmpDir string, opts ...DecoderOption) (string, error) {
 	var err error
 	workingDir, err := os.MkdirTemp(tmpDir, "c1z")
 	if err != nil {
@@ -38,7 +38,7 @@ func loadC1z(filePath string, tmpDir string) (string, error) {
 		}
 		defer c1zFile.Close()
 
-		r, err := NewDecoder(c1zFile)
+		r, err := NewDecoder(c1zFile, opts...)
 		if err != nil {
 			return "", err
 		}
@@ -68,12 +68,6 @@ func saveC1z(dbFilePath string, outputFilePath string) error {
 		err = dbFile.Close()
 		if err != nil {
 			zap.L().Error("failed to close db file", zap.Error(err))
-		}
-
-		// Cleanup the database filepath. This should always be a file within a temp directory, so we remove the entire dir.
-		err = os.RemoveAll(filepath.Dir(dbFilePath))
-		if err != nil {
-			zap.L().Error("failed to remove db dir", zap.Error(err))
 		}
 	}()
 

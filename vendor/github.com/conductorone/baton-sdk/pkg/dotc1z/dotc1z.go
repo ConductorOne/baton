@@ -14,12 +14,12 @@ import (
 var tracer = otel.Tracer("baton-sdk/pkg.dotc1z")
 
 // NewC1FileReader returns a connectorstore.Reader implementation for the given sqlite db file path.
-func NewC1FileReader(ctx context.Context, dbFilePath string) (connectorstore.Reader, error) {
-	return NewC1File(ctx, dbFilePath)
+func NewC1FileReader(ctx context.Context, dbFilePath string, opts ...C1FOption) (connectorstore.Reader, error) {
+	return NewC1File(ctx, dbFilePath, opts...)
 }
 
 // NewC1ZFileDecoder wraps a given .c1z io.Reader that validates the .c1z and decompresses/decodes the underlying file.
-// Defaults: 32MiB max memory and 2GiB max decoded size
+// Defaults: 128MiB max memory and 3GiB max decoded size
 // You must close the resulting io.ReadCloser when you are done, do not forget to close the given io.Reader if necessary.
 func NewC1ZFileDecoder(f io.Reader, opts ...DecoderOption) (io.ReadCloser, error) {
 	return NewDecoder(f, opts...)

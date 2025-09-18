@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
 	"strconv"
 	"time"
 
@@ -13,9 +14,12 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/segmentio/ksuid"
 	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	reader_v2 "github.com/conductorone/baton-sdk/pb/c1/reader/v2"
+	"github.com/conductorone/baton-sdk/pkg/connectorstore"
 )
 
 const syncRunsTableVersion = "1"
@@ -82,24 +86,16 @@ func (r *syncRunsTable) Migrations(ctx context.Context, db *goqu.Database) error
 	return nil
 }
 
-type SyncType string
-
-const (
-	SyncTypeFull    SyncType = "full"
-	SyncTypePartial SyncType = "partial"
-	SyncTypeAny     SyncType = ""
-)
-
 type syncRun struct {
 	ID           string
 	StartedAt    *time.Time
 	EndedAt      *time.Time
 	SyncToken    string
-	Type         SyncType
+	Type         connectorstore.SyncType
 	ParentSyncID string
 }
 
-func (c *C1File) getLatestUnfinishedSync(ctx context.Context) (*syncRun, error) {
+func (c *C1File) getLatestUnfinishedSync(ctx context.Context, syncType connectorstore.SyncType) (*syncRun, error) {
 	ctx, span := tracer.Start(ctx, "C1File.getLatestUnfinishedSync")
 	defer span.End()
 
@@ -116,6 +112,9 @@ func (c *C1File) getLatestUnfinishedSync(ctx context.Context) (*syncRun, error) 
 	q = q.Where(goqu.C("ended_at").IsNull())
 	q = q.Where(goqu.C("started_at").Gte(oneWeekAgo))
 	q = q.Order(goqu.C("started_at").Desc())
+	if syncType != connectorstore.SyncTypeAny {
+		q = q.Where(goqu.C("sync_type").Eq(syncType))
+	}
 	q = q.Limit(1)
 
 	query, args, err := q.ToSQL()
@@ -136,7 +135,7 @@ func (c *C1File) getLatestUnfinishedSync(ctx context.Context) (*syncRun, error) 
 	return ret, nil
 }
 
-func (c *C1File) getFinishedSync(ctx context.Context, offset uint, syncType SyncType) (*syncRun, error) {
+func (c *C1File) getFinishedSync(ctx context.Context, offset uint, syncType connectorstore.SyncType) (*syncRun, error) {
 	ctx, span := tracer.Start(ctx, "C1File.getFinishedSync")
 	defer span.End()
 
@@ -146,15 +145,15 @@ func (c *C1File) getFinishedSync(ctx context.Context, offset uint, syncType Sync
 	}
 
 	// Validate syncType
-	if syncType != SyncTypeFull && syncType != SyncTypePartial && syncType != SyncTypeAny {
-		return nil, fmt.Errorf("invalid sync type: %s", syncType)
+	if !slices.Contains(connectorstore.AllSyncTypes, syncType) {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid sync type: %s", syncType)
 	}
 
 	ret := &syncRun{}
 	q := c.db.From(syncRuns.Name())
 	q = q.Select("sync_id", "started_at", "ended_at", "sync_token", "sync_type", "parent_sync_id")
 	q = q.Where(goqu.C("ended_at").IsNotNull())
-	if syncType != SyncTypeAny {
+	if syncType != connectorstore.SyncTypeAny {
 		q = q.Where(goqu.C("sync_type").Eq(syncType))
 	}
 	q = q.Order(goqu.C("ended_at").Desc())
@@ -234,6 +233,9 @@ func (c *C1File) ListSyncRuns(ctx context.Context, pageToken string, pageSize ui
 		lastRow = rowId
 		ret = append(ret, data)
 	}
+	if rows.Err() != nil {
+		return nil, "", rows.Err()
+	}
 
 	nextPageToken := ""
 	if count > pageSize {
@@ -243,11 +245,11 @@ func (c *C1File) ListSyncRuns(ctx context.Context, pageToken string, pageSize ui
 	return ret, nextPageToken, nil
 }
 
-func (c *C1File) LatestSyncID(ctx context.Context) (string, error) {
+func (c *C1File) LatestSyncID(ctx context.Context, syncType connectorstore.SyncType) (string, error) {
 	ctx, span := tracer.Start(ctx, "C1File.LatestSyncID")
 	defer span.End()
 
-	s, err := c.getFinishedSync(ctx, 0, SyncTypeFull)
+	s, err := c.getFinishedSync(ctx, 0, syncType)
 	if err != nil {
 		return "", err
 	}
@@ -269,11 +271,11 @@ func (c *C1File) ViewSync(ctx context.Context, syncID string) error {
 	return nil
 }
 
-func (c *C1File) PreviousSyncID(ctx context.Context) (string, error) {
+func (c *C1File) PreviousSyncID(ctx context.Context, syncType connectorstore.SyncType) (string, error) {
 	ctx, span := tracer.Start(ctx, "C1File.PreviousSyncID")
 	defer span.End()
 
-	s, err := c.getFinishedSync(ctx, 1, SyncTypeFull)
+	s, err := c.getFinishedSync(ctx, 1, syncType)
 	if err != nil {
 		return "", err
 	}
@@ -285,11 +287,11 @@ func (c *C1File) PreviousSyncID(ctx context.Context) (string, error) {
 	return s.ID, nil
 }
 
-func (c *C1File) LatestFinishedSync(ctx context.Context) (string, error) {
+func (c *C1File) LatestFinishedSyncID(ctx context.Context, syncType connectorstore.SyncType) (string, error) {
 	ctx, span := tracer.Start(ctx, "C1File.LatestFinishedSync")
 	defer span.End()
 
-	s, err := c.getFinishedSync(ctx, 0, SyncTypeFull)
+	s, err := c.getFinishedSync(ctx, 0, syncType)
 	if err != nil {
 		return "", err
 	}
@@ -334,10 +336,23 @@ func (c *C1File) getCurrentSync(ctx context.Context) (*syncRun, error) {
 	defer span.End()
 
 	if c.currentSyncID == "" {
-		return nil, fmt.Errorf("c1file: sync must be running to checkpoint")
+		return nil, fmt.Errorf("c1file: sync must be running to get current sync")
 	}
 
 	return c.getSync(ctx, c.currentSyncID)
+}
+
+func (c *C1File) SetCurrentSync(ctx context.Context, syncID string) error {
+	ctx, span := tracer.Start(ctx, "C1File.SetCurrentSync")
+	defer span.End()
+
+	_, err := c.getSync(ctx, syncID)
+	if err != nil {
+		return err
+	}
+
+	c.currentSyncID = syncID
+	return nil
 }
 
 func (c *C1File) CheckpointSync(ctx context.Context, syncToken string) error {
@@ -368,65 +383,120 @@ func (c *C1File) CheckpointSync(ctx context.Context, syncToken string) error {
 	return nil
 }
 
-// StartSync generates a sync ID to be associated with all objects discovered during this run.
-func (c *C1File) StartSync(ctx context.Context) (string, bool, error) {
-	ctx, span := tracer.Start(ctx, "C1File.StartSync")
+func (c *C1File) ResumeSync(ctx context.Context, syncType connectorstore.SyncType, syncID string) (string, error) {
+	ctx, span := tracer.Start(ctx, "C1File.ResumeSync")
 	defer span.End()
 
 	if c.currentSyncID != "" {
-		return c.currentSyncID, false, nil
+		if syncID == c.currentSyncID {
+			return c.currentSyncID, nil
+		}
+		if syncID != "" {
+			return "", status.Errorf(codes.FailedPrecondition, "current sync is %s, cannot resume %s", c.currentSyncID, syncID)
+		}
 	}
 
-	newSync := false
+	if syncID != "" {
+		syncRun, err := c.getSync(ctx, syncID)
+		if err != nil {
+			return "", err
+		}
+		if syncType != connectorstore.SyncTypeAny && syncRun.Type != syncType {
+			return "", status.Errorf(codes.FailedPrecondition, "cannot resume sync (%s) when a different sync type (%s) is running", syncRun.Type, syncType)
+		}
+		if syncRun.EndedAt != nil {
+			return "", status.Errorf(codes.FailedPrecondition, "cannot resume sync that has already ended")
+		}
+		c.currentSyncID = syncID
+		return c.currentSyncID, nil
+	}
 
-	sync, err := c.getLatestUnfinishedSync(ctx)
+	if c.currentSyncID != "" {
+		syncRun, err := c.getSync(ctx, c.currentSyncID)
+		if err != nil {
+			return "", err
+		}
+		if syncType != connectorstore.SyncTypeAny && syncRun.Type != syncType {
+			return "", status.Errorf(codes.FailedPrecondition, "cannot resume sync. current sync %s is type %s, cannot resume as type %s", syncRun.ID, syncRun.Type, syncType)
+		}
+		if syncRun.EndedAt != nil {
+			return "", status.Errorf(codes.Internal, "current sync %s has already ended. this should never happen", syncRun.ID)
+		}
+
+		return c.currentSyncID, nil
+	}
+
+	syncRun, err := c.getLatestUnfinishedSync(ctx, syncType)
+	if err != nil {
+		return "", err
+	}
+	if syncRun == nil {
+		return "", status.Errorf(codes.NotFound, "no unfinished sync found for type %s", syncType)
+	}
+
+	c.currentSyncID = syncRun.ID
+	return c.currentSyncID, nil
+}
+
+// StartOrResumeSync checks if a sync is already running and resumes it if it is.
+// If no sync is running, it starts a new sync.
+// It returns the sync ID and a boolean indicating if a new sync was started.
+func (c *C1File) StartOrResumeSync(ctx context.Context, syncType connectorstore.SyncType, syncID string) (string, bool, error) {
+	ctx, span := tracer.Start(ctx, "C1File.StartOrResumeSync")
+	defer span.End()
+
+	resumedSyncID, err := c.ResumeSync(ctx, syncType, syncID)
+	if err != nil {
+		if status.Code(err) != codes.NotFound && !errors.Is(err, sql.ErrNoRows) {
+			return "", false, err
+		}
+	} else {
+		return resumedSyncID, false, nil
+	}
+
+	if syncID != "" {
+		return "", false, status.Errorf(codes.NotFound, "no sync with id %s found to resume", syncID)
+	}
+
+	syncID, err = c.StartNewSync(ctx, syncType, "")
 	if err != nil {
 		return "", false, err
 	}
 
-	var syncID string
-	if sync != nil && sync.EndedAt == nil {
-		syncID = sync.ID
-	} else {
-		syncID, err = c.StartNewSync(ctx)
-		if err != nil {
-			return "", false, err
-		}
-		newSync = true
-	}
-
 	c.currentSyncID = syncID
 
-	return c.currentSyncID, newSync, nil
+	return c.currentSyncID, true, nil
 }
 
-func (c *C1File) StartNewSync(ctx context.Context) (string, error) {
+func (c *C1File) StartNewSync(ctx context.Context, syncType connectorstore.SyncType, parentSyncID string) (string, error) {
 	ctx, span := tracer.Start(ctx, "C1File.StartNewSync")
 	defer span.End()
 
-	return c.startNewSyncInternal(ctx, SyncTypeFull, "")
-}
-
-func (c *C1File) StartNewSyncV2(ctx context.Context, syncType string, parentSyncID string) (string, error) {
-	ctx, span := tracer.Start(ctx, "C1File.StartNewSyncV2")
-	defer span.End()
-
-	var syncTypeEnum SyncType
-	switch syncType {
-	case "full":
-		syncTypeEnum = SyncTypeFull
-	case "partial":
-		syncTypeEnum = SyncTypePartial
-	default:
-		return "", fmt.Errorf("invalid sync type: %s", syncType)
-	}
-	return c.startNewSyncInternal(ctx, syncTypeEnum, parentSyncID)
-}
-
-func (c *C1File) startNewSyncInternal(ctx context.Context, syncType SyncType, parentSyncID string) (string, error) {
-	// Not sure if we want to do this here
 	if c.currentSyncID != "" {
+		cur, err := c.getSync(ctx, c.currentSyncID)
+		if err != nil {
+			return "", err
+		}
+		if cur != nil && cur.EndedAt == nil && cur.Type != syncType {
+			return "", status.Errorf(codes.FailedPrecondition, "current sync (id %s) is type %s. cannot start %s", cur.ID, cur.Type, syncType)
+		}
 		return c.currentSyncID, nil
+	}
+
+	switch syncType {
+	case connectorstore.SyncTypeFull:
+		if parentSyncID != "" {
+			return "", status.Errorf(codes.InvalidArgument, "parent sync id must be empty for full sync")
+		}
+	case connectorstore.SyncTypeResourcesOnly:
+		if parentSyncID != "" {
+			return "", status.Errorf(codes.InvalidArgument, "parent sync id must be empty for resources only sync")
+		}
+	case connectorstore.SyncTypePartial:
+	case connectorstore.SyncTypeAny:
+		return "", status.Errorf(codes.InvalidArgument, "sync cannot be started with SyncTypeAny")
+	default:
+		return "", status.Errorf(codes.InvalidArgument, "invalid sync type: %s", syncType)
 	}
 
 	syncID := ksuid.New().String()
@@ -440,7 +510,7 @@ func (c *C1File) startNewSyncInternal(ctx context.Context, syncType SyncType, pa
 	return c.currentSyncID, nil
 }
 
-func (c *C1File) insertSyncRun(ctx context.Context, syncID string, syncType SyncType, parentSyncID string) error {
+func (c *C1File) insertSyncRun(ctx context.Context, syncID string, syncType connectorstore.SyncType, parentSyncID string) error {
 	q := c.db.Insert(syncRuns.Name())
 	q = q.Rows(goqu.Record{
 		"sync_id":        syncID,
@@ -551,7 +621,7 @@ func (c *C1File) Cleanup(ctx context.Context) error {
 			if sr.EndedAt == nil {
 				continue
 			}
-			if sr.Type == SyncTypePartial {
+			if sr.Type == connectorstore.SyncTypePartial || sr.Type == connectorstore.SyncTypeResourcesOnly {
 				partials = append(partials, sr)
 			} else {
 				ret = append(ret, sr)
@@ -583,7 +653,7 @@ func (c *C1File) Cleanup(ctx context.Context) error {
 		l.Info("Removed old sync data.", zap.String("sync_date", ret[i].EndedAt.Format(time.RFC3339)), zap.String("sync_id", ret[i].ID))
 	}
 
-	// Delete partial syncs that ended before the earliest-kept sync started
+	// Delete non-full syncs that ended before the earliest-kept full sync started
 	if len(ret) > syncLimit {
 		earliestKeptSync := ret[len(ret)-syncLimit]
 		l.Debug("Earliest kept sync", zap.String("sync_id", earliestKeptSync.ID), zap.Time("started_at", *earliestKeptSync.StartedAt))
@@ -725,12 +795,7 @@ func (c *C1File) GetLatestFinishedSync(ctx context.Context, request *reader_v2.S
 	ctx, span := tracer.Start(ctx, "C1File.GetLatestFinishedSync")
 	defer span.End()
 
-	syncType := request.SyncType
-	if syncType == "" {
-		syncType = string(SyncTypeFull)
-	}
-
-	sync, err := c.getFinishedSync(ctx, 0, SyncType(syncType))
+	sync, err := c.getFinishedSync(ctx, 0, connectorstore.SyncType(request.SyncType))
 	if err != nil {
 		return nil, fmt.Errorf("error fetching latest finished sync: %w", err)
 	}

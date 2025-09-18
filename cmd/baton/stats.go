@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strconv"
 
+	"github.com/conductorone/baton-sdk/pkg/connectorstore"
 	"github.com/conductorone/baton-sdk/pkg/dotc1z/manager"
 	"github.com/conductorone/baton-sdk/pkg/logging"
 	"github.com/pterm/pterm"
@@ -42,7 +43,7 @@ func runStats(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	counts, err := store.Stats(ctx)
+	counts, err := store.Stats(ctx, connectorstore.SyncTypeFull, "")
 	if err != nil {
 		return err
 	}

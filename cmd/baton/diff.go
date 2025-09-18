@@ -8,6 +8,7 @@ import (
 	"os"
 
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
+	"github.com/conductorone/baton-sdk/pkg/connectorstore"
 	"github.com/conductorone/baton-sdk/pkg/dotc1z"
 	"github.com/conductorone/baton-sdk/pkg/dotc1z/manager"
 	"github.com/conductorone/baton-sdk/pkg/logging"
@@ -48,7 +49,7 @@ func runDiff(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	newSyncID, err := store.LatestSyncID(ctx)
+	newSyncID, err := store.LatestSyncID(ctx, connectorstore.SyncTypeFull)
 	if err != nil {
 		return err
 	}
@@ -57,7 +58,7 @@ func runDiff(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("no syncs found - cannot diff")
 	}
 
-	oldSyncID, err := store.PreviousSyncID(ctx)
+	oldSyncID, err := store.PreviousSyncID(ctx, connectorstore.SyncTypeFull)
 	if err != nil {
 		return err
 	}

@@ -2,6 +2,7 @@ package dotc1z
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/conductorone/baton-sdk/pkg/annotations"
+	"github.com/conductorone/baton-sdk/pkg/connectorstore"
 
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 )
@@ -179,13 +181,13 @@ func (c *C1File) listConnectorObjects(ctx context.Context, tableName string, req
 	default:
 		var latestSyncRun *syncRun
 		var err error
-		latestSyncRun, err = c.getFinishedSync(ctx, 0, SyncTypeFull)
+		latestSyncRun, err = c.getFinishedSync(ctx, 0, connectorstore.SyncTypeFull)
 		if err != nil {
 			return nil, "", err
 		}
 
 		if latestSyncRun == nil {
-			latestSyncRun, err = c.getLatestUnfinishedSync(ctx)
+			latestSyncRun, err = c.getLatestUnfinishedSync(ctx, connectorstore.SyncTypeAny)
 			if err != nil {
 				return nil, "", err
 			}
@@ -253,6 +255,9 @@ func (c *C1File) listConnectorObjects(ctx context.Context, tableName string, req
 		lastRow = rowId
 		ret = append(ret, data)
 	}
+	if rows.Err() != nil {
+		return nil, "", rows.Err()
+	}
 
 	nextPageToken := ""
 	if count > pageSize {
@@ -264,31 +269,22 @@ func (c *C1File) listConnectorObjects(ctx context.Context, tableName string, req
 
 var protoMarshaler = proto.MarshalOptions{Deterministic: true}
 
-func bulkPutConnectorObject[T proto.Message](ctx context.Context, c *C1File,
-	tableName string,
+// prepareConnectorObjectRows prepares the rows for bulk insertion.
+func prepareConnectorObjectRows[T proto.Message](
+	c *C1File,
+	msgs []T,
 	extractFields func(m T) (goqu.Record, error),
-	msgs ...T) error {
-	if len(msgs) == 0 {
-		return nil
-	}
-	ctx, span := tracer.Start(ctx, "C1File.bulkPutConnectorObjectTx")
-	defer span.End()
-
-	err := c.validateSyncDb(ctx)
-	if err != nil {
-		return err
-	}
-
+) ([]*goqu.Record, error) {
 	rows := make([]*goqu.Record, len(msgs))
 	for i, m := range msgs {
 		messageBlob, err := protoMarshaler.Marshal(m)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		fields, err := extractFields(m)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if fields == nil {
 			fields = goqu.Record{}
@@ -297,7 +293,7 @@ func bulkPutConnectorObject[T proto.Message](ctx context.Context, c *C1File,
 		if _, idSet := fields["external_id"]; !idSet {
 			idGetter, ok := any(m).(protoHasID)
 			if !ok {
-				return fmt.Errorf("unable to get ID for object")
+				return nil, fmt.Errorf("unable to get ID for object")
 			}
 			fields["external_id"] = idGetter.GetId()
 		}
@@ -306,11 +302,29 @@ func bulkPutConnectorObject[T proto.Message](ctx context.Context, c *C1File,
 		fields["discovered_at"] = time.Now().Format("2006-01-02 15:04:05.999999999")
 		rows[i] = &fields
 	}
+	return rows, nil
+}
+
+// executeChunkedInsert executes the insert query in chunks.
+func executeChunkedInsert(
+	ctx context.Context,
+	c *C1File,
+	tableName string,
+	rows []*goqu.Record,
+	buildQueryFn func(*goqu.InsertDataset, []*goqu.Record) (*goqu.InsertDataset, error),
+) error {
 	chunkSize := 100
 	chunks := len(rows) / chunkSize
 	if len(rows)%chunkSize != 0 {
 		chunks++
 	}
+
+	tx, err := c.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	var txError error
 
 	for i := 0; i < chunks; i++ {
 		start := i * chunkSize
@@ -319,21 +333,117 @@ func bulkPutConnectorObject[T proto.Message](ctx context.Context, c *C1File,
 			end = len(rows)
 		}
 		chunkedRows := rows[start:end]
-		query, args, err := c.db.Insert(tableName).
-			OnConflict(goqu.DoUpdate("external_id, sync_id", goqu.C("data").Set(goqu.I("EXCLUDED.data")))).
-			Rows(chunkedRows).
-			Prepared(true).
-			ToSQL()
+
+		// Create the base insert dataset
+		insertDs := tx.Insert(tableName)
+
+		// Apply the custom query building function
+		insertDs, err = buildQueryFn(insertDs, chunkedRows)
 		if err != nil {
-			return err
+			txError = err
+			break
 		}
-		_, err = c.db.Exec(query, args...)
+
+		// Generate the SQL
+		query, args, err := insertDs.ToSQL()
 		if err != nil {
-			return err
+			txError = err
+			break
+		}
+
+		// Execute the query
+		_, err = tx.ExecContext(ctx, query, args...)
+		if err != nil {
+			txError = err
+			break
 		}
 	}
 
-	return nil
+	if txError != nil {
+		if rollbackErr := tx.Rollback(); rollbackErr != nil {
+			return errors.Join(rollbackErr, txError)
+		}
+
+		return fmt.Errorf("error executing chunked insert: %w", txError)
+	}
+
+	return tx.Commit()
+}
+
+func bulkPutConnectorObject[T proto.Message](
+	ctx context.Context, c *C1File,
+	tableName string,
+	extractFields func(m T) (goqu.Record, error),
+	msgs ...T,
+) error {
+	if len(msgs) == 0 {
+		return nil
+	}
+	ctx, span := tracer.Start(ctx, "C1File.bulkPutConnectorObject")
+	defer span.End()
+
+	err := c.validateSyncDb(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Prepare rows
+	rows, err := prepareConnectorObjectRows(c, msgs, extractFields)
+	if err != nil {
+		return err
+	}
+
+	// Define query building function
+	buildQueryFn := func(insertDs *goqu.InsertDataset, chunkedRows []*goqu.Record) (*goqu.InsertDataset, error) {
+		return insertDs.
+			OnConflict(goqu.DoUpdate("external_id, sync_id", goqu.C("data").Set(goqu.I("EXCLUDED.data")))).
+			Rows(chunkedRows).
+			Prepared(true), nil
+	}
+
+	// Execute the insert
+	return executeChunkedInsert(ctx, c, tableName, rows, buildQueryFn)
+}
+
+func bulkPutConnectorObjectIfNewer[T proto.Message](
+	ctx context.Context, c *C1File,
+	tableName string,
+	extractFields func(m T) (goqu.Record, error),
+	msgs ...T,
+) error {
+	if len(msgs) == 0 {
+		return nil
+	}
+	ctx, span := tracer.Start(ctx, "C1File.bulkPutConnectorObjectIfNewer")
+	defer span.End()
+
+	err := c.validateSyncDb(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Prepare rows
+	rows, err := prepareConnectorObjectRows(c, msgs, extractFields)
+	if err != nil {
+		return err
+	}
+
+	// Define query building function
+	buildQueryFn := func(insertDs *goqu.InsertDataset, chunkedRows []*goqu.Record) (*goqu.InsertDataset, error) {
+		return insertDs.
+			OnConflict(goqu.DoUpdate("external_id, sync_id",
+				goqu.Record{
+					"data":          goqu.I("EXCLUDED.data"),
+					"discovered_at": goqu.I("EXCLUDED.discovered_at"),
+				}).Where(
+				goqu.L("EXCLUDED.discovered_at > ?.discovered_at", goqu.I(tableName)),
+			)).
+			Rows(chunkedRows).
+			Prepared(true), nil
+	}
+
+	// Execute the insert
+	return executeChunkedInsert(ctx, c, tableName, rows, buildQueryFn)
 }
 
 func (c *C1File) getResourceObject(ctx context.Context, resourceID *v2.ResourceId, m *v2.Resource, syncID string) error {
@@ -360,13 +470,13 @@ func (c *C1File) getResourceObject(ctx context.Context, resourceID *v2.ResourceI
 	default:
 		var latestSyncRun *syncRun
 		var err error
-		latestSyncRun, err = c.getFinishedSync(ctx, 0, SyncTypeFull)
+		latestSyncRun, err = c.getFinishedSync(ctx, 0, connectorstore.SyncTypeFull)
 		if err != nil {
 			return err
 		}
 
 		if latestSyncRun == nil {
-			latestSyncRun, err = c.getLatestUnfinishedSync(ctx)
+			latestSyncRun, err = c.getLatestUnfinishedSync(ctx, connectorstore.SyncTypeAny)
 			if err != nil {
 				return err
 			}
@@ -420,13 +530,13 @@ func (c *C1File) getConnectorObject(ctx context.Context, tableName string, id st
 	default:
 		var latestSyncRun *syncRun
 		var err error
-		latestSyncRun, err = c.getFinishedSync(ctx, 0, SyncTypeAny)
+		latestSyncRun, err = c.getFinishedSync(ctx, 0, connectorstore.SyncTypeAny)
 		if err != nil {
 			return fmt.Errorf("error getting finished sync: %w", err)
 		}
 
 		if latestSyncRun == nil {
-			latestSyncRun, err = c.getLatestUnfinishedSync(ctx)
+			latestSyncRun, err = c.getLatestUnfinishedSync(ctx, connectorstore.SyncTypeAny)
 			if err != nil {
 				return fmt.Errorf("error getting latest unfinished sync: %w", err)
 			}

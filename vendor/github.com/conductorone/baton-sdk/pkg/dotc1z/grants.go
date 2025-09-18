@@ -194,7 +194,20 @@ func (c *C1File) PutGrants(ctx context.Context, bulkGrants ...*v2.Grant) error {
 	ctx, span := tracer.Start(ctx, "C1File.PutGrants")
 	defer span.End()
 
-	err := bulkPutConnectorObject(ctx, c, grants.Name(),
+	return c.putGrantsInternal(ctx, bulkPutConnectorObject, bulkGrants...)
+}
+
+func (c *C1File) PutGrantsIfNewer(ctx context.Context, bulkGrants ...*v2.Grant) error {
+	ctx, span := tracer.Start(ctx, "C1File.PutGrantsIfNewer")
+	defer span.End()
+
+	return c.putGrantsInternal(ctx, bulkPutConnectorObjectIfNewer, bulkGrants...)
+}
+
+type grantPutFunc func(context.Context, *C1File, string, func(m *v2.Grant) (goqu.Record, error), ...*v2.Grant) error
+
+func (c *C1File) putGrantsInternal(ctx context.Context, f grantPutFunc, bulkGrants ...*v2.Grant) error {
+	err := f(ctx, c, grants.Name(),
 		func(grant *v2.Grant) (goqu.Record, error) {
 			return goqu.Record{
 				"resource_type_id":           grant.Entitlement.Resource.Id.ResourceType,
