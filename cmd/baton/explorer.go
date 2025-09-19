@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -31,7 +32,8 @@ func explorerCmd() *cobra.Command {
 }
 
 func runNpmInstallAndStart(projectPath string) error {
-	installCmd := exec.Command("npm", "install")
+	ctx := context.Background()
+	installCmd := exec.CommandContext(ctx, "npm", "install")
 	installCmd.Stdout = os.Stdout
 	installCmd.Stderr = os.Stderr
 	installCmd.Dir = projectPath
@@ -39,7 +41,7 @@ func runNpmInstallAndStart(projectPath string) error {
 		return fmt.Errorf("error running 'npm install': %w", err)
 	}
 
-	startCmd := exec.Command("npm", "start")
+	startCmd := exec.CommandContext(ctx, "npm", "start")
 	startCmd.Stdout = os.Stdout
 	startCmd.Stderr = os.Stderr
 	startCmd.Dir = projectPath
@@ -64,35 +66,35 @@ func startExplorerAPI(cmd *cobra.Command, devMode bool) {
 
 	filePath, err := cmd.Flags().GetString("file")
 	if err != nil {
-		log.Fatal("error fetching file path", err)
+		log.Fatal("error fetching file path", err) //nolint:gocritic // reason
 	}
 
 	syncID, err := cmd.Flags().GetString("sync-id")
 	if err != nil {
-		log.Fatal("error fetching syncID", err)
+		log.Fatal("error fetching syncID", err) //nolint:gocritic // reason
 	}
 
 	resourceType, err := cmd.Flags().GetString(resourceTypeFlag)
 	if err != nil {
-		log.Fatal("error fetching resourceType", err)
+		log.Fatal("error fetching resourceType", err) //nolint:gocritic // reason
 	}
 
 	m, err := manager.New(ctx, filePath)
 	if err != nil {
-		log.Fatal("error creating c1z manager", err)
+		log.Fatal("error creating c1z manager", err) //nolint:gocritic // reason
 	}
 	defer m.Close(ctx)
 
 	store, err := m.LoadC1Z(ctx)
 	if err != nil {
-		log.Fatal("error loading c1z", err) //nolint:gocritic // reason: in this case store is nil
+		log.Fatal("error loading c1z", err) //nolint:gocritic // reason
 	}
 	defer store.Close()
 
 	ctrl := explorer.NewController(ctx, store, syncID, resourceType, devMode)
 	e := ctrl.Run(":8080")
 	if e != nil {
-		log.Fatal("error running explorer", err)
+		log.Fatal("error running explorer", err) //nolint:gocritic // reason
 	}
 }
 
@@ -106,7 +108,7 @@ func runExplorer(cmd *cobra.Command, args []string) error {
 		go startExplorerAPI(cmd, isDevMode)
 		err = startFrontendServer()
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal(err) //nolint:gocritic // reason
 		}
 	}
 	startExplorerAPI(cmd, isDevMode)

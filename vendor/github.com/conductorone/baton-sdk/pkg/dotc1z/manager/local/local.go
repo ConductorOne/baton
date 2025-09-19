@@ -16,9 +16,10 @@ import (
 var tracer = otel.Tracer("baton-sdk/pkg.dotc1z.manager.local")
 
 type localManager struct {
-	filePath string
-	tmpPath  string
-	tmpDir   string
+	filePath       string
+	tmpPath        string
+	tmpDir         string
+	decoderOptions []dotc1z.DecoderOption
 }
 
 type Option func(*localManager)
@@ -26,6 +27,12 @@ type Option func(*localManager)
 func WithTmpDir(tmpDir string) Option {
 	return func(o *localManager) {
 		o.tmpDir = tmpDir
+	}
+}
+
+func WithDecoderOptions(opts ...dotc1z.DecoderOption) Option {
+	return func(o *localManager) {
+		o.decoderOptions = opts
 	}
 }
 
@@ -97,7 +104,14 @@ func (l *localManager) LoadC1Z(ctx context.Context) (*dotc1z.C1File, error) {
 		zap.String("temp_path", l.tmpPath),
 	)
 
-	return dotc1z.NewC1ZFile(ctx, l.tmpPath, dotc1z.WithTmpDir(l.tmpDir), dotc1z.WithPragma("journal_mode", "WAL"))
+	opts := []dotc1z.C1ZOption{
+		dotc1z.WithTmpDir(l.tmpDir),
+		dotc1z.WithPragma("journal_mode", "WAL"),
+	}
+	if len(l.decoderOptions) > 0 {
+		opts = append(opts, dotc1z.WithDecoderOptions(l.decoderOptions...))
+	}
+	return dotc1z.NewC1ZFile(ctx, l.tmpPath, opts...)
 }
 
 // SaveC1Z saves the C1Z file to the local file system.

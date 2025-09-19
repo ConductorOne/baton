@@ -106,7 +106,20 @@ func (c *C1File) PutResources(ctx context.Context, resourceObjs ...*v2.Resource)
 	ctx, span := tracer.Start(ctx, "C1File.PutResources")
 	defer span.End()
 
-	err := bulkPutConnectorObject(ctx, c, resources.Name(),
+	return c.putResourcesInternal(ctx, bulkPutConnectorObject, resourceObjs...)
+}
+
+func (c *C1File) PutResourcesIfNewer(ctx context.Context, resourceObjs ...*v2.Resource) error {
+	ctx, span := tracer.Start(ctx, "C1File.PutResourcesIfNewer")
+	defer span.End()
+
+	return c.putResourcesInternal(ctx, bulkPutConnectorObjectIfNewer, resourceObjs...)
+}
+
+type resourcePutFunc func(context.Context, *C1File, string, func(m *v2.Resource) (goqu.Record, error), ...*v2.Resource) error
+
+func (c *C1File) putResourcesInternal(ctx context.Context, f resourcePutFunc, resourceObjs ...*v2.Resource) error {
+	err := f(ctx, c, resources.Name(),
 		func(resource *v2.Resource) (goqu.Record, error) {
 			fields := goqu.Record{
 				"resource_type_id": resource.Id.ResourceType,

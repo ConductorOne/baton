@@ -104,7 +104,7 @@ func ExtractRateLimitData(statusCode int, header *http.Header) (*v2.RateLimitDes
 		if resetAtStr != "" {
 			resetAt, err = parseTime(resetAtStr)
 			if err != nil {
-				return nil, err
+				continue
 			}
 			break
 		}

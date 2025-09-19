@@ -58,9 +58,10 @@ type DecoderOption func(*decoderOptions) error
 
 // options retains accumulated state of multiple options.
 type decoderOptions struct {
-	ctx            context.Context
-	maxDecodedSize uint64
-	maxMemorySize  uint64
+	ctx                context.Context
+	maxDecodedSize     uint64
+	maxMemorySize      uint64
+	decoderConcurrency int
 }
 
 // WithContext sets a context, when cancelled, will cause subequent calls to Read() to return ctx.Error().
@@ -73,7 +74,7 @@ func WithContext(ctx context.Context) DecoderOption {
 
 // WithDecoderMaxMemory sets the maximum window size for streaming operations.
 // This can be used to control memory usage of potentially hostile content.
-// Maximum is 1 << 63 bytes. Default is 32MiB.
+// Maximum is 1 << 63 bytes. Default is 128MiB.
 func WithDecoderMaxMemory(n uint64) DecoderOption {
 	return func(o *decoderOptions) error {
 		if n == 0 {
@@ -103,6 +104,16 @@ func WithDecoderMaxDecodedSize(n uint64) DecoderOption {
 	}
 }
 
+// WithDecoderConcurrency sets the number of created decoders.
+// Default is 1, which disables async decoding/concurrency.
+// 0 uses GOMAXPROCS.
+func WithDecoderConcurrency(n int) DecoderOption {
+	return func(o *decoderOptions) error {
+		o.decoderConcurrency = n
+		return nil
+	}
+}
+
 type decoder struct {
 	o  *decoderOptions
 	f  io.Reader
@@ -128,11 +139,18 @@ func (d *decoder) Read(p []byte) (int, error) {
 		if maxMemSize == 0 {
 			maxMemSize = defaultDecoderMaxMemory
 		}
-		zd, err := zstd.NewReader(
-			d.f,
-			zstd.WithDecoderConcurrency(1),        // disables async decoding/concurrency
+
+		zstdOpts := []zstd.DOption{
 			zstd.WithDecoderLowmem(true),          // uses lower memory, trading potentially more allocations
 			zstd.WithDecoderMaxMemory(maxMemSize), // sets limit on maximum memory used when decoding stream
+		}
+		if d.o.decoderConcurrency >= 0 {
+			zstdOpts = append(zstdOpts, zstd.WithDecoderConcurrency(d.o.decoderConcurrency))
+		}
+
+		zd, err := zstd.NewReader(
+			d.f,
+			zstdOpts...,
 		)
 		if err != nil {
 			d.decoderInitErr = err
@@ -206,7 +224,9 @@ func NewDecoder(f io.Reader, opts ...DecoderOption) (*decoder, error) {
 		}
 	}
 
-	o := &decoderOptions{}
+	o := &decoderOptions{
+		decoderConcurrency: 1,
+	}
 	for _, opt := range opts {
 		err := opt(o)
 		if err != nil {

@@ -190,8 +190,8 @@ github.com/cloudwego/base64x/internal/native
 github.com/cloudwego/base64x/internal/native/avx2
 github.com/cloudwego/base64x/internal/native/sse
 github.com/cloudwego/base64x/internal/rt
-# github.com/conductorone/baton-sdk v0.3.2
-## explicit; go 1.23.4
+# github.com/conductorone/baton-sdk v0.4.0
+## explicit; go 1.25
 github.com/conductorone/baton-sdk/pb/c1/c1z/v1
 github.com/conductorone/baton-sdk/pb/c1/config/v1
 github.com/conductorone/baton-sdk/pb/c1/connector/v2
@@ -229,6 +229,9 @@ github.com/doug-martin/goqu/v9/sqlgen
 # github.com/dustin/go-humanize v1.0.1
 ## explicit; go 1.16
 github.com/dustin/go-humanize
+# github.com/ennyjfrick/ruleguard-logfatal v0.0.2
+## explicit; go 1.23
+github.com/ennyjfrick/ruleguard-logfatal
 # github.com/envoyproxy/protoc-gen-validate v1.2.1
 ## explicit; go 1.21.1
 github.com/envoyproxy/protoc-gen-validate/validate
@@ -302,12 +305,13 @@ github.com/inconshreveable/mousetrap
 # github.com/json-iterator/go v1.1.12
 ## explicit; go 1.12
 github.com/json-iterator/go
-# github.com/klauspost/compress v1.17.11
-## explicit; go 1.21
+# github.com/klauspost/compress v1.18.0
+## explicit; go 1.22
 github.com/klauspost/compress
 github.com/klauspost/compress/fse
 github.com/klauspost/compress/huff0
 github.com/klauspost/compress/internal/cpuinfo
+github.com/klauspost/compress/internal/le
 github.com/klauspost/compress/internal/snapref
 github.com/klauspost/compress/zstd
 github.com/klauspost/compress/zstd/internal/xxhash
@@ -365,6 +369,10 @@ github.com/pelletier/go-toml/v2/unstable
 github.com/pterm/pterm
 github.com/pterm/pterm/internal
 github.com/pterm/pterm/putils
+# github.com/quasilyte/go-ruleguard/dsl v0.3.22
+## explicit; go 1.15
+github.com/quasilyte/go-ruleguard/dsl
+github.com/quasilyte/go-ruleguard/dsl/types
 # github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec
 ## explicit; go 1.12
 github.com/remyoudompheng/bigfft

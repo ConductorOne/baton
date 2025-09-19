@@ -1,14 +1,16 @@
 module github.com/conductorone/baton
 
-go 1.23.6
+go 1.25
 
 require (
-	github.com/conductorone/baton-sdk v0.3.2
+	github.com/conductorone/baton-sdk v0.4.0
+	github.com/ennyjfrick/ruleguard-logfatal v0.0.2
 	github.com/envoyproxy/protoc-gen-validate v1.2.1
 	github.com/gin-gonic/contrib v0.0.0-20250113154928-93b827325fec
 	github.com/gin-gonic/gin v1.10.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/pterm/pterm v0.12.80
+	github.com/quasilyte/go-ruleguard/dsl v0.3.22
 	github.com/spf13/cobra v1.8.1
 	github.com/xuri/excelize/v2 v2.9.0
 	go.uber.org/zap v1.27.0
@@ -61,7 +63,7 @@ require (
 	github.com/gookit/color v1.5.4 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.17.11 // indirect
+	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/lithammer/fuzzysearch v1.1.8 // indirect

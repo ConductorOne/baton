@@ -192,7 +192,7 @@ func (d *DBCache) removeDB(ctx context.Context) error {
 // Get returns cached response (if exists).
 func (d *DBCache) Get(req *http.Request) (*http.Response, error) {
 	var (
-		isFound bool = false
+		isFound = false
 		resp    *http.Response
 	)
 	key, err := CreateCacheKey(req)

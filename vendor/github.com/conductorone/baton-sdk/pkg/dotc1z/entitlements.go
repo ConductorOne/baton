@@ -101,7 +101,20 @@ func (c *C1File) PutEntitlements(ctx context.Context, entitlementObjs ...*v2.Ent
 	ctx, span := tracer.Start(ctx, "C1File.PutEntitlements")
 	defer span.End()
 
-	err := bulkPutConnectorObject(ctx, c, entitlements.Name(),
+	return c.putEntitlementsInternal(ctx, bulkPutConnectorObject, entitlementObjs...)
+}
+
+func (c *C1File) PutEntitlementsIfNewer(ctx context.Context, entitlementObjs ...*v2.Entitlement) error {
+	ctx, span := tracer.Start(ctx, "C1File.PutEntitlementsIfNewer")
+	defer span.End()
+
+	return c.putEntitlementsInternal(ctx, bulkPutConnectorObjectIfNewer, entitlementObjs...)
+}
+
+type entitlementPutFunc func(context.Context, *C1File, string, func(m *v2.Entitlement) (goqu.Record, error), ...*v2.Entitlement) error
+
+func (c *C1File) putEntitlementsInternal(ctx context.Context, f entitlementPutFunc, entitlementObjs ...*v2.Entitlement) error {
+	err := f(ctx, c, entitlements.Name(),
 		func(entitlement *v2.Entitlement) (goqu.Record, error) {
 			return goqu.Record{
 				"resource_id":      entitlement.Resource.Id.Resource,

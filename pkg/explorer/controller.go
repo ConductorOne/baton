@@ -59,11 +59,11 @@ func (ctrl *Controller) Run(addr string) error {
 }
 
 // TODO - this is a hack to get the frontend to work. Should be rewritten.
-func runNpmInstallAndBuild(projectPath string) error {
+func runNpmInstallAndBuild(ctx context.Context, projectPath string) error {
 	nodeModulesPath := filepath.Join(projectPath, "node_modules")
 	if _, err := os.Stat(nodeModulesPath); os.IsNotExist(err) {
 		log.Default().Print("node_modules folder not found. Running npm install...")
-		cmd := exec.Command("npm", "install")
+		cmd := exec.CommandContext(ctx, "npm", "install")
 		cmd.Dir = projectPath
 		output, err := cmd.CombinedOutput()
 		if err != nil {
@@ -79,7 +79,7 @@ func runNpmInstallAndBuild(projectPath string) error {
 	if _, err := os.Stat(buildPath); os.IsNotExist(err) {
 		log.Default().Print("Build folder not found. Running npm build...")
 
-		cmd := exec.Command("npm", "run", "build")
+		cmd := exec.CommandContext(ctx, "npm", "run", "build")
 		cmd.Dir = projectPath
 		output, err := cmd.CombinedOutput()
 		if err != nil {
@@ -94,10 +94,11 @@ func runNpmInstallAndBuild(projectPath string) error {
 }
 
 func (ctrl *Controller) router() *gin.Engine {
+	ctx := context.Background()
 	router := gin.Default()
 	api := router.Group("/api")
 	if !ctrl.baton.devMode {
-		err := runNpmInstallAndBuild("frontend")
+		err := runNpmInstallAndBuild(ctx, "frontend")
 		if err != nil {
 			log.Default().Println("error setting up frontend: ", err)
 		}
@@ -108,7 +109,7 @@ func (ctrl *Controller) router() *gin.Engine {
 
 	// todo: make this configurable
 	if !ctrl.baton.devMode {
-		err := openBrowser("http://localhost:8080")
+		err := openBrowser(ctx, "http://localhost:8080")
 		if err != nil {
 			log.Default().Print("error opening browser: ", err)
 		}
@@ -131,15 +132,15 @@ func (ctrl *Controller) router() *gin.Engine {
 	return router
 }
 
-func openBrowser(url string) error {
+func openBrowser(ctx context.Context, url string) error {
 	var err error
 	switch runtime.GOOS {
 	case "darwin":
-		err = exec.Command("open", url).Start()
+		err = exec.CommandContext(ctx, "open", url).Start()
 	case "linux":
-		err = exec.Command("xdg-open", url).Start()
+		err = exec.CommandContext(ctx, "xdg-open", url).Start()
 	case "windows":
-		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+		err = exec.CommandContext(ctx, "rundll32", "url.dll,FileProtocolHandler", url).Start()
 
 	default:
 		err = fmt.Errorf("platform not supported")
