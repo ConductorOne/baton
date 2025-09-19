@@ -10,6 +10,7 @@ jobs:
     uses: ConductorOne/github-workflows/.github/workflows/release.yaml@v2
     with:
       tag: ${{ github.ref_name }}
+      lambda: false
     secrets:
       RELENG_GITHUB_TOKEN: ${{ secrets.RELENG_GITHUB_TOKEN }}
       APPLE_SIGNING_KEY_P12: ${{ secrets.APPLE_SIGNING_KEY_P12 }}
