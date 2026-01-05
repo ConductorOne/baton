@@ -2,13 +2,17 @@ package dotc1z
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"syscall"
 
 	"github.com/klauspost/compress/zstd"
 	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func loadC1z(filePath string, tmpDir string, opts ...DecoderOption) (string, error) {
@@ -55,9 +59,9 @@ func loadC1z(filePath string, tmpDir string, opts ...DecoderOption) (string, err
 	return dbFilePath, nil
 }
 
-func saveC1z(dbFilePath string, outputFilePath string) error {
+func saveC1z(dbFilePath string, outputFilePath string, encoderConcurrency int) error {
 	if outputFilePath == "" {
-		return errors.New("c1z: output file path not configured")
+		return status.Errorf(codes.InvalidArgument, "c1z: output file path not configured")
 	}
 
 	dbFile, err := os.Open(dbFilePath)
@@ -65,9 +69,11 @@ func saveC1z(dbFilePath string, outputFilePath string) error {
 		return err
 	}
 	defer func() {
-		err = dbFile.Close()
-		if err != nil {
-			zap.L().Error("failed to close db file", zap.Error(err))
+		if dbFile != nil {
+			err = dbFile.Close()
+			if err != nil {
+				zap.L().Error("failed to close db file", zap.Error(err))
+			}
 		}
 	}()
 
@@ -75,7 +81,14 @@ func saveC1z(dbFilePath string, outputFilePath string) error {
 	if err != nil {
 		return err
 	}
-	defer outFile.Close()
+	defer func() {
+		if outFile != nil {
+			err = outFile.Close()
+			if err != nil {
+				zap.L().Error("failed to close out file", zap.Error(err))
+			}
+		}
+	}()
 
 	// Write the magic file header
 	_, err = outFile.Write(C1ZFileHeader)
@@ -83,7 +96,15 @@ func saveC1z(dbFilePath string, outputFilePath string) error {
 		return err
 	}
 
-	c1z, err := zstd.NewWriter(outFile)
+	// zstd.WithEncoderConcurrency does not work the same as WithDecoderConcurrency.
+	// WithDecoderConcurrency uses GOMAXPROCS if set to 0.
+	// WithEncoderConcurrency errors if set to 0 (but defaults to GOMAXPROCS).
+	if encoderConcurrency == 0 {
+		encoderConcurrency = runtime.GOMAXPROCS(0)
+	}
+	c1z, err := zstd.NewWriter(outFile,
+		zstd.WithEncoderConcurrency(encoderConcurrency),
+	)
 	if err != nil {
 		return err
 	}
@@ -95,12 +116,29 @@ func saveC1z(dbFilePath string, outputFilePath string) error {
 
 	err = c1z.Flush()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to flush c1z: %w", err)
 	}
 	err = c1z.Close()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to close c1z: %w", err)
 	}
+
+	err = outFile.Sync()
+	if err != nil {
+		return fmt.Errorf("failed to sync out file: %w", err)
+	}
+
+	err = outFile.Close()
+	if err != nil {
+		return fmt.Errorf("failed to close out file: %w", err)
+	}
+	outFile = nil
+
+	err = dbFile.Close()
+	if err != nil {
+		return fmt.Errorf("failed to close db file: %w", err)
+	}
+	dbFile = nil
 
 	return nil
 }

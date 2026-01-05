@@ -52,13 +52,13 @@ const (
 	failRollback                = "Failed to rollback transaction"
 	failInsert                  = "Failed to insert response data into cache table"
 	failScanResponse            = "Failed to scan rows for cached response"
-	cacheTTLThreshold           = 60
+	cacheTTLThreshold           = time.Duration(60) * time.Second
 	cacheTTLMultiplier   uint64 = 5
 )
 
 var errNilConnection = errors.New("database connection is nil")
 
-var defaultWaitDuration = cacheTTLThreshold * time.Second // Default Cleanup interval, 60 seconds
+var defaultWaitDuration = cacheTTLThreshold // Default Cleanup interval, 60 seconds
 
 const tableName = "http_cache"
 
@@ -67,10 +67,9 @@ func NewDBCache(ctx context.Context, cfg CacheConfig) (*DBCache, error) {
 	var (
 		err error
 		dc  = &DBCache{
-			waitDuration: defaultWaitDuration, // Default Cleanup interval, 60 seconds
-			stats:        true,
-			//nolint:gosec // disable G115
-			expirationTime: time.Duration(cfg.TTL) * time.Second,
+			waitDuration:   defaultWaitDuration, // Default Cleanup interval, 60 seconds
+			stats:          true,
+			expirationTime: cfg.TTL,
 		}
 	)
 	l := ctxzap.Extract(ctx)
@@ -111,8 +110,7 @@ func NewDBCache(ctx context.Context, cfg CacheConfig) (*DBCache, error) {
 	}
 
 	if cfg.TTL > cacheTTLThreshold {
-		//nolint:gosec // disable G115
-		dc.waitDuration = time.Duration(cfg.TTL*cacheTTLMultiplier) * time.Second // set as a fraction of the Cache TTL
+		dc.waitDuration = cfg.TTL * time.Duration(cacheTTLMultiplier) // set as a fraction of the Cache TTL
 	}
 
 	go func(waitDuration, expirationTime time.Duration) {
@@ -429,8 +427,8 @@ func (d *DBCache) updateStats(ctx context.Context, field, key string) error {
 
 func (d *DBCache) getStats(ctx context.Context) (CacheStats, error) {
 	var (
-		hits   int64
-		misses int64
+		hits   uint64
+		misses uint64
 	)
 	if d.db == nil {
 		return CacheStats{}, errNilConnection
@@ -455,6 +453,9 @@ func (d *DBCache) getStats(ctx context.Context) (CacheStats, error) {
 			l.Warn(failScanResponse, zap.Error(err))
 			return CacheStats{}, err
 		}
+	}
+	if rows.Err() != nil {
+		return CacheStats{}, rows.Err()
 	}
 
 	return CacheStats{

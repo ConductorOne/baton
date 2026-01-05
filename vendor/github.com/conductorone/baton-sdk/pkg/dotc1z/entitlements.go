@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/doug-martin/goqu/v9"
-	"google.golang.org/protobuf/proto"
 
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	reader_v2 "github.com/conductorone/baton-sdk/pb/c1/reader/v2"
@@ -57,25 +56,15 @@ func (c *C1File) ListEntitlements(ctx context.Context, request *v2.EntitlementsS
 	ctx, span := tracer.Start(ctx, "C1File.ListEntitlements")
 	defer span.End()
 
-	objs, nextPageToken, err := c.listConnectorObjects(ctx, entitlements.Name(), request)
+	objs, nextPageToken, err := listConnectorObjects(ctx, c, entitlements.Name(), request, func() *v2.Entitlement { return &v2.Entitlement{} })
 	if err != nil {
 		return nil, fmt.Errorf("error listing entitlements: %w", err)
 	}
 
-	ret := make([]*v2.Entitlement, 0, len(objs))
-	for _, o := range objs {
-		en := &v2.Entitlement{}
-		err = proto.Unmarshal(o, en)
-		if err != nil {
-			return nil, err
-		}
-		ret = append(ret, en)
-	}
-
-	return &v2.EntitlementsServiceListEntitlementsResponse{
-		List:          ret,
+	return v2.EntitlementsServiceListEntitlementsResponse_builder{
+		List:          objs,
 		NextPageToken: nextPageToken,
-	}, nil
+	}.Build(), nil
 }
 
 func (c *C1File) GetEntitlement(ctx context.Context, request *reader_v2.EntitlementsReaderServiceGetEntitlementRequest) (*reader_v2.EntitlementsReaderServiceGetEntitlementResponse, error) {
@@ -85,16 +74,26 @@ func (c *C1File) GetEntitlement(ctx context.Context, request *reader_v2.Entitlem
 	ret := &v2.Entitlement{}
 	syncId, err := annotations.GetSyncIdFromAnnotations(request.GetAnnotations())
 	if err != nil {
-		return nil, fmt.Errorf("error getting sync id from annotations for entitlement '%s': %w", request.EntitlementId, err)
+		return nil, fmt.Errorf("error getting sync id from annotations for entitlement '%s': %w", request.GetEntitlementId(), err)
 	}
-	err = c.getConnectorObject(ctx, entitlements.Name(), request.EntitlementId, syncId, ret)
+	err = c.getConnectorObject(ctx, entitlements.Name(), request.GetEntitlementId(), syncId, ret)
 	if err != nil {
-		return nil, fmt.Errorf("error fetching entitlement '%s': %w", request.EntitlementId, err)
+		return nil, fmt.Errorf("error fetching entitlement '%s': %w", request.GetEntitlementId(), err)
 	}
 
-	return &reader_v2.EntitlementsReaderServiceGetEntitlementResponse{
+	return reader_v2.EntitlementsReaderServiceGetEntitlementResponse_builder{
 		Entitlement: ret,
-	}, nil
+	}.Build(), nil
+}
+
+func (c *C1File) ListStaticEntitlements(ctx context.Context, request *v2.EntitlementsServiceListStaticEntitlementsRequest) (*v2.EntitlementsServiceListStaticEntitlementsResponse, error) {
+	_, span := tracer.Start(ctx, "C1File.ListStaticEntitlements")
+	defer span.End()
+
+	return v2.EntitlementsServiceListStaticEntitlementsResponse_builder{
+		List:          []*v2.Entitlement{},
+		NextPageToken: "",
+	}.Build(), nil
 }
 
 func (c *C1File) PutEntitlements(ctx context.Context, entitlementObjs ...*v2.Entitlement) error {
@@ -114,11 +113,15 @@ func (c *C1File) PutEntitlementsIfNewer(ctx context.Context, entitlementObjs ...
 type entitlementPutFunc func(context.Context, *C1File, string, func(m *v2.Entitlement) (goqu.Record, error), ...*v2.Entitlement) error
 
 func (c *C1File) putEntitlementsInternal(ctx context.Context, f entitlementPutFunc, entitlementObjs ...*v2.Entitlement) error {
+	if c.readOnly {
+		return ErrReadOnly
+	}
+
 	err := f(ctx, c, entitlements.Name(),
 		func(entitlement *v2.Entitlement) (goqu.Record, error) {
 			return goqu.Record{
-				"resource_id":      entitlement.Resource.Id.Resource,
-				"resource_type_id": entitlement.Resource.Id.ResourceType,
+				"resource_id":      entitlement.GetResource().GetId().GetResource(),
+				"resource_type_id": entitlement.GetResource().GetId().GetResourceType(),
 			}, nil
 		},
 		entitlementObjs...,

@@ -165,6 +165,8 @@ func (m *BatonActionSchema) validate(all bool) error {
 
 	// no validation rules for Description
 
+	// no validation rules for ResourceTypeId
+
 	if len(errors) > 0 {
 		return BatonActionSchemaMultiError(errors)
 	}
@@ -331,6 +333,8 @@ func (m *InvokeActionRequest) validate(all bool) error {
 		}
 
 	}
+
+	// no validation rules for ResourceTypeId
 
 	if len(errors) > 0 {
 		return InvokeActionRequestMultiError(errors)
@@ -1252,6 +1256,8 @@ func (m *ListActionSchemasRequest) validate(all bool) error {
 		}
 
 	}
+
+	// no validation rules for ResourceTypeId
 
 	if len(errors) > 0 {
 		return ListActionSchemasRequestMultiError(errors)

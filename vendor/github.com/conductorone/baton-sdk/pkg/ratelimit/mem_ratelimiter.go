@@ -21,22 +21,22 @@ type MemRateLimiter struct {
 // TODO
 func (m *MemRateLimiter) Do(ctx context.Context, req *ratelimitV1.DoRequest) (*ratelimitV1.DoResponse, error) {
 	if m.limiter == nil {
-		return &ratelimitV1.DoResponse{
-			RequestToken: req.RequestToken,
-			Description: &ratelimitV1.RateLimitDescription{
+		return ratelimitV1.DoResponse_builder{
+			RequestToken: req.GetRequestToken(),
+			Description: ratelimitV1.RateLimitDescription_builder{
 				Status: ratelimitV1.RateLimitDescription_STATUS_EMPTY,
-			},
-		}, nil
+			}.Build(),
+		}.Build(), nil
 	}
 
 	m.limiter.Take()
 
-	return &ratelimitV1.DoResponse{
-		RequestToken: req.RequestToken,
-		Description: &ratelimitV1.RateLimitDescription{
+	return ratelimitV1.DoResponse_builder{
+		RequestToken: req.GetRequestToken(),
+		Description: ratelimitV1.RateLimitDescription_builder{
 			Status: ratelimitV1.RateLimitDescription_STATUS_EMPTY,
-		},
-	}, nil
+		}.Build(),
+	}.Build(), nil
 }
 
 // Report updates the rate limiter with relevant information.
@@ -53,20 +53,20 @@ func (m *MemRateLimiter) Report(ctx context.Context, req *ratelimitV1.ReportRequ
 	}
 	desc := req.GetDescription()
 
-	if desc.ResetAt == nil {
+	if !desc.HasResetAt() {
 		return &ratelimitV1.ReportResponse{}, nil
 	}
 
-	if desc.Remaining == 0 {
+	if desc.GetRemaining() == 0 {
 		return &ratelimitV1.ReportResponse{}, nil
 	}
 
-	resetAt := desc.ResetAt.AsTime().UTC()
+	resetAt := desc.GetResetAt().AsTime().UTC()
 	windowDuration := resetAt.Sub(m.now())
 	if windowDuration > 5*time.Minute {
 		windowDuration = 5 * time.Minute
 	}
-	remaining := int64(m.usePercent * float64(desc.Remaining))
+	remaining := int64(m.usePercent * float64(desc.GetRemaining()))
 	if remaining < 1 {
 		remaining = 1
 	}
@@ -75,7 +75,7 @@ func (m *MemRateLimiter) Report(ctx context.Context, req *ratelimitV1.ReportRequ
 	ctxzap.Extract(ctx).Debug(
 		"updating rate limiter",
 		zap.Int64("calculated_remaining", remaining),
-		zap.Int64("remaining", desc.Remaining),
+		zap.Int64("remaining", desc.GetRemaining()),
 		zap.Int64("rate", limiterSize),
 		zap.Time("reset_at", resetAt),
 	)

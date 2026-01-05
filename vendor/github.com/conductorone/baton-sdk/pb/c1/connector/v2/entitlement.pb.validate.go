@@ -413,6 +413,21 @@ func (m *EntitlementsServiceListEntitlementsRequest) validate(all bool) error {
 
 	}
 
+	if m.GetActiveSyncId() != "" {
+
+		if l := len(m.GetActiveSyncId()); l < 1 || l > 1024 {
+			err := EntitlementsServiceListEntitlementsRequestValidationError{
+				field:  "ActiveSyncId",
+				reason: "value length must be between 1 and 1024 bytes, inclusive",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+	}
+
 	if len(errors) > 0 {
 		return EntitlementsServiceListEntitlementsRequestMultiError(errors)
 	}
@@ -683,3 +698,402 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = EntitlementsServiceListEntitlementsResponseValidationError{}
+
+// Validate checks the field values on
+// EntitlementsServiceListStaticEntitlementsRequest with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *EntitlementsServiceListStaticEntitlementsRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on
+// EntitlementsServiceListStaticEntitlementsRequest with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in
+// EntitlementsServiceListStaticEntitlementsRequestMultiError, or nil if none found.
+func (m *EntitlementsServiceListStaticEntitlementsRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *EntitlementsServiceListStaticEntitlementsRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := len(m.GetResourceTypeId()); l < 1 || l > 1024 {
+		err := EntitlementsServiceListStaticEntitlementsRequestValidationError{
+			field:  "ResourceTypeId",
+			reason: "value length must be between 1 and 1024 bytes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.GetPageSize() != 0 {
+
+		if m.GetPageSize() > 250 {
+			err := EntitlementsServiceListStaticEntitlementsRequestValidationError{
+				field:  "PageSize",
+				reason: "value must be less than or equal to 250",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+	}
+
+	if m.GetPageToken() != "" {
+
+		if l := len(m.GetPageToken()); l < 1 || l > 1048576 {
+			err := EntitlementsServiceListStaticEntitlementsRequestValidationError{
+				field:  "PageToken",
+				reason: "value length must be between 1 and 1048576 bytes, inclusive",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+	}
+
+	for idx, item := range m.GetAnnotations() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, EntitlementsServiceListStaticEntitlementsRequestValidationError{
+						field:  fmt.Sprintf("Annotations[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, EntitlementsServiceListStaticEntitlementsRequestValidationError{
+						field:  fmt.Sprintf("Annotations[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return EntitlementsServiceListStaticEntitlementsRequestValidationError{
+					field:  fmt.Sprintf("Annotations[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if m.GetActiveSyncId() != "" {
+
+		if l := len(m.GetActiveSyncId()); l < 1 || l > 1024 {
+			err := EntitlementsServiceListStaticEntitlementsRequestValidationError{
+				field:  "ActiveSyncId",
+				reason: "value length must be between 1 and 1024 bytes, inclusive",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return EntitlementsServiceListStaticEntitlementsRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// EntitlementsServiceListStaticEntitlementsRequestMultiError is an error
+// wrapping multiple validation errors returned by
+// EntitlementsServiceListStaticEntitlementsRequest.ValidateAll() if the
+// designated constraints aren't met.
+type EntitlementsServiceListStaticEntitlementsRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m EntitlementsServiceListStaticEntitlementsRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m EntitlementsServiceListStaticEntitlementsRequestMultiError) AllErrors() []error { return m }
+
+// EntitlementsServiceListStaticEntitlementsRequestValidationError is the
+// validation error returned by
+// EntitlementsServiceListStaticEntitlementsRequest.Validate if the designated
+// constraints aren't met.
+type EntitlementsServiceListStaticEntitlementsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e EntitlementsServiceListStaticEntitlementsRequestValidationError) Field() string {
+	return e.field
+}
+
+// Reason function returns reason value.
+func (e EntitlementsServiceListStaticEntitlementsRequestValidationError) Reason() string {
+	return e.reason
+}
+
+// Cause function returns cause value.
+func (e EntitlementsServiceListStaticEntitlementsRequestValidationError) Cause() error {
+	return e.cause
+}
+
+// Key function returns key value.
+func (e EntitlementsServiceListStaticEntitlementsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e EntitlementsServiceListStaticEntitlementsRequestValidationError) ErrorName() string {
+	return "EntitlementsServiceListStaticEntitlementsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e EntitlementsServiceListStaticEntitlementsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sEntitlementsServiceListStaticEntitlementsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = EntitlementsServiceListStaticEntitlementsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = EntitlementsServiceListStaticEntitlementsRequestValidationError{}
+
+// Validate checks the field values on
+// EntitlementsServiceListStaticEntitlementsResponse with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *EntitlementsServiceListStaticEntitlementsResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on
+// EntitlementsServiceListStaticEntitlementsResponse with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in
+// EntitlementsServiceListStaticEntitlementsResponseMultiError, or nil if none found.
+func (m *EntitlementsServiceListStaticEntitlementsResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *EntitlementsServiceListStaticEntitlementsResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetList() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, EntitlementsServiceListStaticEntitlementsResponseValidationError{
+						field:  fmt.Sprintf("List[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, EntitlementsServiceListStaticEntitlementsResponseValidationError{
+						field:  fmt.Sprintf("List[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return EntitlementsServiceListStaticEntitlementsResponseValidationError{
+					field:  fmt.Sprintf("List[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if m.GetNextPageToken() != "" {
+
+		if l := len(m.GetNextPageToken()); l < 1 || l > 1048576 {
+			err := EntitlementsServiceListStaticEntitlementsResponseValidationError{
+				field:  "NextPageToken",
+				reason: "value length must be between 1 and 1048576 bytes, inclusive",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+	}
+
+	for idx, item := range m.GetAnnotations() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, EntitlementsServiceListStaticEntitlementsResponseValidationError{
+						field:  fmt.Sprintf("Annotations[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, EntitlementsServiceListStaticEntitlementsResponseValidationError{
+						field:  fmt.Sprintf("Annotations[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return EntitlementsServiceListStaticEntitlementsResponseValidationError{
+					field:  fmt.Sprintf("Annotations[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return EntitlementsServiceListStaticEntitlementsResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// EntitlementsServiceListStaticEntitlementsResponseMultiError is an error
+// wrapping multiple validation errors returned by
+// EntitlementsServiceListStaticEntitlementsResponse.ValidateAll() if the
+// designated constraints aren't met.
+type EntitlementsServiceListStaticEntitlementsResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m EntitlementsServiceListStaticEntitlementsResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m EntitlementsServiceListStaticEntitlementsResponseMultiError) AllErrors() []error { return m }
+
+// EntitlementsServiceListStaticEntitlementsResponseValidationError is the
+// validation error returned by
+// EntitlementsServiceListStaticEntitlementsResponse.Validate if the
+// designated constraints aren't met.
+type EntitlementsServiceListStaticEntitlementsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e EntitlementsServiceListStaticEntitlementsResponseValidationError) Field() string {
+	return e.field
+}
+
+// Reason function returns reason value.
+func (e EntitlementsServiceListStaticEntitlementsResponseValidationError) Reason() string {
+	return e.reason
+}
+
+// Cause function returns cause value.
+func (e EntitlementsServiceListStaticEntitlementsResponseValidationError) Cause() error {
+	return e.cause
+}
+
+// Key function returns key value.
+func (e EntitlementsServiceListStaticEntitlementsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e EntitlementsServiceListStaticEntitlementsResponseValidationError) ErrorName() string {
+	return "EntitlementsServiceListStaticEntitlementsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e EntitlementsServiceListStaticEntitlementsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sEntitlementsServiceListStaticEntitlementsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = EntitlementsServiceListStaticEntitlementsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = EntitlementsServiceListStaticEntitlementsResponseValidationError{}

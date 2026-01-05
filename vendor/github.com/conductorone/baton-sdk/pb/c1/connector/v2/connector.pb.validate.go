@@ -91,6 +91,21 @@ func (m *ConnectorServiceCleanupRequest) validate(all bool) error {
 
 	}
 
+	if m.GetActiveSyncId() != "" {
+
+		if l := len(m.GetActiveSyncId()); l < 1 || l > 1024 {
+			err := ConnectorServiceCleanupRequestValidationError{
+				field:  "ActiveSyncId",
+				reason: "value length must be between 1 and 1024 bytes, inclusive",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+	}
+
 	if len(errors) > 0 {
 		return ConnectorServiceCleanupRequestMultiError(errors)
 	}
@@ -1202,6 +1217,246 @@ var _ interface {
 	ErrorName() string
 } = ConnectorCapabilitiesValidationError{}
 
+// Validate checks the field values on CapabilityPermission with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CapabilityPermission) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CapabilityPermission with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CapabilityPermissionMultiError, or nil if none found.
+func (m *CapabilityPermission) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CapabilityPermission) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Permission
+
+	if len(errors) > 0 {
+		return CapabilityPermissionMultiError(errors)
+	}
+
+	return nil
+}
+
+// CapabilityPermissionMultiError is an error wrapping multiple validation
+// errors returned by CapabilityPermission.ValidateAll() if the designated
+// constraints aren't met.
+type CapabilityPermissionMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CapabilityPermissionMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CapabilityPermissionMultiError) AllErrors() []error { return m }
+
+// CapabilityPermissionValidationError is the validation error returned by
+// CapabilityPermission.Validate if the designated constraints aren't met.
+type CapabilityPermissionValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CapabilityPermissionValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CapabilityPermissionValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CapabilityPermissionValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CapabilityPermissionValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CapabilityPermissionValidationError) ErrorName() string {
+	return "CapabilityPermissionValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CapabilityPermissionValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCapabilityPermission.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CapabilityPermissionValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CapabilityPermissionValidationError{}
+
+// Validate checks the field values on CapabilityPermissions with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CapabilityPermissions) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CapabilityPermissions with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CapabilityPermissionsMultiError, or nil if none found.
+func (m *CapabilityPermissions) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CapabilityPermissions) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetPermissions() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, CapabilityPermissionsValidationError{
+						field:  fmt.Sprintf("Permissions[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, CapabilityPermissionsValidationError{
+						field:  fmt.Sprintf("Permissions[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return CapabilityPermissionsValidationError{
+					field:  fmt.Sprintf("Permissions[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return CapabilityPermissionsMultiError(errors)
+	}
+
+	return nil
+}
+
+// CapabilityPermissionsMultiError is an error wrapping multiple validation
+// errors returned by CapabilityPermissions.ValidateAll() if the designated
+// constraints aren't met.
+type CapabilityPermissionsMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CapabilityPermissionsMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CapabilityPermissionsMultiError) AllErrors() []error { return m }
+
+// CapabilityPermissionsValidationError is the validation error returned by
+// CapabilityPermissions.Validate if the designated constraints aren't met.
+type CapabilityPermissionsValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CapabilityPermissionsValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CapabilityPermissionsValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CapabilityPermissionsValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CapabilityPermissionsValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CapabilityPermissionsValidationError) ErrorName() string {
+	return "CapabilityPermissionsValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CapabilityPermissionsValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCapabilityPermissions.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CapabilityPermissionsValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CapabilityPermissionsValidationError{}
+
 // Validate checks the field values on ResourceTypeCapability with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -1247,6 +1502,35 @@ func (m *ResourceTypeCapability) validate(all bool) error {
 		if err := v.Validate(); err != nil {
 			return ResourceTypeCapabilityValidationError{
 				field:  "ResourceType",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetPermissions()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ResourceTypeCapabilityValidationError{
+					field:  "Permissions",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ResourceTypeCapabilityValidationError{
+					field:  "Permissions",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetPermissions()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ResourceTypeCapabilityValidationError{
+				field:  "Permissions",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -1731,6 +2015,8 @@ func (m *ConnectorServiceValidateResponse) validate(all bool) error {
 		}
 
 	}
+
+	// no validation rules for SdkVersion
 
 	if len(errors) > 0 {
 		return ConnectorServiceValidateResponseMultiError(errors)

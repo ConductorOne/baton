@@ -121,10 +121,10 @@ func ExtractRateLimitData(statusCode int, header *http.Header) (*v2.RateLimitDes
 		resetAt = time.Now().Add(time.Second * 60)
 	}
 
-	return &v2.RateLimitDescription{
+	return v2.RateLimitDescription_builder{
 		Status:    rlstatus,
 		Limit:     limit,
 		Remaining: remaining,
 		ResetAt:   timestamppb.New(resetAt),
-	}, nil
+	}.Build(), nil
 }

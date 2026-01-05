@@ -34,15 +34,22 @@ type pragma struct {
 }
 
 type C1File struct {
-	rawDb          *sql.DB
-	db             *goqu.Database
-	currentSyncID  string
-	viewSyncID     string
-	outputFilePath string
-	dbFilePath     string
-	dbUpdated      bool
-	tempDir        string
-	pragmas        []pragma
+	rawDb              *sql.DB
+	db                 *goqu.Database
+	currentSyncID      string
+	viewSyncID         string
+	outputFilePath     string
+	dbFilePath         string
+	dbUpdated          bool
+	tempDir            string
+	pragmas            []pragma
+	readOnly           bool
+	encoderConcurrency int
+
+	// Cached sync run for listConnectorObjects (avoids N+1 queries)
+	cachedViewSyncRun *syncRun
+	cachedViewSyncMu  sync.Mutex
+	cachedViewSyncErr error
 
 	// Slow query tracking
 	slowQueryLogTimes     map[string]time.Time
@@ -55,15 +62,30 @@ var _ connectorstore.Writer = (*C1File)(nil)
 
 type C1FOption func(*C1File)
 
+// WithC1FTmpDir sets the temporary directory to use when cloning a sync.
+// If not provided, os.TempDir() will be used.
 func WithC1FTmpDir(tempDir string) C1FOption {
 	return func(o *C1File) {
 		o.tempDir = tempDir
 	}
 }
 
+// WithC1FPragma sets a sqlite pragma for the c1z file.
 func WithC1FPragma(name string, value string) C1FOption {
 	return func(o *C1File) {
 		o.pragmas = append(o.pragmas, pragma{name, value})
+	}
+}
+
+func WithC1FReadOnly(readOnly bool) C1FOption {
+	return func(o *C1File) {
+		o.readOnly = readOnly
+	}
+}
+
+func WithC1FEncoderConcurrency(concurrency int) C1FOption {
+	return func(o *C1File) {
+		o.encoderConcurrency = concurrency
 	}
 }
 
@@ -87,6 +109,7 @@ func NewC1File(ctx context.Context, dbFilePath string, opts ...C1FOption) (*C1Fi
 		slowQueryLogTimes:     make(map[string]time.Time),
 		slowQueryThreshold:    5 * time.Second,
 		slowQueryLogFrequency: 1 * time.Minute,
+		encoderConcurrency:    1,
 	}
 
 	for _, opt := range opts {
@@ -107,18 +130,23 @@ func NewC1File(ctx context.Context, dbFilePath string, opts ...C1FOption) (*C1Fi
 }
 
 type c1zOptions struct {
-	tmpDir         string
-	pragmas        []pragma
-	decoderOptions []DecoderOption
+	tmpDir             string
+	pragmas            []pragma
+	decoderOptions     []DecoderOption
+	readOnly           bool
+	encoderConcurrency int
 }
 type C1ZOption func(*c1zOptions)
 
+// WithTmpDir sets the temporary directory to extract the c1z file to.
+// If not provided, os.TempDir() will be used.
 func WithTmpDir(tmpDir string) C1ZOption {
 	return func(o *c1zOptions) {
 		o.tmpDir = tmpDir
 	}
 }
 
+// WithPragma sets a sqlite pragma for the c1z file.
 func WithPragma(name string, value string) C1ZOption {
 	return func(o *c1zOptions) {
 		o.pragmas = append(o.pragmas, pragma{name, value})
@@ -131,12 +159,30 @@ func WithDecoderOptions(opts ...DecoderOption) C1ZOption {
 	}
 }
 
+// WithReadOnly opens the c1z file in read only mode. Modifying the c1z will result in an error on close.
+func WithReadOnly(readOnly bool) C1ZOption {
+	return func(o *c1zOptions) {
+		o.readOnly = readOnly
+	}
+}
+
+// WithEncoderConcurrency sets the number of created encoders.
+// Default is 1, which disables async encoding/concurrency.
+// 0 uses GOMAXPROCS.
+func WithEncoderConcurrency(concurrency int) C1ZOption {
+	return func(o *c1zOptions) {
+		o.encoderConcurrency = concurrency
+	}
+}
+
 // Returns a new C1File instance with its state stored at the provided filename.
 func NewC1ZFile(ctx context.Context, outputFilePath string, opts ...C1ZOption) (*C1File, error) {
 	ctx, span := tracer.Start(ctx, "NewC1ZFile")
 	defer span.End()
 
-	options := &c1zOptions{}
+	options := &c1zOptions{
+		encoderConcurrency: 1,
+	}
 	for _, opt := range opts {
 		opt(options)
 	}
@@ -150,6 +196,13 @@ func NewC1ZFile(ctx context.Context, outputFilePath string, opts ...C1ZOption) (
 	for _, pragma := range options.pragmas {
 		c1fopts = append(c1fopts, WithC1FPragma(pragma.name, pragma.value))
 	}
+	if options.readOnly {
+		c1fopts = append(c1fopts, WithC1FReadOnly(true))
+	}
+	if options.encoderConcurrency < 0 {
+		return nil, fmt.Errorf("encoder concurrency must be greater than 0")
+	}
+	c1fopts = append(c1fopts, WithC1FEncoderConcurrency(options.encoderConcurrency))
 
 	c1File, err := NewC1File(ctx, dbFilePath, c1fopts...)
 	if err != nil {
@@ -169,6 +222,8 @@ func cleanupDbDir(dbFilePath string, err error) error {
 	return err
 }
 
+var ErrReadOnly = errors.New("c1z: read only mode")
+
 // Close ensures that the sqlite database is flushed to disk, and if any changes were made we update the original database
 // with our changes.
 func (c *C1File) Close() error {
@@ -185,7 +240,10 @@ func (c *C1File) Close() error {
 
 	// We only want to save the file if we've made any changes
 	if c.dbUpdated {
-		err = saveC1z(c.dbFilePath, c.outputFilePath)
+		if c.readOnly {
+			return cleanupDbDir(c.dbFilePath, ErrReadOnly)
+		}
+		err = saveC1z(c.dbFilePath, c.outputFilePath, c.encoderConcurrency)
 		if err != nil {
 			return cleanupDbDir(c.dbFilePath, err)
 		}
@@ -204,13 +262,19 @@ func (c *C1File) init(ctx context.Context) error {
 		return err
 	}
 
-	for _, t := range allTableDescriptors {
-		query, args := t.Schema()
-		_, err = c.db.ExecContext(ctx, fmt.Sprintf(query, args...))
+	err = c.InitTables(ctx)
+	if err != nil {
+		return err
+	}
+
+	if c.readOnly {
+		// Disable journaling in read only mode, since we're not writing to the database.
+		_, err = c.db.ExecContext(ctx, "PRAGMA journal_mode = OFF")
 		if err != nil {
 			return err
 		}
-		err = t.Migrations(ctx, c.db)
+		// Disable synchronous writes in read only mode, since we're not writing to the database.
+		_, err = c.db.ExecContext(ctx, "PRAGMA synchronous = OFF")
 		if err != nil {
 			return err
 		}
@@ -218,6 +282,30 @@ func (c *C1File) init(ctx context.Context) error {
 
 	for _, pragma := range c.pragmas {
 		_, err := c.db.ExecContext(ctx, fmt.Sprintf("PRAGMA %s = %s", pragma.name, pragma.value))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (c *C1File) InitTables(ctx context.Context) error {
+	ctx, span := tracer.Start(ctx, "C1File.InitTables")
+	defer span.End()
+
+	err := c.validateDb(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, t := range allTableDescriptors {
+		query, args := t.Schema()
+		_, err = c.db.ExecContext(ctx, fmt.Sprintf(query, args...))
+		if err != nil {
+			return err
+		}
+		err = t.Migrations(ctx, c.db)
 		if err != nil {
 			return err
 		}
@@ -241,47 +329,47 @@ func (c *C1File) Stats(ctx context.Context, syncType connectorstore.SyncType, sy
 			return nil, err
 		}
 	}
-	resp, err := c.GetSync(ctx, &reader_v2.SyncsReaderServiceGetSyncRequest{SyncId: syncId})
+	resp, err := c.GetSync(ctx, reader_v2.SyncsReaderServiceGetSyncRequest_builder{SyncId: syncId}.Build())
 	if err != nil {
 		return nil, err
 	}
-	if resp == nil || resp.Sync == nil {
+	if resp == nil || !resp.HasSync() {
 		return nil, status.Errorf(codes.NotFound, "sync '%s' not found", syncId)
 	}
-	sync := resp.Sync
-	if syncType != connectorstore.SyncTypeAny && syncType != connectorstore.SyncType(sync.SyncType) {
+	sync := resp.GetSync()
+	if syncType != connectorstore.SyncTypeAny && syncType != connectorstore.SyncType(sync.GetSyncType()) {
 		return nil, status.Errorf(codes.InvalidArgument, "sync '%s' is not of type '%s'", syncId, syncType)
 	}
-	syncType = connectorstore.SyncType(sync.SyncType)
+	syncType = connectorstore.SyncType(sync.GetSyncType())
 
 	counts["resource_types"] = 0
 
 	var rtStats []*v2.ResourceType
 	pageToken := ""
 	for {
-		resp, err := c.ListResourceTypes(ctx, &v2.ResourceTypesServiceListResourceTypesRequest{PageToken: pageToken})
+		resp, err := c.ListResourceTypes(ctx, v2.ResourceTypesServiceListResourceTypesRequest_builder{PageToken: pageToken}.Build())
 		if err != nil {
 			return nil, err
 		}
 
-		rtStats = append(rtStats, resp.List...)
+		rtStats = append(rtStats, resp.GetList()...)
 
-		if resp.NextPageToken == "" {
+		if resp.GetNextPageToken() == "" {
 			break
 		}
 
-		pageToken = resp.NextPageToken
+		pageToken = resp.GetNextPageToken()
 	}
 	counts["resource_types"] = int64(len(rtStats))
 	for _, rt := range rtStats {
 		resourceCount, err := c.db.From(resources.Name()).
-			Where(goqu.C("resource_type_id").Eq(rt.Id)).
+			Where(goqu.C("resource_type_id").Eq(rt.GetId())).
 			Where(goqu.C("sync_id").Eq(syncId)).
 			CountContext(ctx)
 		if err != nil {
 			return nil, err
 		}
-		counts[rt.Id] = resourceCount
+		counts[rt.GetId()] = resourceCount
 	}
 
 	if syncType != connectorstore.SyncTypeResourcesOnly {
@@ -367,14 +455,14 @@ func (c *C1File) GrantStats(ctx context.Context, syncType connectorstore.SyncTyp
 			return nil, err
 		}
 	} else {
-		lastSync, err := c.GetSync(ctx, &reader_v2.SyncsReaderServiceGetSyncRequest{SyncId: syncId})
+		lastSync, err := c.GetSync(ctx, reader_v2.SyncsReaderServiceGetSyncRequest_builder{SyncId: syncId}.Build())
 		if err != nil {
 			return nil, err
 		}
 		if lastSync == nil {
 			return nil, status.Errorf(codes.NotFound, "sync '%s' not found", syncId)
 		}
-		if syncType != connectorstore.SyncTypeAny && syncType != connectorstore.SyncType(lastSync.Sync.SyncType) {
+		if syncType != connectorstore.SyncTypeAny && syncType != connectorstore.SyncType(lastSync.GetSync().GetSyncType()) {
 			return nil, status.Errorf(codes.InvalidArgument, "sync '%s' is not of type '%s'", syncId, syncType)
 		}
 	}
@@ -382,18 +470,18 @@ func (c *C1File) GrantStats(ctx context.Context, syncType connectorstore.SyncTyp
 	var allResourceTypes []*v2.ResourceType
 	pageToken := ""
 	for {
-		resp, err := c.ListResourceTypes(ctx, &v2.ResourceTypesServiceListResourceTypesRequest{PageToken: pageToken})
+		resp, err := c.ListResourceTypes(ctx, v2.ResourceTypesServiceListResourceTypesRequest_builder{PageToken: pageToken}.Build())
 		if err != nil {
 			return nil, err
 		}
 
-		allResourceTypes = append(allResourceTypes, resp.List...)
+		allResourceTypes = append(allResourceTypes, resp.GetList()...)
 
-		if resp.NextPageToken == "" {
+		if resp.GetNextPageToken() == "" {
 			break
 		}
 
-		pageToken = resp.NextPageToken
+		pageToken = resp.GetNextPageToken()
 	}
 
 	stats := make(map[string]int64)
@@ -401,13 +489,13 @@ func (c *C1File) GrantStats(ctx context.Context, syncType connectorstore.SyncTyp
 	for _, resourceType := range allResourceTypes {
 		grantsCount, err := c.db.From(grants.Name()).
 			Where(goqu.C("sync_id").Eq(syncId)).
-			Where(goqu.C("resource_type_id").Eq(resourceType.Id)).
+			Where(goqu.C("resource_type_id").Eq(resourceType.GetId())).
 			CountContext(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		stats[resourceType.Id] = grantsCount
+		stats[resourceType.GetId()] = grantsCount
 	}
 
 	return stats, nil
