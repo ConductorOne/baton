@@ -11,6 +11,10 @@ import (
 )
 
 func (c *C1File) GenerateSyncDiff(ctx context.Context, baseSyncID string, appliedSyncID string) (string, error) {
+	if c.readOnly {
+		return "", ErrReadOnly
+	}
+
 	// Validate that both sync runs exist
 	baseSync, err := c.getSync(ctx, baseSyncID)
 	if err != nil {
@@ -44,6 +48,9 @@ func (c *C1File) GenerateSyncDiff(ctx context.Context, baseSyncID string, applie
 		if err != nil {
 			return "", err
 		}
+		if q == "" {
+			continue
+		}
 		_, err = c.db.ExecContext(ctx, q, args...)
 		if err != nil {
 			return "", err
@@ -70,6 +77,9 @@ func (c *C1File) diffTableQuery(table tableDescriptor, baseSyncID, appliedSyncID
 	tableName := table.Name()
 	// Add table-specific columns
 	switch {
+	case strings.Contains(tableName, sessionStoreTableName):
+		// caching is not relevant to diffs.
+		return "", nil, nil
 	case strings.Contains(tableName, resourcesTableName):
 		columns = append(columns, "resource_type_id", "parent_resource_type_id", "parent_resource_id")
 	case strings.Contains(tableName, resourceTypesTableName):

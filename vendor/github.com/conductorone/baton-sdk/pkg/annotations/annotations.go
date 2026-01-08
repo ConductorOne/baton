@@ -137,13 +137,3 @@ func GetSyncIdFromAnnotations(annos Annotations) (string, error) {
 
 	return "", nil
 }
-
-// NOTE: this is used to communicate the active sync to the connector proper, for session storage.
-func GetActiveSyncIdFromAnnotations(annos Annotations) (string, error) {
-	v2SyncId := &v2.ActiveSync{}
-	_, err := annos.Pick(v2SyncId)
-	if err != nil {
-		return "", err
-	}
-	return v2SyncId.GetId(), nil
-}
