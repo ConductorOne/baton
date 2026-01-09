@@ -50,7 +50,7 @@ func C1ZFileCheckHeader(f io.ReadSeeker) (bool, error) {
 }
 
 func NewExternalC1FileReader(ctx context.Context, tmpDir string, externalResourceC1ZPath string) (connectorstore.Reader, error) {
-	dbFilePath, err := loadC1z(externalResourceC1ZPath, tmpDir)
+	dbFilePath, _, err := decompressC1z(externalResourceC1ZPath, tmpDir)
 	if err != nil {
 		return nil, fmt.Errorf("error loading external resource c1z file: %w", err)
 	}

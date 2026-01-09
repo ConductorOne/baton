@@ -19,7 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	EntitlementsService_ListEntitlements_FullMethodName = "/c1.connector.v2.EntitlementsService/ListEntitlements"
+	EntitlementsService_ListEntitlements_FullMethodName       = "/c1.connector.v2.EntitlementsService/ListEntitlements"
+	EntitlementsService_ListStaticEntitlements_FullMethodName = "/c1.connector.v2.EntitlementsService/ListStaticEntitlements"
 )
 
 // EntitlementsServiceClient is the client API for EntitlementsService service.
@@ -27,6 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type EntitlementsServiceClient interface {
 	ListEntitlements(ctx context.Context, in *EntitlementsServiceListEntitlementsRequest, opts ...grpc.CallOption) (*EntitlementsServiceListEntitlementsResponse, error)
+	ListStaticEntitlements(ctx context.Context, in *EntitlementsServiceListStaticEntitlementsRequest, opts ...grpc.CallOption) (*EntitlementsServiceListStaticEntitlementsResponse, error)
 }
 
 type entitlementsServiceClient struct {
@@ -47,11 +49,22 @@ func (c *entitlementsServiceClient) ListEntitlements(ctx context.Context, in *En
 	return out, nil
 }
 
+func (c *entitlementsServiceClient) ListStaticEntitlements(ctx context.Context, in *EntitlementsServiceListStaticEntitlementsRequest, opts ...grpc.CallOption) (*EntitlementsServiceListStaticEntitlementsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(EntitlementsServiceListStaticEntitlementsResponse)
+	err := c.cc.Invoke(ctx, EntitlementsService_ListStaticEntitlements_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // EntitlementsServiceServer is the server API for EntitlementsService service.
 // All implementations should embed UnimplementedEntitlementsServiceServer
 // for forward compatibility.
 type EntitlementsServiceServer interface {
 	ListEntitlements(context.Context, *EntitlementsServiceListEntitlementsRequest) (*EntitlementsServiceListEntitlementsResponse, error)
+	ListStaticEntitlements(context.Context, *EntitlementsServiceListStaticEntitlementsRequest) (*EntitlementsServiceListStaticEntitlementsResponse, error)
 }
 
 // UnimplementedEntitlementsServiceServer should be embedded to have
@@ -63,6 +76,9 @@ type UnimplementedEntitlementsServiceServer struct{}
 
 func (UnimplementedEntitlementsServiceServer) ListEntitlements(context.Context, *EntitlementsServiceListEntitlementsRequest) (*EntitlementsServiceListEntitlementsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListEntitlements not implemented")
+}
+func (UnimplementedEntitlementsServiceServer) ListStaticEntitlements(context.Context, *EntitlementsServiceListStaticEntitlementsRequest) (*EntitlementsServiceListStaticEntitlementsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListStaticEntitlements not implemented")
 }
 func (UnimplementedEntitlementsServiceServer) testEmbeddedByValue() {}
 
@@ -102,6 +118,24 @@ func _EntitlementsService_ListEntitlements_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
+func _EntitlementsService_ListStaticEntitlements_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EntitlementsServiceListStaticEntitlementsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EntitlementsServiceServer).ListStaticEntitlements(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: EntitlementsService_ListStaticEntitlements_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EntitlementsServiceServer).ListStaticEntitlements(ctx, req.(*EntitlementsServiceListStaticEntitlementsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // EntitlementsService_ServiceDesc is the grpc.ServiceDesc for EntitlementsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -112,6 +146,10 @@ var EntitlementsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListEntitlements",
 			Handler:    _EntitlementsService_ListEntitlements_Handler,
+		},
+		{
+			MethodName: "ListStaticEntitlements",
+			Handler:    _EntitlementsService_ListStaticEntitlements_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

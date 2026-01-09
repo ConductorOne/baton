@@ -892,3 +892,205 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = StringMapRulesValidationError{}
+
+// Validate checks the field values on ResourceIDRules with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *ResourceIDRules) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ResourceIDRules with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ResourceIDRulesMultiError, or nil if none found.
+func (m *ResourceIDRules) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ResourceIDRules) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if len(errors) > 0 {
+		return ResourceIDRulesMultiError(errors)
+	}
+
+	return nil
+}
+
+// ResourceIDRulesMultiError is an error wrapping multiple validation errors
+// returned by ResourceIDRules.ValidateAll() if the designated constraints
+// aren't met.
+type ResourceIDRulesMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ResourceIDRulesMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ResourceIDRulesMultiError) AllErrors() []error { return m }
+
+// ResourceIDRulesValidationError is the validation error returned by
+// ResourceIDRules.Validate if the designated constraints aren't met.
+type ResourceIDRulesValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ResourceIDRulesValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ResourceIDRulesValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ResourceIDRulesValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ResourceIDRulesValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ResourceIDRulesValidationError) ErrorName() string { return "ResourceIDRulesValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ResourceIDRulesValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sResourceIDRules.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ResourceIDRulesValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ResourceIDRulesValidationError{}
+
+// Validate checks the field values on RepeatedResourceIdRules with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *RepeatedResourceIdRules) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on RepeatedResourceIdRules with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// RepeatedResourceIdRulesMultiError, or nil if none found.
+func (m *RepeatedResourceIdRules) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *RepeatedResourceIdRules) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if len(errors) > 0 {
+		return RepeatedResourceIdRulesMultiError(errors)
+	}
+
+	return nil
+}
+
+// RepeatedResourceIdRulesMultiError is an error wrapping multiple validation
+// errors returned by RepeatedResourceIdRules.ValidateAll() if the designated
+// constraints aren't met.
+type RepeatedResourceIdRulesMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m RepeatedResourceIdRulesMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m RepeatedResourceIdRulesMultiError) AllErrors() []error { return m }
+
+// RepeatedResourceIdRulesValidationError is the validation error returned by
+// RepeatedResourceIdRules.Validate if the designated constraints aren't met.
+type RepeatedResourceIdRulesValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RepeatedResourceIdRulesValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RepeatedResourceIdRulesValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RepeatedResourceIdRulesValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RepeatedResourceIdRulesValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RepeatedResourceIdRulesValidationError) ErrorName() string {
+	return "RepeatedResourceIdRulesValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e RepeatedResourceIdRulesValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRepeatedResourceIdRules.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RepeatedResourceIdRulesValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RepeatedResourceIdRulesValidationError{}

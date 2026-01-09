@@ -242,10 +242,10 @@ func WithRatelimitData(resource *v2.RateLimitDescription) DoOption {
 			return err
 		}
 
-		resource.Limit = rl.Limit
-		resource.Remaining = rl.Remaining
-		resource.ResetAt = rl.ResetAt
-		resource.Status = rl.Status
+		resource.SetLimit(rl.GetLimit())
+		resource.SetRemaining(rl.GetRemaining())
+		resource.SetResetAt(rl.GetResetAt())
+		resource.SetStatus(rl.GetStatus())
 
 		return nil
 	}
@@ -433,7 +433,7 @@ func (c *BaseHttpClient) Do(req *http.Request, options ...DoOption) (*http.Respo
 
 	// Log response headers directly for certain errors
 	if resp.StatusCode >= 400 {
-		redactedHeaders := redactHeaders(resp.Header)
+		redactedHeaders := RedactSensitiveHeaders(resp.Header)
 		l.Error("base-http-client: HTTP error status",
 			zap.Int("status_code", resp.StatusCode),
 			zap.String("status", resp.Status),
@@ -476,13 +476,34 @@ func (c *BaseHttpClient) Do(req *http.Request, options ...DoOption) (*http.Respo
 	return resp, errors.Join(optErrs...)
 }
 
-func redactHeaders(h http.Header) http.Header {
+var sensitiveStrings = []string{
+	"api-key",
+	"auth",
+	"cookie",
+	"proxy-authorization",
+	"set-cookie",
+	"x-forwarded-for",
+	"x-forwarded-proto",
+}
+
+func RedactSensitiveHeaders(h http.Header) http.Header {
+	if h == nil {
+		return nil
+	}
 	safe := make(http.Header, len(h))
 	for k, v := range h {
-		switch strings.ToLower(k) {
-		case "authorization", "set-cookie", "cookie":
+		sensitive := false
+		headerKey := strings.ToLower(k)
+		for _, sensitiveString := range sensitiveStrings {
+			if strings.Contains(headerKey, sensitiveString) {
+				sensitive = true
+				break
+			}
+		}
+
+		if sensitive {
 			safe[k] = []string{"REDACTED"}
-		default:
+		} else {
 			safe[k] = v
 		}
 	}

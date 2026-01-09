@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"google.golang.org/protobuf/proto"
-
 	"github.com/doug-martin/goqu/v9"
 
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
@@ -53,25 +51,15 @@ func (c *C1File) ListResourceTypes(ctx context.Context, request *v2.ResourceType
 	ctx, span := tracer.Start(ctx, "C1File.ListResourceTypes")
 	defer span.End()
 
-	objs, nextPageToken, err := c.listConnectorObjects(ctx, resourceTypes.Name(), request)
+	ret, nextPageToken, err := listConnectorObjects(ctx, c, resourceTypes.Name(), request, func() *v2.ResourceType { return &v2.ResourceType{} })
 	if err != nil {
 		return nil, fmt.Errorf("error listing resource types: %w", err)
 	}
 
-	ret := make([]*v2.ResourceType, 0, len(objs))
-	for _, o := range objs {
-		rt := &v2.ResourceType{}
-		err = proto.Unmarshal(o, rt)
-		if err != nil {
-			return nil, err
-		}
-		ret = append(ret, rt)
-	}
-
-	return &v2.ResourceTypesServiceListResourceTypesResponse{
+	return v2.ResourceTypesServiceListResourceTypesResponse_builder{
 		List:          ret,
 		NextPageToken: nextPageToken,
-	}, nil
+	}.Build(), nil
 }
 
 func (c *C1File) GetResourceType(ctx context.Context, request *reader_v2.ResourceTypesReaderServiceGetResourceTypeRequest) (*reader_v2.ResourceTypesReaderServiceGetResourceTypeResponse, error) {
@@ -81,16 +69,16 @@ func (c *C1File) GetResourceType(ctx context.Context, request *reader_v2.Resourc
 	ret := &v2.ResourceType{}
 	syncId, err := annotations.GetSyncIdFromAnnotations(request.GetAnnotations())
 	if err != nil {
-		return nil, fmt.Errorf("error getting sync id from annotations for resource type '%s': %w", request.ResourceTypeId, err)
+		return nil, fmt.Errorf("error getting sync id from annotations for resource type '%s': %w", request.GetResourceTypeId(), err)
 	}
-	err = c.getConnectorObject(ctx, resourceTypes.Name(), request.ResourceTypeId, syncId, ret)
+	err = c.getConnectorObject(ctx, resourceTypes.Name(), request.GetResourceTypeId(), syncId, ret)
 	if err != nil {
-		return nil, fmt.Errorf("error fetching resource type '%s': %w", request.ResourceTypeId, err)
+		return nil, fmt.Errorf("error fetching resource type '%s': %w", request.GetResourceTypeId(), err)
 	}
 
-	return &reader_v2.ResourceTypesReaderServiceGetResourceTypeResponse{
+	return reader_v2.ResourceTypesReaderServiceGetResourceTypeResponse_builder{
 		ResourceType: ret,
-	}, nil
+	}.Build(), nil
 }
 
 func (c *C1File) PutResourceTypes(ctx context.Context, resourceTypesObjs ...*v2.ResourceType) error {
@@ -110,6 +98,10 @@ func (c *C1File) PutResourceTypesIfNewer(ctx context.Context, resourceTypesObjs 
 type resourceTypePutFunc func(context.Context, *C1File, string, func(m *v2.ResourceType) (goqu.Record, error), ...*v2.ResourceType) error
 
 func (c *C1File) putResourceTypesInternal(ctx context.Context, f resourceTypePutFunc, resourceTypesObjs ...*v2.ResourceType) error {
+	if c.readOnly {
+		return ErrReadOnly
+	}
+
 	err := f(ctx, c, resourceTypes.Name(),
 		func(resource *v2.ResourceType) (goqu.Record, error) {
 			return nil, nil

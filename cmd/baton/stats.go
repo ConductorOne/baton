@@ -43,7 +43,7 @@ func runStats(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	counts, err := store.Stats(ctx, connectorstore.SyncTypeFull, "")
+	counts, err := store.Stats(ctx, connectorstore.SyncTypeAny, "")
 	if err != nil {
 		return err
 	}

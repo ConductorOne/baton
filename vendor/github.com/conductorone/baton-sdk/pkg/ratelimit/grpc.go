@@ -52,30 +52,34 @@ type hasResourceType interface {
 }
 
 func getRatelimitDescriptors(ctx context.Context, method string, in interface{}, descriptors ...*ratelimitV1.RateLimitDescriptors_Entry) *ratelimitV1.RateLimitDescriptors {
-	ret := &ratelimitV1.RateLimitDescriptors{
+	ret := ratelimitV1.RateLimitDescriptors_builder{
 		Entries: descriptors,
-	}
+	}.Build()
 
-	ret.Entries = append(ret.Entries, &ratelimitV1.RateLimitDescriptors_Entry{
+	ret.SetEntries(append(ret.GetEntries(), ratelimitV1.RateLimitDescriptors_Entry_builder{
 		Key:   descriptorKeyConnectorMethod,
 		Value: method,
-	})
+	}.Build()))
 
 	// ListEntitlements, ListGrants
 	if req, ok := in.(hasResource); ok {
-		ret.Entries = append(ret.Entries, &ratelimitV1.RateLimitDescriptors_Entry{
-			Key:   descriptorKeyConnectorResourceType,
-			Value: req.GetResource().Id.ResourceType,
-		})
+		if resourceType := req.GetResource().GetId().GetResourceType(); resourceType != "" {
+			ret.SetEntries(append(ret.GetEntries(), ratelimitV1.RateLimitDescriptors_Entry_builder{
+				Key:   descriptorKeyConnectorResourceType,
+				Value: resourceType,
+			}.Build()))
+		}
 		return ret
 	}
 
-	// ListResources
+	// ListResources, ListActionSchemas
 	if req, ok := in.(hasResourceType); ok {
-		ret.Entries = append(ret.Entries, &ratelimitV1.RateLimitDescriptors_Entry{
-			Key:   descriptorKeyConnectorResourceType,
-			Value: req.GetResourceTypeId(),
-		})
+		if resourceTypeID := req.GetResourceTypeId(); resourceTypeID != "" {
+			ret.SetEntries(append(ret.GetEntries(), ratelimitV1.RateLimitDescriptors_Entry_builder{
+				Key:   descriptorKeyConnectorResourceType,
+				Value: resourceTypeID,
+			}.Build()))
+		}
 		return ret
 	}
 
@@ -102,19 +106,19 @@ func UnaryInterceptor(now func() time.Time, descriptors ...*ratelimitV1.RateLimi
 		rlDescriptors := getRatelimitDescriptors(ctx, method, req, descriptors...)
 
 		for {
-			rlReq := &ratelimitV1.DoRequest{
+			rlReq := ratelimitV1.DoRequest_builder{
 				RequestToken: token,
 				Service:      connectorServiceKey,
 				Descriptors:  rlDescriptors,
-			}
+			}.Build()
 			resp, err := rlClient.Do(ctx, rlReq)
 			if err != nil {
 				l.Error("ratelimit: error", zap.Error(err))
 				return status.Error(codes.Unknown, err.Error())
 			}
-			token = resp.RequestToken
+			token = resp.GetRequestToken()
 
-			switch resp.Description.Status {
+			switch resp.GetDescription().GetStatus() {
 			case ratelimitV1.RateLimitDescription_STATUS_OK, ratelimitV1.RateLimitDescription_STATUS_EMPTY:
 				l.Debug("ratelimit ok - calling method", zap.String("method", method))
 				err = invoker(ctx, method, req, reply, cc, opts...)
@@ -122,7 +126,7 @@ func UnaryInterceptor(now func() time.Time, descriptors ...*ratelimitV1.RateLimi
 					rlErr := reportRatelimit(
 						ctx,
 						rlClient,
-						rlReq.RequestToken,
+						rlReq.GetRequestToken(),
 						ratelimitV1.RateLimitDescription_STATUS_ERROR,
 						rlDescriptors,
 						nil,
@@ -137,7 +141,7 @@ func UnaryInterceptor(now func() time.Time, descriptors ...*ratelimitV1.RateLimi
 
 				if reply != nil {
 					if resp, ok := req.(hasAnnos); ok {
-						err = reportRatelimit(ctx, rlClient, rlReq.RequestToken, ratelimitV1.RateLimitDescription_STATUS_OK, rlDescriptors, resp.GetAnnotations())
+						err = reportRatelimit(ctx, rlClient, rlReq.GetRequestToken(), ratelimitV1.RateLimitDescription_STATUS_OK, rlDescriptors, resp.GetAnnotations())
 						if err != nil {
 							l.Error("ratelimit: error reporting rate limit", zap.Error(err))
 							return nil // Explicitly not failing the request as it has already been run successfully.
@@ -148,7 +152,7 @@ func UnaryInterceptor(now func() time.Time, descriptors ...*ratelimitV1.RateLimi
 				return nil
 
 			case ratelimitV1.RateLimitDescription_STATUS_OVERLIMIT:
-				resetAt := resp.Description.ResetAt.AsTime()
+				resetAt := resp.GetDescription().GetResetAt().AsTime()
 				d, ok := wait(start, now().UTC(), resetAt)
 				if !ok {
 					l.Error("ratelimit: timeout")
@@ -184,21 +188,21 @@ func reportRatelimit(
 	l := ctxzap.Extract(ctx)
 	annos := annotations.Annotations(anys)
 
-	rlAnnotation := &ratelimitV1.RateLimitDescription{
+	rlAnnotation := ratelimitV1.RateLimitDescription_builder{
 		Status: status,
-	}
+	}.Build()
 
 	_, err := annos.Pick(rlAnnotation)
 	if err != nil {
 		return err
 	}
 
-	_, err = rlClient.Report(ctx, &ratelimitV1.ReportRequest{
+	_, err = rlClient.Report(ctx, ratelimitV1.ReportRequest_builder{
 		RequestToken: token,
 		Description:  rlAnnotation,
 		Descriptors:  descriptors,
 		Service:      "connector",
-	})
+	}.Build())
 	if err != nil {
 		l.Error("ratelimit: report failed", zap.Error(err))
 		return err
