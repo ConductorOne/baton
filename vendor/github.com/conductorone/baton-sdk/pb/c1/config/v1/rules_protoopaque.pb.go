@@ -1524,6 +1524,13 @@ func (b0 ResourceIDRules_builder) Build() *ResourceIDRules {
 type RepeatedResourceIdRules struct {
 	state                             protoimpl.MessageState `protogen:"opaque.v1"`
 	xxx_hidden_AllowedResourceTypeIds []string               `protobuf:"bytes,1,rep,name=allowed_resource_type_ids,json=allowedResourceTypeIds,proto3"`
+	xxx_hidden_MinItems               uint64                 `protobuf:"varint,2,opt,name=min_items,json=minItems,proto3,oneof"`
+	xxx_hidden_MaxItems               uint64                 `protobuf:"varint,3,opt,name=max_items,json=maxItems,proto3,oneof"`
+	xxx_hidden_Unique                 bool                   `protobuf:"varint,4,opt,name=unique,proto3"`
+	xxx_hidden_ValidateEmpty          bool                   `protobuf:"varint,5,opt,name=validate_empty,json=validateEmpty,proto3"`
+	xxx_hidden_IsRequired             bool                   `protobuf:"varint,6,opt,name=is_required,json=isRequired,proto3"`
+	XXX_raceDetectHookData            protoimpl.RaceDetectHookData
+	XXX_presence                      [1]uint32
 	unknownFields                     protoimpl.UnknownFields
 	sizeCache                         protoimpl.SizeCache
 }
@@ -1560,14 +1567,107 @@ func (x *RepeatedResourceIdRules) GetAllowedResourceTypeIds() []string {
 	return nil
 }
 
+func (x *RepeatedResourceIdRules) GetMinItems() uint64 {
+	if x != nil {
+		return x.xxx_hidden_MinItems
+	}
+	return 0
+}
+
+func (x *RepeatedResourceIdRules) GetMaxItems() uint64 {
+	if x != nil {
+		return x.xxx_hidden_MaxItems
+	}
+	return 0
+}
+
+func (x *RepeatedResourceIdRules) GetUnique() bool {
+	if x != nil {
+		return x.xxx_hidden_Unique
+	}
+	return false
+}
+
+func (x *RepeatedResourceIdRules) GetValidateEmpty() bool {
+	if x != nil {
+		return x.xxx_hidden_ValidateEmpty
+	}
+	return false
+}
+
+func (x *RepeatedResourceIdRules) GetIsRequired() bool {
+	if x != nil {
+		return x.xxx_hidden_IsRequired
+	}
+	return false
+}
+
 func (x *RepeatedResourceIdRules) SetAllowedResourceTypeIds(v []string) {
 	x.xxx_hidden_AllowedResourceTypeIds = v
+}
+
+func (x *RepeatedResourceIdRules) SetMinItems(v uint64) {
+	x.xxx_hidden_MinItems = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 6)
+}
+
+func (x *RepeatedResourceIdRules) SetMaxItems(v uint64) {
+	x.xxx_hidden_MaxItems = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 2, 6)
+}
+
+func (x *RepeatedResourceIdRules) SetUnique(v bool) {
+	x.xxx_hidden_Unique = v
+}
+
+func (x *RepeatedResourceIdRules) SetValidateEmpty(v bool) {
+	x.xxx_hidden_ValidateEmpty = v
+}
+
+func (x *RepeatedResourceIdRules) SetIsRequired(v bool) {
+	x.xxx_hidden_IsRequired = v
+}
+
+func (x *RepeatedResourceIdRules) HasMinItems() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *RepeatedResourceIdRules) HasMaxItems() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 2)
+}
+
+func (x *RepeatedResourceIdRules) ClearMinItems() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_MinItems = 0
+}
+
+func (x *RepeatedResourceIdRules) ClearMaxItems() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 2)
+	x.xxx_hidden_MaxItems = 0
 }
 
 type RepeatedResourceIdRules_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
 	AllowedResourceTypeIds []string
+	// MinItems specifies that this field must have the specified number of
+	// items at a minimum
+	MinItems *uint64
+	// MaxItems specifies that this field must have the specified number of
+	// items at a maximum
+	MaxItems *uint64
+	// Unique specifies that all elements in this field must be unique.
+	Unique bool
+	// IgnoreEmpty specifies that the validation rules of this field should be
+	// evaluated only if the field is not empty
+	ValidateEmpty bool
+	IsRequired    bool
 }
 
 func (b0 RepeatedResourceIdRules_builder) Build() *RepeatedResourceIdRules {
@@ -1575,6 +1675,17 @@ func (b0 RepeatedResourceIdRules_builder) Build() *RepeatedResourceIdRules {
 	b, x := &b0, m0
 	_, _ = b, x
 	x.xxx_hidden_AllowedResourceTypeIds = b.AllowedResourceTypeIds
+	if b.MinItems != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 6)
+		x.xxx_hidden_MinItems = *b.MinItems
+	}
+	if b.MaxItems != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 2, 6)
+		x.xxx_hidden_MaxItems = *b.MaxItems
+	}
+	x.xxx_hidden_Unique = b.Unique
+	x.xxx_hidden_ValidateEmpty = b.ValidateEmpty
+	x.xxx_hidden_IsRequired = b.IsRequired
 	return m0
 }
 
@@ -1667,9 +1778,19 @@ const file_c1_config_v1_rules_proto_rawDesc = "" +
 	"\vis_required\x18\x02 \x01(\bR\n" +
 	"isRequired\"L\n" +
 	"\x0fResourceIDRules\x129\n" +
-	"\x19allowed_resource_type_ids\x18\x01 \x03(\tR\x16allowedResourceTypeIds\"T\n" +
+	"\x19allowed_resource_type_ids\x18\x01 \x03(\tR\x16allowedResourceTypeIds\"\x94\x02\n" +
 	"\x17RepeatedResourceIdRules\x129\n" +
-	"\x19allowed_resource_type_ids\x18\x01 \x03(\tR\x16allowedResourceTypeIds*\x99\x02\n" +
+	"\x19allowed_resource_type_ids\x18\x01 \x03(\tR\x16allowedResourceTypeIds\x12 \n" +
+	"\tmin_items\x18\x02 \x01(\x04H\x00R\bminItems\x88\x01\x01\x12 \n" +
+	"\tmax_items\x18\x03 \x01(\x04H\x01R\bmaxItems\x88\x01\x01\x12\x16\n" +
+	"\x06unique\x18\x04 \x01(\bR\x06unique\x12%\n" +
+	"\x0evalidate_empty\x18\x05 \x01(\bR\rvalidateEmpty\x12\x1f\n" +
+	"\vis_required\x18\x06 \x01(\bR\n" +
+	"isRequiredB\f\n" +
+	"\n" +
+	"_min_itemsB\f\n" +
+	"\n" +
+	"_max_items*\x99\x02\n" +
 	"\x0fWellKnownString\x12!\n" +
 	"\x1dWELL_KNOWN_STRING_UNSPECIFIED\x10\x00\x12\x1b\n" +
 	"\x17WELL_KNOWN_STRING_EMAIL\x10\x01\x12\x1e\n" +
@@ -1721,6 +1842,7 @@ func file_c1_config_v1_rules_proto_init() {
 	}
 	file_c1_config_v1_rules_proto_msgTypes[3].OneofWrappers = []any{}
 	file_c1_config_v1_rules_proto_msgTypes[4].OneofWrappers = []any{}
+	file_c1_config_v1_rules_proto_msgTypes[7].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

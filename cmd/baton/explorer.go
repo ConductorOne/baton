@@ -89,7 +89,7 @@ func startExplorerAPI(cmd *cobra.Command, devMode bool) {
 	if err != nil {
 		log.Fatal("error loading c1z", err) //nolint:gocritic // reason
 	}
-	defer store.Close()
+	defer store.Close(ctx)
 
 	ctrl := explorer.NewController(ctx, store, syncID, resourceType, devMode)
 	e := ctrl.Run(":8080")

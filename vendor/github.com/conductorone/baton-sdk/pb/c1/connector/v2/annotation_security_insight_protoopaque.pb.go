@@ -24,33 +24,28 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// SecurityInsightTrait is the trait annotation for resources with TRAIT_SECURITY_INSIGHT.
-// It contains the metadata for the security insight including type, value, observation time,
-// and the target entity (user or resource) that this insight should be bound to.
-type SecurityInsightTrait struct {
-	state                  protoimpl.MessageState        `protogen:"opaque.v1"`
-	xxx_hidden_InsightType string                        `protobuf:"bytes,1,opt,name=insight_type,json=insightType,proto3"`
-	xxx_hidden_Value       string                        `protobuf:"bytes,2,opt,name=value,proto3"`
-	xxx_hidden_ObservedAt  *timestamppb.Timestamp        `protobuf:"bytes,3,opt,name=observed_at,json=observedAt,proto3"`
-	xxx_hidden_Target      isSecurityInsightTrait_Target `protobuf_oneof:"target"`
-	unknownFields          protoimpl.UnknownFields
-	sizeCache              protoimpl.SizeCache
+// RiskScore represents a risk score insight
+type RiskScore struct {
+	state            protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Value string                 `protobuf:"bytes,1,opt,name=value,proto3"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
-func (x *SecurityInsightTrait) Reset() {
-	*x = SecurityInsightTrait{}
+func (x *RiskScore) Reset() {
+	*x = RiskScore{}
 	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *SecurityInsightTrait) String() string {
+func (x *RiskScore) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*SecurityInsightTrait) ProtoMessage() {}
+func (*RiskScore) ProtoMessage() {}
 
-func (x *SecurityInsightTrait) ProtoReflect() protoreflect.Message {
+func (x *RiskScore) ProtoReflect() protoreflect.Message {
 	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -62,18 +57,158 @@ func (x *SecurityInsightTrait) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-func (x *SecurityInsightTrait) GetInsightType() string {
-	if x != nil {
-		return x.xxx_hidden_InsightType
-	}
-	return ""
-}
-
-func (x *SecurityInsightTrait) GetValue() string {
+func (x *RiskScore) GetValue() string {
 	if x != nil {
 		return x.xxx_hidden_Value
 	}
 	return ""
+}
+
+func (x *RiskScore) SetValue(v string) {
+	x.xxx_hidden_Value = v
+}
+
+type RiskScore_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	// The risk score value (e.g., "85", "High")
+	Value string
+}
+
+func (b0 RiskScore_builder) Build() *RiskScore {
+	m0 := &RiskScore{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_Value = b.Value
+	return m0
+}
+
+// Issue represents a security issue or vulnerability
+type Issue struct {
+	state               protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Value    string                 `protobuf:"bytes,1,opt,name=value,proto3"`
+	xxx_hidden_Severity string                 `protobuf:"bytes,2,opt,name=severity,proto3"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
+}
+
+func (x *Issue) Reset() {
+	*x = Issue{}
+	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Issue) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Issue) ProtoMessage() {}
+
+func (x *Issue) ProtoReflect() protoreflect.Message {
+	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *Issue) GetValue() string {
+	if x != nil {
+		return x.xxx_hidden_Value
+	}
+	return ""
+}
+
+func (x *Issue) GetSeverity() string {
+	if x != nil {
+		return x.xxx_hidden_Severity
+	}
+	return ""
+}
+
+func (x *Issue) SetValue(v string) {
+	x.xxx_hidden_Value = v
+}
+
+func (x *Issue) SetSeverity(v string) {
+	x.xxx_hidden_Severity = v
+}
+
+type Issue_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	// The issue description or severity (e.g., "Critical", "CVE-2024-1234")
+	Value    string
+	Severity string
+}
+
+func (b0 Issue_builder) Build() *Issue {
+	m0 := &Issue{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_Value = b.Value
+	x.xxx_hidden_Severity = b.Severity
+	return m0
+}
+
+// SecurityInsightTrait is the trait annotation for resources with TRAIT_SECURITY_INSIGHT.
+// It contains the metadata for the security insight including type, value, observation time,
+// and the target entity (user or resource) that this insight should be bound to.
+type SecurityInsightTrait struct {
+	state                  protoimpl.MessageState             `protogen:"opaque.v1"`
+	xxx_hidden_InsightType isSecurityInsightTrait_InsightType `protobuf_oneof:"insight_type"`
+	xxx_hidden_ObservedAt  *timestamppb.Timestamp             `protobuf:"bytes,3,opt,name=observed_at,json=observedAt,proto3"`
+	xxx_hidden_Target      isSecurityInsightTrait_Target      `protobuf_oneof:"target"`
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
+}
+
+func (x *SecurityInsightTrait) Reset() {
+	*x = SecurityInsightTrait{}
+	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SecurityInsightTrait) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SecurityInsightTrait) ProtoMessage() {}
+
+func (x *SecurityInsightTrait) ProtoReflect() protoreflect.Message {
+	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *SecurityInsightTrait) GetRiskScore() *RiskScore {
+	if x != nil {
+		if x, ok := x.xxx_hidden_InsightType.(*securityInsightTrait_RiskScore); ok {
+			return x.RiskScore
+		}
+	}
+	return nil
+}
+
+func (x *SecurityInsightTrait) GetIssue() *Issue {
+	if x != nil {
+		if x, ok := x.xxx_hidden_InsightType.(*securityInsightTrait_Issue); ok {
+			return x.Issue
+		}
+	}
+	return nil
 }
 
 func (x *SecurityInsightTrait) GetObservedAt() *timestamppb.Timestamp {
@@ -110,12 +245,29 @@ func (x *SecurityInsightTrait) GetExternalResource() *SecurityInsightTrait_Exter
 	return nil
 }
 
-func (x *SecurityInsightTrait) SetInsightType(v string) {
-	x.xxx_hidden_InsightType = v
+func (x *SecurityInsightTrait) GetAppUser() *SecurityInsightTrait_AppUserTarget {
+	if x != nil {
+		if x, ok := x.xxx_hidden_Target.(*securityInsightTrait_AppUser); ok {
+			return x.AppUser
+		}
+	}
+	return nil
 }
 
-func (x *SecurityInsightTrait) SetValue(v string) {
-	x.xxx_hidden_Value = v
+func (x *SecurityInsightTrait) SetRiskScore(v *RiskScore) {
+	if v == nil {
+		x.xxx_hidden_InsightType = nil
+		return
+	}
+	x.xxx_hidden_InsightType = &securityInsightTrait_RiskScore{v}
+}
+
+func (x *SecurityInsightTrait) SetIssue(v *Issue) {
+	if v == nil {
+		x.xxx_hidden_InsightType = nil
+		return
+	}
+	x.xxx_hidden_InsightType = &securityInsightTrait_Issue{v}
 }
 
 func (x *SecurityInsightTrait) SetObservedAt(v *timestamppb.Timestamp) {
@@ -144,6 +296,37 @@ func (x *SecurityInsightTrait) SetExternalResource(v *SecurityInsightTrait_Exter
 		return
 	}
 	x.xxx_hidden_Target = &securityInsightTrait_ExternalResource{v}
+}
+
+func (x *SecurityInsightTrait) SetAppUser(v *SecurityInsightTrait_AppUserTarget) {
+	if v == nil {
+		x.xxx_hidden_Target = nil
+		return
+	}
+	x.xxx_hidden_Target = &securityInsightTrait_AppUser{v}
+}
+
+func (x *SecurityInsightTrait) HasInsightType() bool {
+	if x == nil {
+		return false
+	}
+	return x.xxx_hidden_InsightType != nil
+}
+
+func (x *SecurityInsightTrait) HasRiskScore() bool {
+	if x == nil {
+		return false
+	}
+	_, ok := x.xxx_hidden_InsightType.(*securityInsightTrait_RiskScore)
+	return ok
+}
+
+func (x *SecurityInsightTrait) HasIssue() bool {
+	if x == nil {
+		return false
+	}
+	_, ok := x.xxx_hidden_InsightType.(*securityInsightTrait_Issue)
+	return ok
 }
 
 func (x *SecurityInsightTrait) HasObservedAt() bool {
@@ -184,6 +367,30 @@ func (x *SecurityInsightTrait) HasExternalResource() bool {
 	return ok
 }
 
+func (x *SecurityInsightTrait) HasAppUser() bool {
+	if x == nil {
+		return false
+	}
+	_, ok := x.xxx_hidden_Target.(*securityInsightTrait_AppUser)
+	return ok
+}
+
+func (x *SecurityInsightTrait) ClearInsightType() {
+	x.xxx_hidden_InsightType = nil
+}
+
+func (x *SecurityInsightTrait) ClearRiskScore() {
+	if _, ok := x.xxx_hidden_InsightType.(*securityInsightTrait_RiskScore); ok {
+		x.xxx_hidden_InsightType = nil
+	}
+}
+
+func (x *SecurityInsightTrait) ClearIssue() {
+	if _, ok := x.xxx_hidden_InsightType.(*securityInsightTrait_Issue); ok {
+		x.xxx_hidden_InsightType = nil
+	}
+}
+
 func (x *SecurityInsightTrait) ClearObservedAt() {
 	x.xxx_hidden_ObservedAt = nil
 }
@@ -210,10 +417,35 @@ func (x *SecurityInsightTrait) ClearExternalResource() {
 	}
 }
 
+func (x *SecurityInsightTrait) ClearAppUser() {
+	if _, ok := x.xxx_hidden_Target.(*securityInsightTrait_AppUser); ok {
+		x.xxx_hidden_Target = nil
+	}
+}
+
+const SecurityInsightTrait_InsightType_not_set_case case_SecurityInsightTrait_InsightType = 0
+const SecurityInsightTrait_RiskScore_case case_SecurityInsightTrait_InsightType = 1
+const SecurityInsightTrait_Issue_case case_SecurityInsightTrait_InsightType = 2
+
+func (x *SecurityInsightTrait) WhichInsightType() case_SecurityInsightTrait_InsightType {
+	if x == nil {
+		return SecurityInsightTrait_InsightType_not_set_case
+	}
+	switch x.xxx_hidden_InsightType.(type) {
+	case *securityInsightTrait_RiskScore:
+		return SecurityInsightTrait_RiskScore_case
+	case *securityInsightTrait_Issue:
+		return SecurityInsightTrait_Issue_case
+	default:
+		return SecurityInsightTrait_InsightType_not_set_case
+	}
+}
+
 const SecurityInsightTrait_Target_not_set_case case_SecurityInsightTrait_Target = 0
 const SecurityInsightTrait_User_case case_SecurityInsightTrait_Target = 4
 const SecurityInsightTrait_ResourceId_case case_SecurityInsightTrait_Target = 5
 const SecurityInsightTrait_ExternalResource_case case_SecurityInsightTrait_Target = 6
+const SecurityInsightTrait_AppUser_case case_SecurityInsightTrait_Target = 7
 
 func (x *SecurityInsightTrait) WhichTarget() case_SecurityInsightTrait_Target {
 	if x == nil {
@@ -226,6 +458,8 @@ func (x *SecurityInsightTrait) WhichTarget() case_SecurityInsightTrait_Target {
 		return SecurityInsightTrait_ResourceId_case
 	case *securityInsightTrait_ExternalResource:
 		return SecurityInsightTrait_ExternalResource_case
+	case *securityInsightTrait_AppUser:
+		return SecurityInsightTrait_AppUser_case
 	default:
 		return SecurityInsightTrait_Target_not_set_case
 	}
@@ -234,10 +468,12 @@ func (x *SecurityInsightTrait) WhichTarget() case_SecurityInsightTrait_Target {
 type SecurityInsightTrait_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
-	// The type of insight (e.g., "crowdstrike_zta_score", "wiz_critical_vulnerability")
-	InsightType string
-	// The value of the insight (e.g., "85", "High", "Critical")
-	Value string
+	// The type and value of the insight
+
+	// Fields of oneof xxx_hidden_InsightType:
+	RiskScore *RiskScore
+	Issue     *Issue
+	// -- end of xxx_hidden_InsightType
 	// When this insight was observed/captured from the source system
 	ObservedAt *timestamppb.Timestamp
 	// The target entity this insight should be bound to
@@ -249,6 +485,8 @@ type SecurityInsightTrait_builder struct {
 	ResourceId *ResourceId
 	// For binding to an AppResource by external ID
 	ExternalResource *SecurityInsightTrait_ExternalResourceTarget
+	// For binding to an AppUser by email address
+	AppUser *SecurityInsightTrait_AppUserTarget
 	// -- end of xxx_hidden_Target
 }
 
@@ -256,8 +494,12 @@ func (b0 SecurityInsightTrait_builder) Build() *SecurityInsightTrait {
 	m0 := &SecurityInsightTrait{}
 	b, x := &b0, m0
 	_, _ = b, x
-	x.xxx_hidden_InsightType = b.InsightType
-	x.xxx_hidden_Value = b.Value
+	if b.RiskScore != nil {
+		x.xxx_hidden_InsightType = &securityInsightTrait_RiskScore{b.RiskScore}
+	}
+	if b.Issue != nil {
+		x.xxx_hidden_InsightType = &securityInsightTrait_Issue{b.Issue}
+	}
 	x.xxx_hidden_ObservedAt = b.ObservedAt
 	if b.User != nil {
 		x.xxx_hidden_Target = &securityInsightTrait_User{b.User}
@@ -268,18 +510,47 @@ func (b0 SecurityInsightTrait_builder) Build() *SecurityInsightTrait {
 	if b.ExternalResource != nil {
 		x.xxx_hidden_Target = &securityInsightTrait_ExternalResource{b.ExternalResource}
 	}
+	if b.AppUser != nil {
+		x.xxx_hidden_Target = &securityInsightTrait_AppUser{b.AppUser}
+	}
 	return m0
 }
 
-type case_SecurityInsightTrait_Target protoreflect.FieldNumber
+type case_SecurityInsightTrait_InsightType protoreflect.FieldNumber
 
-func (x case_SecurityInsightTrait_Target) String() string {
-	md := file_c1_connector_v2_annotation_security_insight_proto_msgTypes[0].Descriptor()
+func (x case_SecurityInsightTrait_InsightType) String() string {
+	md := file_c1_connector_v2_annotation_security_insight_proto_msgTypes[2].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
 	return protoimpl.X.MessageFieldStringOf(md, protoreflect.FieldNumber(x))
 }
+
+type case_SecurityInsightTrait_Target protoreflect.FieldNumber
+
+func (x case_SecurityInsightTrait_Target) String() string {
+	md := file_c1_connector_v2_annotation_security_insight_proto_msgTypes[2].Descriptor()
+	if x == 0 {
+		return "not set"
+	}
+	return protoimpl.X.MessageFieldStringOf(md, protoreflect.FieldNumber(x))
+}
+
+type isSecurityInsightTrait_InsightType interface {
+	isSecurityInsightTrait_InsightType()
+}
+
+type securityInsightTrait_RiskScore struct {
+	RiskScore *RiskScore `protobuf:"bytes,1,opt,name=risk_score,json=riskScore,proto3,oneof"`
+}
+
+type securityInsightTrait_Issue struct {
+	Issue *Issue `protobuf:"bytes,2,opt,name=issue,proto3,oneof"`
+}
+
+func (*securityInsightTrait_RiskScore) isSecurityInsightTrait_InsightType() {}
+
+func (*securityInsightTrait_Issue) isSecurityInsightTrait_InsightType() {}
 
 type isSecurityInsightTrait_Target interface {
 	isSecurityInsightTrait_Target()
@@ -300,11 +571,18 @@ type securityInsightTrait_ExternalResource struct {
 	ExternalResource *SecurityInsightTrait_ExternalResourceTarget `protobuf:"bytes,6,opt,name=external_resource,json=externalResource,proto3,oneof"`
 }
 
+type securityInsightTrait_AppUser struct {
+	// For binding to an AppUser by email address
+	AppUser *SecurityInsightTrait_AppUserTarget `protobuf:"bytes,7,opt,name=app_user,json=appUser,proto3,oneof"`
+}
+
 func (*securityInsightTrait_User) isSecurityInsightTrait_Target() {}
 
 func (*securityInsightTrait_ResourceId) isSecurityInsightTrait_Target() {}
 
 func (*securityInsightTrait_ExternalResource) isSecurityInsightTrait_Target() {}
+
+func (*securityInsightTrait_AppUser) isSecurityInsightTrait_Target() {}
 
 // UserTarget identifies a user by email for resolution to a C1 User
 type SecurityInsightTrait_UserTarget struct {
@@ -316,7 +594,7 @@ type SecurityInsightTrait_UserTarget struct {
 
 func (x *SecurityInsightTrait_UserTarget) Reset() {
 	*x = SecurityInsightTrait_UserTarget{}
-	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[1]
+	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -328,7 +606,7 @@ func (x *SecurityInsightTrait_UserTarget) String() string {
 func (*SecurityInsightTrait_UserTarget) ProtoMessage() {}
 
 func (x *SecurityInsightTrait_UserTarget) ProtoReflect() protoreflect.Message {
-	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[1]
+	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -364,6 +642,79 @@ func (b0 SecurityInsightTrait_UserTarget_builder) Build() *SecurityInsightTrait_
 	return m0
 }
 
+// AppUserTarget identifies a user by email for resolution to an AppUser.
+type SecurityInsightTrait_AppUserTarget struct {
+	state                 protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Email      string                 `protobuf:"bytes,1,opt,name=email,proto3"`
+	xxx_hidden_ExternalId string                 `protobuf:"bytes,2,opt,name=external_id,json=externalId,proto3"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
+}
+
+func (x *SecurityInsightTrait_AppUserTarget) Reset() {
+	*x = SecurityInsightTrait_AppUserTarget{}
+	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SecurityInsightTrait_AppUserTarget) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SecurityInsightTrait_AppUserTarget) ProtoMessage() {}
+
+func (x *SecurityInsightTrait_AppUserTarget) ProtoReflect() protoreflect.Message {
+	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *SecurityInsightTrait_AppUserTarget) GetEmail() string {
+	if x != nil {
+		return x.xxx_hidden_Email
+	}
+	return ""
+}
+
+func (x *SecurityInsightTrait_AppUserTarget) GetExternalId() string {
+	if x != nil {
+		return x.xxx_hidden_ExternalId
+	}
+	return ""
+}
+
+func (x *SecurityInsightTrait_AppUserTarget) SetEmail(v string) {
+	x.xxx_hidden_Email = v
+}
+
+func (x *SecurityInsightTrait_AppUserTarget) SetExternalId(v string) {
+	x.xxx_hidden_ExternalId = v
+}
+
+type SecurityInsightTrait_AppUserTarget_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Email string
+	// The external identifier of the user (e.g., ID, GUID, etc.)
+	ExternalId string
+}
+
+func (b0 SecurityInsightTrait_AppUserTarget_builder) Build() *SecurityInsightTrait_AppUserTarget {
+	m0 := &SecurityInsightTrait_AppUserTarget{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_Email = b.Email
+	x.xxx_hidden_ExternalId = b.ExternalId
+	return m0
+}
+
 // ExternalResourceTarget identifies a resource by external ID for resolution to an AppResource.
 // Use this when the connector doesn't sync the target resource itself.
 type SecurityInsightTrait_ExternalResourceTarget struct {
@@ -376,7 +727,7 @@ type SecurityInsightTrait_ExternalResourceTarget struct {
 
 func (x *SecurityInsightTrait_ExternalResourceTarget) Reset() {
 	*x = SecurityInsightTrait_ExternalResourceTarget{}
-	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[2]
+	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -388,7 +739,7 @@ func (x *SecurityInsightTrait_ExternalResourceTarget) String() string {
 func (*SecurityInsightTrait_ExternalResourceTarget) ProtoMessage() {}
 
 func (x *SecurityInsightTrait_ExternalResourceTarget) ProtoReflect() protoreflect.Message {
-	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[2]
+	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -443,46 +794,64 @@ var File_c1_connector_v2_annotation_security_insight_proto protoreflect.FileDesc
 
 const file_c1_connector_v2_annotation_security_insight_proto_rawDesc = "" +
 	"\n" +
-	"1c1/connector/v2/annotation_security_insight.proto\x12\x0fc1.connector.v2\x1a\x1ec1/connector/v2/resource.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x17validate/validate.proto\"\xc9\x04\n" +
-	"\x14SecurityInsightTrait\x12-\n" +
-	"\finsight_type\x18\x01 \x01(\tB\n" +
-	"\xfaB\ar\x05 \x01(\x80\bR\vinsightType\x12 \n" +
-	"\x05value\x18\x02 \x01(\tB\n" +
-	"\xfaB\ar\x05 \x01(\x80\bR\x05value\x12;\n" +
+	"1c1/connector/v2/annotation_security_insight.proto\x12\x0fc1.connector.v2\x1a\x1ec1/connector/v2/resource.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x17validate/validate.proto\"!\n" +
+	"\tRiskScore\x12\x14\n" +
+	"\x05value\x18\x01 \x01(\tR\x05value\"E\n" +
+	"\x05Issue\x12\x14\n" +
+	"\x05value\x18\x01 \x01(\tR\x05value\x12&\n" +
+	"\bseverity\x18\x02 \x01(\tB\n" +
+	"\xfaB\ar\x05 \x00(\x80\bR\bseverity\"\xae\x06\n" +
+	"\x14SecurityInsightTrait\x12;\n" +
+	"\n" +
+	"risk_score\x18\x01 \x01(\v2\x1a.c1.connector.v2.RiskScoreH\x00R\triskScore\x12.\n" +
+	"\x05issue\x18\x02 \x01(\v2\x16.c1.connector.v2.IssueH\x00R\x05issue\x12;\n" +
 	"\vobserved_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"observedAt\x12F\n" +
-	"\x04user\x18\x04 \x01(\v20.c1.connector.v2.SecurityInsightTrait.UserTargetH\x00R\x04user\x12>\n" +
-	"\vresource_id\x18\x05 \x01(\v2\x1b.c1.connector.v2.ResourceIdH\x00R\n" +
+	"\x04user\x18\x04 \x01(\v20.c1.connector.v2.SecurityInsightTrait.UserTargetH\x01R\x04user\x12>\n" +
+	"\vresource_id\x18\x05 \x01(\v2\x1b.c1.connector.v2.ResourceIdH\x01R\n" +
 	"resourceId\x12k\n" +
-	"\x11external_resource\x18\x06 \x01(\v2<.c1.connector.v2.SecurityInsightTrait.ExternalResourceTargetH\x00R\x10externalResource\x1a0\n" +
+	"\x11external_resource\x18\x06 \x01(\v2<.c1.connector.v2.SecurityInsightTrait.ExternalResourceTargetH\x01R\x10externalResource\x12P\n" +
+	"\bapp_user\x18\a \x01(\v23.c1.connector.v2.SecurityInsightTrait.AppUserTargetH\x01R\aappUser\x1a0\n" +
 	"\n" +
 	"UserTarget\x12\"\n" +
-	"\x05email\x18\x01 \x01(\tB\f\xfaB\tr\a \x01(\x80\b`\x01R\x05email\x1am\n" +
+	"\x05email\x18\x01 \x01(\tB\f\xfaB\tr\a \x01(\x80\b`\x01R\x05email\x1a`\n" +
+	"\rAppUserTarget\x12\"\n" +
+	"\x05email\x18\x01 \x01(\tB\f\xfaB\tr\a \x01(\x80\b`\x01R\x05email\x12+\n" +
+	"\vexternal_id\x18\x02 \x01(\tB\n" +
+	"\xfaB\ar\x05 \x01(\x80 R\n" +
+	"externalId\x1am\n" +
 	"\x16ExternalResourceTarget\x12+\n" +
 	"\vexternal_id\x18\x01 \x01(\tB\n" +
 	"\xfaB\ar\x05 \x01(\x80 R\n" +
 	"externalId\x12&\n" +
-	"\bapp_hint\x18\x02 \x01(\tB\v\xfaB\br\x06(\x80\b\xd0\x01\x01R\aappHintB\r\n" +
+	"\bapp_hint\x18\x02 \x01(\tB\v\xfaB\br\x06(\x80\b\xd0\x01\x01R\aappHintB\x13\n" +
+	"\finsight_type\x12\x03\xf8B\x01B\r\n" +
 	"\x06target\x12\x03\xf8B\x01B6Z4github.com/conductorone/baton-sdk/pb/c1/connector/v2b\x06proto3"
 
-var file_c1_connector_v2_annotation_security_insight_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_c1_connector_v2_annotation_security_insight_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_c1_connector_v2_annotation_security_insight_proto_goTypes = []any{
-	(*SecurityInsightTrait)(nil),                        // 0: c1.connector.v2.SecurityInsightTrait
-	(*SecurityInsightTrait_UserTarget)(nil),             // 1: c1.connector.v2.SecurityInsightTrait.UserTarget
-	(*SecurityInsightTrait_ExternalResourceTarget)(nil), // 2: c1.connector.v2.SecurityInsightTrait.ExternalResourceTarget
-	(*timestamppb.Timestamp)(nil),                       // 3: google.protobuf.Timestamp
-	(*ResourceId)(nil),                                  // 4: c1.connector.v2.ResourceId
+	(*RiskScore)(nil),                                   // 0: c1.connector.v2.RiskScore
+	(*Issue)(nil),                                       // 1: c1.connector.v2.Issue
+	(*SecurityInsightTrait)(nil),                        // 2: c1.connector.v2.SecurityInsightTrait
+	(*SecurityInsightTrait_UserTarget)(nil),             // 3: c1.connector.v2.SecurityInsightTrait.UserTarget
+	(*SecurityInsightTrait_AppUserTarget)(nil),          // 4: c1.connector.v2.SecurityInsightTrait.AppUserTarget
+	(*SecurityInsightTrait_ExternalResourceTarget)(nil), // 5: c1.connector.v2.SecurityInsightTrait.ExternalResourceTarget
+	(*timestamppb.Timestamp)(nil),                       // 6: google.protobuf.Timestamp
+	(*ResourceId)(nil),                                  // 7: c1.connector.v2.ResourceId
 }
 var file_c1_connector_v2_annotation_security_insight_proto_depIdxs = []int32{
-	3, // 0: c1.connector.v2.SecurityInsightTrait.observed_at:type_name -> google.protobuf.Timestamp
-	1, // 1: c1.connector.v2.SecurityInsightTrait.user:type_name -> c1.connector.v2.SecurityInsightTrait.UserTarget
-	4, // 2: c1.connector.v2.SecurityInsightTrait.resource_id:type_name -> c1.connector.v2.ResourceId
-	2, // 3: c1.connector.v2.SecurityInsightTrait.external_resource:type_name -> c1.connector.v2.SecurityInsightTrait.ExternalResourceTarget
-	4, // [4:4] is the sub-list for method output_type
-	4, // [4:4] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	0, // 0: c1.connector.v2.SecurityInsightTrait.risk_score:type_name -> c1.connector.v2.RiskScore
+	1, // 1: c1.connector.v2.SecurityInsightTrait.issue:type_name -> c1.connector.v2.Issue
+	6, // 2: c1.connector.v2.SecurityInsightTrait.observed_at:type_name -> google.protobuf.Timestamp
+	3, // 3: c1.connector.v2.SecurityInsightTrait.user:type_name -> c1.connector.v2.SecurityInsightTrait.UserTarget
+	7, // 4: c1.connector.v2.SecurityInsightTrait.resource_id:type_name -> c1.connector.v2.ResourceId
+	5, // 5: c1.connector.v2.SecurityInsightTrait.external_resource:type_name -> c1.connector.v2.SecurityInsightTrait.ExternalResourceTarget
+	4, // 6: c1.connector.v2.SecurityInsightTrait.app_user:type_name -> c1.connector.v2.SecurityInsightTrait.AppUserTarget
+	7, // [7:7] is the sub-list for method output_type
+	7, // [7:7] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	7, // [7:7] is the sub-list for extension extendee
+	0, // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_c1_connector_v2_annotation_security_insight_proto_init() }
@@ -491,10 +860,13 @@ func file_c1_connector_v2_annotation_security_insight_proto_init() {
 		return
 	}
 	file_c1_connector_v2_resource_proto_init()
-	file_c1_connector_v2_annotation_security_insight_proto_msgTypes[0].OneofWrappers = []any{
+	file_c1_connector_v2_annotation_security_insight_proto_msgTypes[2].OneofWrappers = []any{
+		(*securityInsightTrait_RiskScore)(nil),
+		(*securityInsightTrait_Issue)(nil),
 		(*securityInsightTrait_User)(nil),
 		(*securityInsightTrait_ResourceId)(nil),
 		(*securityInsightTrait_ExternalResource)(nil),
+		(*securityInsightTrait_AppUser)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -502,7 +874,7 @@ func file_c1_connector_v2_annotation_security_insight_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_c1_connector_v2_annotation_security_insight_proto_rawDesc), len(file_c1_connector_v2_annotation_security_insight_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
