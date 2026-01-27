@@ -35,6 +35,218 @@ var (
 	_ = sort.Sort
 )
 
+// Validate checks the field values on RiskScore with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *RiskScore) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on RiskScore with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in RiskScoreMultiError, or nil
+// if none found.
+func (m *RiskScore) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *RiskScore) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Value
+
+	if len(errors) > 0 {
+		return RiskScoreMultiError(errors)
+	}
+
+	return nil
+}
+
+// RiskScoreMultiError is an error wrapping multiple validation errors returned
+// by RiskScore.ValidateAll() if the designated constraints aren't met.
+type RiskScoreMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m RiskScoreMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m RiskScoreMultiError) AllErrors() []error { return m }
+
+// RiskScoreValidationError is the validation error returned by
+// RiskScore.Validate if the designated constraints aren't met.
+type RiskScoreValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RiskScoreValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RiskScoreValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RiskScoreValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RiskScoreValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RiskScoreValidationError) ErrorName() string { return "RiskScoreValidationError" }
+
+// Error satisfies the builtin error interface
+func (e RiskScoreValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRiskScore.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RiskScoreValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RiskScoreValidationError{}
+
+// Validate checks the field values on Issue with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *Issue) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on Issue with the rules defined in the
+// proto definition for this message. If any rules are violated, the result is
+// a list of violation errors wrapped in IssueMultiError, or nil if none found.
+func (m *Issue) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *Issue) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Value
+
+	if l := len(m.GetSeverity()); l < 0 || l > 1024 {
+		err := IssueValidationError{
+			field:  "Severity",
+			reason: "value length must be between 0 and 1024 bytes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return IssueMultiError(errors)
+	}
+
+	return nil
+}
+
+// IssueMultiError is an error wrapping multiple validation errors returned by
+// Issue.ValidateAll() if the designated constraints aren't met.
+type IssueMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m IssueMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m IssueMultiError) AllErrors() []error { return m }
+
+// IssueValidationError is the validation error returned by Issue.Validate if
+// the designated constraints aren't met.
+type IssueValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e IssueValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e IssueValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e IssueValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e IssueValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e IssueValidationError) ErrorName() string { return "IssueValidationError" }
+
+// Error satisfies the builtin error interface
+func (e IssueValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sIssue.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = IssueValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = IssueValidationError{}
+
 // Validate checks the field values on SecurityInsightTrait with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -56,28 +268,6 @@ func (m *SecurityInsightTrait) validate(all bool) error {
 	}
 
 	var errors []error
-
-	if l := len(m.GetInsightType()); l < 1 || l > 1024 {
-		err := SecurityInsightTraitValidationError{
-			field:  "InsightType",
-			reason: "value length must be between 1 and 1024 bytes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if l := len(m.GetValue()); l < 1 || l > 1024 {
-		err := SecurityInsightTraitValidationError{
-			field:  "Value",
-			reason: "value length must be between 1 and 1024 bytes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
 
 	if all {
 		switch v := interface{}(m.GetObservedAt()).(type) {
@@ -108,6 +298,105 @@ func (m *SecurityInsightTrait) validate(all bool) error {
 		}
 	}
 
+	oneofInsightTypePresent := false
+	switch v := m.InsightType.(type) {
+	case *SecurityInsightTrait_RiskScore:
+		if v == nil {
+			err := SecurityInsightTraitValidationError{
+				field:  "InsightType",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+		oneofInsightTypePresent = true
+
+		if all {
+			switch v := interface{}(m.GetRiskScore()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, SecurityInsightTraitValidationError{
+						field:  "RiskScore",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, SecurityInsightTraitValidationError{
+						field:  "RiskScore",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetRiskScore()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return SecurityInsightTraitValidationError{
+					field:  "RiskScore",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	case *SecurityInsightTrait_Issue:
+		if v == nil {
+			err := SecurityInsightTraitValidationError{
+				field:  "InsightType",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+		oneofInsightTypePresent = true
+
+		if all {
+			switch v := interface{}(m.GetIssue()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, SecurityInsightTraitValidationError{
+						field:  "Issue",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, SecurityInsightTraitValidationError{
+						field:  "Issue",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetIssue()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return SecurityInsightTraitValidationError{
+					field:  "Issue",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	default:
+		_ = v // ensures v is used
+	}
+	if !oneofInsightTypePresent {
+		err := SecurityInsightTraitValidationError{
+			field:  "InsightType",
+			reason: "value is required",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 	oneofTargetPresent := false
 	switch v := m.Target.(type) {
 	case *SecurityInsightTrait_User:
@@ -230,6 +519,48 @@ func (m *SecurityInsightTrait) validate(all bool) error {
 			if err := v.Validate(); err != nil {
 				return SecurityInsightTraitValidationError{
 					field:  "ExternalResource",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	case *SecurityInsightTrait_AppUser:
+		if v == nil {
+			err := SecurityInsightTraitValidationError{
+				field:  "Target",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+		oneofTargetPresent = true
+
+		if all {
+			switch v := interface{}(m.GetAppUser()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, SecurityInsightTraitValidationError{
+						field:  "AppUser",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, SecurityInsightTraitValidationError{
+						field:  "AppUser",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetAppUser()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return SecurityInsightTraitValidationError{
+					field:  "AppUser",
 					reason: "embedded message failed validation",
 					cause:  err,
 				}
@@ -505,6 +836,195 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = SecurityInsightTrait_UserTargetValidationError{}
+
+// Validate checks the field values on SecurityInsightTrait_AppUserTarget with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *SecurityInsightTrait_AppUserTarget) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on SecurityInsightTrait_AppUserTarget
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the result is a list of violation errors wrapped in
+// SecurityInsightTrait_AppUserTargetMultiError, or nil if none found.
+func (m *SecurityInsightTrait_AppUserTarget) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *SecurityInsightTrait_AppUserTarget) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := len(m.GetEmail()); l < 1 || l > 1024 {
+		err := SecurityInsightTrait_AppUserTargetValidationError{
+			field:  "Email",
+			reason: "value length must be between 1 and 1024 bytes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if err := m._validateEmail(m.GetEmail()); err != nil {
+		err = SecurityInsightTrait_AppUserTargetValidationError{
+			field:  "Email",
+			reason: "value must be a valid email address",
+			cause:  err,
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := len(m.GetExternalId()); l < 1 || l > 4096 {
+		err := SecurityInsightTrait_AppUserTargetValidationError{
+			field:  "ExternalId",
+			reason: "value length must be between 1 and 4096 bytes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return SecurityInsightTrait_AppUserTargetMultiError(errors)
+	}
+
+	return nil
+}
+
+func (m *SecurityInsightTrait_AppUserTarget) _validateHostname(host string) error {
+	s := strings.ToLower(strings.TrimSuffix(host, "."))
+
+	if len(host) > 253 {
+		return errors.New("hostname cannot exceed 253 characters")
+	}
+
+	for _, part := range strings.Split(s, ".") {
+		if l := len(part); l == 0 || l > 63 {
+			return errors.New("hostname part must be non-empty and cannot exceed 63 characters")
+		}
+
+		if part[0] == '-' {
+			return errors.New("hostname parts cannot begin with hyphens")
+		}
+
+		if part[len(part)-1] == '-' {
+			return errors.New("hostname parts cannot end with hyphens")
+		}
+
+		for _, r := range part {
+			if (r < 'a' || r > 'z') && (r < '0' || r > '9') && r != '-' {
+				return fmt.Errorf("hostname parts can only contain alphanumeric characters or hyphens, got %q", string(r))
+			}
+		}
+	}
+
+	return nil
+}
+
+func (m *SecurityInsightTrait_AppUserTarget) _validateEmail(addr string) error {
+	a, err := mail.ParseAddress(addr)
+	if err != nil {
+		return err
+	}
+	addr = a.Address
+
+	if len(addr) > 254 {
+		return errors.New("email addresses cannot exceed 254 characters")
+	}
+
+	parts := strings.SplitN(addr, "@", 2)
+
+	if len(parts[0]) > 64 {
+		return errors.New("email address local phrase cannot exceed 64 characters")
+	}
+
+	return m._validateHostname(parts[1])
+}
+
+// SecurityInsightTrait_AppUserTargetMultiError is an error wrapping multiple
+// validation errors returned by
+// SecurityInsightTrait_AppUserTarget.ValidateAll() if the designated
+// constraints aren't met.
+type SecurityInsightTrait_AppUserTargetMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SecurityInsightTrait_AppUserTargetMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SecurityInsightTrait_AppUserTargetMultiError) AllErrors() []error { return m }
+
+// SecurityInsightTrait_AppUserTargetValidationError is the validation error
+// returned by SecurityInsightTrait_AppUserTarget.Validate if the designated
+// constraints aren't met.
+type SecurityInsightTrait_AppUserTargetValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SecurityInsightTrait_AppUserTargetValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SecurityInsightTrait_AppUserTargetValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SecurityInsightTrait_AppUserTargetValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SecurityInsightTrait_AppUserTargetValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SecurityInsightTrait_AppUserTargetValidationError) ErrorName() string {
+	return "SecurityInsightTrait_AppUserTargetValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e SecurityInsightTrait_AppUserTargetValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSecurityInsightTrait_AppUserTarget.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SecurityInsightTrait_AppUserTargetValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SecurityInsightTrait_AppUserTargetValidationError{}
 
 // Validate checks the field values on
 // SecurityInsightTrait_ExternalResourceTarget with the rules defined in the

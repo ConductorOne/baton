@@ -99,7 +99,7 @@ func (c *C1File) diffTableQuery(table tableDescriptor, baseSyncID, appliedSyncID
 
 	queryColumns := []interface{}{}
 	for _, col := range columns {
-		if col == "sync_id" {
+		if col == "sync_id" { //nolint:goconst,nolintlint // ...
 			queryColumns = append(queryColumns, goqu.L(fmt.Sprintf("'%s' as sync_id", newSyncID)))
 			continue
 		}

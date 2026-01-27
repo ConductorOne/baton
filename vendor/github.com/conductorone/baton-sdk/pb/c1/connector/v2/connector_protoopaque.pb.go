@@ -28,19 +28,20 @@ const (
 type Capability int32
 
 const (
-	Capability_CAPABILITY_UNSPECIFIED          Capability = 0
-	Capability_CAPABILITY_PROVISION            Capability = 1
-	Capability_CAPABILITY_SYNC                 Capability = 2
-	Capability_CAPABILITY_EVENT_FEED           Capability = 3
-	Capability_CAPABILITY_TICKETING            Capability = 4
-	Capability_CAPABILITY_ACCOUNT_PROVISIONING Capability = 5
-	Capability_CAPABILITY_CREDENTIAL_ROTATION  Capability = 6
-	Capability_CAPABILITY_RESOURCE_CREATE      Capability = 7
-	Capability_CAPABILITY_RESOURCE_DELETE      Capability = 8
-	Capability_CAPABILITY_SYNC_SECRETS         Capability = 9
-	Capability_CAPABILITY_ACTIONS              Capability = 10
-	Capability_CAPABILITY_TARGETED_SYNC        Capability = 11
-	Capability_CAPABILITY_EVENT_FEED_V2        Capability = 12
+	Capability_CAPABILITY_UNSPECIFIED                Capability = 0
+	Capability_CAPABILITY_PROVISION                  Capability = 1
+	Capability_CAPABILITY_SYNC                       Capability = 2
+	Capability_CAPABILITY_EVENT_FEED                 Capability = 3
+	Capability_CAPABILITY_TICKETING                  Capability = 4
+	Capability_CAPABILITY_ACCOUNT_PROVISIONING       Capability = 5
+	Capability_CAPABILITY_CREDENTIAL_ROTATION        Capability = 6
+	Capability_CAPABILITY_RESOURCE_CREATE            Capability = 7
+	Capability_CAPABILITY_RESOURCE_DELETE            Capability = 8
+	Capability_CAPABILITY_SYNC_SECRETS               Capability = 9
+	Capability_CAPABILITY_ACTIONS                    Capability = 10
+	Capability_CAPABILITY_TARGETED_SYNC              Capability = 11
+	Capability_CAPABILITY_EVENT_FEED_V2              Capability = 12
+	Capability_CAPABILITY_SERVICE_MODE_TARGETED_SYNC Capability = 13
 )
 
 // Enum value maps for Capability.
@@ -59,21 +60,23 @@ var (
 		10: "CAPABILITY_ACTIONS",
 		11: "CAPABILITY_TARGETED_SYNC",
 		12: "CAPABILITY_EVENT_FEED_V2",
+		13: "CAPABILITY_SERVICE_MODE_TARGETED_SYNC",
 	}
 	Capability_value = map[string]int32{
-		"CAPABILITY_UNSPECIFIED":          0,
-		"CAPABILITY_PROVISION":            1,
-		"CAPABILITY_SYNC":                 2,
-		"CAPABILITY_EVENT_FEED":           3,
-		"CAPABILITY_TICKETING":            4,
-		"CAPABILITY_ACCOUNT_PROVISIONING": 5,
-		"CAPABILITY_CREDENTIAL_ROTATION":  6,
-		"CAPABILITY_RESOURCE_CREATE":      7,
-		"CAPABILITY_RESOURCE_DELETE":      8,
-		"CAPABILITY_SYNC_SECRETS":         9,
-		"CAPABILITY_ACTIONS":              10,
-		"CAPABILITY_TARGETED_SYNC":        11,
-		"CAPABILITY_EVENT_FEED_V2":        12,
+		"CAPABILITY_UNSPECIFIED":                0,
+		"CAPABILITY_PROVISION":                  1,
+		"CAPABILITY_SYNC":                       2,
+		"CAPABILITY_EVENT_FEED":                 3,
+		"CAPABILITY_TICKETING":                  4,
+		"CAPABILITY_ACCOUNT_PROVISIONING":       5,
+		"CAPABILITY_CREDENTIAL_ROTATION":        6,
+		"CAPABILITY_RESOURCE_CREATE":            7,
+		"CAPABILITY_RESOURCE_DELETE":            8,
+		"CAPABILITY_SYNC_SECRETS":               9,
+		"CAPABILITY_ACTIONS":                    10,
+		"CAPABILITY_TARGETED_SYNC":              11,
+		"CAPABILITY_EVENT_FEED_V2":              12,
+		"CAPABILITY_SERVICE_MODE_TARGETED_SYNC": 13,
 	}
 )
 
@@ -2173,7 +2176,7 @@ const file_c1_connector_v2_connector_proto_rawDesc = "" +
 	"\rdefault_value\x18\x01 \x03(\v2J.c1.connector.v2.ConnectorAccountCreationSchema.MapField.DefaultValueEntryR\fdefaultValue\x1av\n" +
 	"\x11DefaultValueEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12K\n" +
-	"\x05value\x18\x02 \x01(\v25.c1.connector.v2.ConnectorAccountCreationSchema.FieldR\x05value:\x028\x01*\x86\x03\n" +
+	"\x05value\x18\x02 \x01(\v25.c1.connector.v2.ConnectorAccountCreationSchema.FieldR\x05value:\x028\x01*\xb1\x03\n" +
 	"\n" +
 	"Capability\x12\x1a\n" +
 	"\x16CAPABILITY_UNSPECIFIED\x10\x00\x12\x18\n" +
@@ -2189,7 +2192,8 @@ const file_c1_connector_v2_connector_proto_rawDesc = "" +
 	"\x12CAPABILITY_ACTIONS\x10\n" +
 	"\x12\x1c\n" +
 	"\x18CAPABILITY_TARGETED_SYNC\x10\v\x12\x1c\n" +
-	"\x18CAPABILITY_EVENT_FEED_V2\x10\f*\xae\x02\n" +
+	"\x18CAPABILITY_EVENT_FEED_V2\x10\f\x12)\n" +
+	"%CAPABILITY_SERVICE_MODE_TARGETED_SYNC\x10\r*\xae\x02\n" +
 	" CapabilityDetailCredentialOption\x123\n" +
 	"/CAPABILITY_DETAIL_CREDENTIAL_OPTION_UNSPECIFIED\x10\x00\x123\n" +
 	"/CAPABILITY_DETAIL_CREDENTIAL_OPTION_NO_PASSWORD\x10\x01\x127\n" +

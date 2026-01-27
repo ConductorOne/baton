@@ -47,7 +47,7 @@ func runOptimizeDb(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = store.Close()
+	err = store.Close(ctx)
 	if err != nil {
 		return err
 	}

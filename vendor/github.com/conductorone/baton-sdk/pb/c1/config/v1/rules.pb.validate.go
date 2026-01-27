@@ -1015,6 +1015,20 @@ func (m *RepeatedResourceIdRules) validate(all bool) error {
 
 	var errors []error
 
+	// no validation rules for Unique
+
+	// no validation rules for ValidateEmpty
+
+	// no validation rules for IsRequired
+
+	if m.MinItems != nil {
+		// no validation rules for MinItems
+	}
+
+	if m.MaxItems != nil {
+		// no validation rules for MaxItems
+	}
+
 	if len(errors) > 0 {
 		return RepeatedResourceIdRulesMultiError(errors)
 	}
