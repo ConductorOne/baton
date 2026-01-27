@@ -21,6 +21,7 @@ func entitlementsCmd() *cobra.Command {
 	}
 
 	addSyncIDFlag(cmd)
+	addResourceTypeFlag(cmd)
 
 	return cmd
 }
@@ -42,6 +43,11 @@ func runEntitlements(cmd *cobra.Command, args []string) error {
 	outputManager := output.NewManager(ctx, outputFormat)
 
 	syncID, err := cmd.Flags().GetString("sync-id")
+	if err != nil {
+		return err
+	}
+
+	resourceType, err := cmd.Flags().GetString(resourceTypeFlag)
 	if err != nil {
 		return err
 	}
@@ -80,6 +86,9 @@ func runEntitlements(cmd *cobra.Command, args []string) error {
 			rt, err := sc.GetResourceType(ctx, en.Resource.Id.ResourceType)
 			if err != nil {
 				return err
+			}
+			if resourceType != "" && rt.Id != resourceType {
+				continue
 			}
 			resource, err := sc.GetResource(ctx, en.Resource.Id)
 			if err != nil {
