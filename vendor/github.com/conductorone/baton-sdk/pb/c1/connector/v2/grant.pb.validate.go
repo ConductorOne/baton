@@ -1570,6 +1570,8 @@ func (m *GrantSources_GrantSource) validate(all bool) error {
 
 	var errors []error
 
+	// no validation rules for IsDirect
+
 	if len(errors) > 0 {
 		return GrantSources_GrantSourceMultiError(errors)
 	}

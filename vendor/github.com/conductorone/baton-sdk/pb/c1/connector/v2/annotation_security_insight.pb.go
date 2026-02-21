@@ -24,29 +24,79 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// RiskScore represents a risk score insight
-type RiskScore struct {
-	state protoimpl.MessageState `protogen:"hybrid.v1"`
-	// The risk score value (e.g., "85", "High")
-	Value         string `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
+type RiskFactor_Severity int32
+
+const (
+	RiskFactor_SEVERITY_UNSPECIFIED RiskFactor_Severity = 0
+	RiskFactor_SEVERITY_LOW         RiskFactor_Severity = 1
+	RiskFactor_SEVERITY_MEDIUM      RiskFactor_Severity = 2
+	RiskFactor_SEVERITY_HIGH        RiskFactor_Severity = 3
+	RiskFactor_SEVERITY_CRITICAL    RiskFactor_Severity = 4
+)
+
+// Enum value maps for RiskFactor_Severity.
+var (
+	RiskFactor_Severity_name = map[int32]string{
+		0: "SEVERITY_UNSPECIFIED",
+		1: "SEVERITY_LOW",
+		2: "SEVERITY_MEDIUM",
+		3: "SEVERITY_HIGH",
+		4: "SEVERITY_CRITICAL",
+	}
+	RiskFactor_Severity_value = map[string]int32{
+		"SEVERITY_UNSPECIFIED": 0,
+		"SEVERITY_LOW":         1,
+		"SEVERITY_MEDIUM":      2,
+		"SEVERITY_HIGH":        3,
+		"SEVERITY_CRITICAL":    4,
+	}
+)
+
+func (x RiskFactor_Severity) Enum() *RiskFactor_Severity {
+	p := new(RiskFactor_Severity)
+	*p = x
+	return p
+}
+
+func (x RiskFactor_Severity) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (RiskFactor_Severity) Descriptor() protoreflect.EnumDescriptor {
+	return file_c1_connector_v2_annotation_security_insight_proto_enumTypes[0].Descriptor()
+}
+
+func (RiskFactor_Severity) Type() protoreflect.EnumType {
+	return &file_c1_connector_v2_annotation_security_insight_proto_enumTypes[0]
+}
+
+func (x RiskFactor_Severity) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// RiskFactor represents a contributing factor to a risk score.
+type RiskFactor struct {
+	state         protoimpl.MessageState `protogen:"hybrid.v1"`
+	Description   string                 `protobuf:"bytes,1,opt,name=description,proto3" json:"description,omitempty"`
+	Severity      RiskFactor_Severity    `protobuf:"varint,2,opt,name=severity,proto3,enum=c1.connector.v2.RiskFactor_Severity" json:"severity,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *RiskScore) Reset() {
-	*x = RiskScore{}
+func (x *RiskFactor) Reset() {
+	*x = RiskFactor{}
 	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *RiskScore) String() string {
+func (x *RiskFactor) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*RiskScore) ProtoMessage() {}
+func (*RiskFactor) ProtoMessage() {}
 
-func (x *RiskScore) ProtoReflect() protoreflect.Message {
+func (x *RiskFactor) ProtoReflect() protoreflect.Message {
 	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -58,6 +108,92 @@ func (x *RiskScore) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
+func (x *RiskFactor) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *RiskFactor) GetSeverity() RiskFactor_Severity {
+	if x != nil {
+		return x.Severity
+	}
+	return RiskFactor_SEVERITY_UNSPECIFIED
+}
+
+func (x *RiskFactor) SetDescription(v string) {
+	x.Description = v
+}
+
+func (x *RiskFactor) SetSeverity(v RiskFactor_Severity) {
+	x.Severity = v
+}
+
+type RiskFactor_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Description string
+	Severity    RiskFactor_Severity
+}
+
+func (b0 RiskFactor_builder) Build() *RiskFactor {
+	m0 := &RiskFactor{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.Description = b.Description
+	x.Severity = b.Severity
+	return m0
+}
+
+// RiskScore represents a risk score insight
+type RiskScore struct {
+	state protoimpl.MessageState `protogen:"hybrid.v1"`
+	// Deprecated: Use source_score instead. The raw risk score value from the source system.
+	//
+	// Deprecated: Marked as deprecated in c1/connector/v2/annotation_security_insight.proto.
+	Value string `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
+	// Deprecated: Use risk_factors instead. Flat string factors.
+	//
+	// Deprecated: Marked as deprecated in c1/connector/v2/annotation_security_insight.proto.
+	Factors []string `protobuf:"bytes,2,rep,name=factors,proto3" json:"factors,omitempty"`
+	// Required. Normalized risk score as a percentage [0, 100]. Higher means more risk.
+	// Connector authors must normalize their source system's score to this range.
+	NormalizedScore uint32 `protobuf:"varint,3,opt,name=normalized_score,json=normalizedScore,proto3" json:"normalized_score,omitempty"`
+	// The original score from the source system for reference/auditability (e.g., "0.48", "7.5/10").
+	SourceScore string `protobuf:"bytes,4,opt,name=source_score,json=sourceScore,proto3" json:"source_score,omitempty"`
+	// Structured factors contributing to this risk score.
+	RiskFactors   []*RiskFactor `protobuf:"bytes,5,rep,name=risk_factors,json=riskFactors,proto3" json:"risk_factors,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RiskScore) Reset() {
+	*x = RiskScore{}
+	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RiskScore) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RiskScore) ProtoMessage() {}
+
+func (x *RiskScore) ProtoReflect() protoreflect.Message {
+	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Marked as deprecated in c1/connector/v2/annotation_security_insight.proto.
 func (x *RiskScore) GetValue() string {
 	if x != nil {
 		return x.Value
@@ -65,15 +201,75 @@ func (x *RiskScore) GetValue() string {
 	return ""
 }
 
+// Deprecated: Marked as deprecated in c1/connector/v2/annotation_security_insight.proto.
+func (x *RiskScore) GetFactors() []string {
+	if x != nil {
+		return x.Factors
+	}
+	return nil
+}
+
+func (x *RiskScore) GetNormalizedScore() uint32 {
+	if x != nil {
+		return x.NormalizedScore
+	}
+	return 0
+}
+
+func (x *RiskScore) GetSourceScore() string {
+	if x != nil {
+		return x.SourceScore
+	}
+	return ""
+}
+
+func (x *RiskScore) GetRiskFactors() []*RiskFactor {
+	if x != nil {
+		return x.RiskFactors
+	}
+	return nil
+}
+
+// Deprecated: Marked as deprecated in c1/connector/v2/annotation_security_insight.proto.
 func (x *RiskScore) SetValue(v string) {
 	x.Value = v
+}
+
+// Deprecated: Marked as deprecated in c1/connector/v2/annotation_security_insight.proto.
+func (x *RiskScore) SetFactors(v []string) {
+	x.Factors = v
+}
+
+func (x *RiskScore) SetNormalizedScore(v uint32) {
+	x.NormalizedScore = v
+}
+
+func (x *RiskScore) SetSourceScore(v string) {
+	x.SourceScore = v
+}
+
+func (x *RiskScore) SetRiskFactors(v []*RiskFactor) {
+	x.RiskFactors = v
 }
 
 type RiskScore_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
-	// The risk score value (e.g., "85", "High")
+	// Deprecated: Use source_score instead. The raw risk score value from the source system.
+	//
+	// Deprecated: Marked as deprecated in c1/connector/v2/annotation_security_insight.proto.
 	Value string
+	// Deprecated: Use risk_factors instead. Flat string factors.
+	//
+	// Deprecated: Marked as deprecated in c1/connector/v2/annotation_security_insight.proto.
+	Factors []string
+	// Required. Normalized risk score as a percentage [0, 100]. Higher means more risk.
+	// Connector authors must normalize their source system's score to this range.
+	NormalizedScore uint32
+	// The original score from the source system for reference/auditability (e.g., "0.48", "7.5/10").
+	SourceScore string
+	// Structured factors contributing to this risk score.
+	RiskFactors []*RiskFactor
 }
 
 func (b0 RiskScore_builder) Build() *RiskScore {
@@ -81,6 +277,10 @@ func (b0 RiskScore_builder) Build() *RiskScore {
 	b, x := &b0, m0
 	_, _ = b, x
 	x.Value = b.Value
+	x.Factors = b.Factors
+	x.NormalizedScore = b.NormalizedScore
+	x.SourceScore = b.SourceScore
+	x.RiskFactors = b.RiskFactors
 	return m0
 }
 
@@ -96,7 +296,7 @@ type Issue struct {
 
 func (x *Issue) Reset() {
 	*x = Issue{}
-	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[1]
+	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -108,7 +308,7 @@ func (x *Issue) String() string {
 func (*Issue) ProtoMessage() {}
 
 func (x *Issue) ProtoReflect() protoreflect.Message {
-	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[1]
+	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -187,7 +387,7 @@ type SecurityInsightTrait struct {
 
 func (x *SecurityInsightTrait) Reset() {
 	*x = SecurityInsightTrait{}
-	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[2]
+	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -199,7 +399,7 @@ func (x *SecurityInsightTrait) String() string {
 func (*SecurityInsightTrait) ProtoMessage() {}
 
 func (x *SecurityInsightTrait) ProtoReflect() protoreflect.Message {
-	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[2]
+	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -550,7 +750,7 @@ func (b0 SecurityInsightTrait_builder) Build() *SecurityInsightTrait {
 type case_SecurityInsightTrait_InsightType protoreflect.FieldNumber
 
 func (x case_SecurityInsightTrait_InsightType) String() string {
-	md := file_c1_connector_v2_annotation_security_insight_proto_msgTypes[2].Descriptor()
+	md := file_c1_connector_v2_annotation_security_insight_proto_msgTypes[3].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -560,7 +760,7 @@ func (x case_SecurityInsightTrait_InsightType) String() string {
 type case_SecurityInsightTrait_Target protoreflect.FieldNumber
 
 func (x case_SecurityInsightTrait_Target) String() string {
-	md := file_c1_connector_v2_annotation_security_insight_proto_msgTypes[2].Descriptor()
+	md := file_c1_connector_v2_annotation_security_insight_proto_msgTypes[3].Descriptor()
 	if x == 0 {
 		return "not set"
 	}
@@ -625,7 +825,7 @@ type SecurityInsightTrait_UserTarget struct {
 
 func (x *SecurityInsightTrait_UserTarget) Reset() {
 	*x = SecurityInsightTrait_UserTarget{}
-	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[3]
+	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -637,7 +837,7 @@ func (x *SecurityInsightTrait_UserTarget) String() string {
 func (*SecurityInsightTrait_UserTarget) ProtoMessage() {}
 
 func (x *SecurityInsightTrait_UserTarget) ProtoReflect() protoreflect.Message {
-	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[3]
+	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -685,7 +885,7 @@ type SecurityInsightTrait_AppUserTarget struct {
 
 func (x *SecurityInsightTrait_AppUserTarget) Reset() {
 	*x = SecurityInsightTrait_AppUserTarget{}
-	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[4]
+	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -697,7 +897,7 @@ func (x *SecurityInsightTrait_AppUserTarget) String() string {
 func (*SecurityInsightTrait_AppUserTarget) ProtoMessage() {}
 
 func (x *SecurityInsightTrait_AppUserTarget) ProtoReflect() protoreflect.Message {
-	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[4]
+	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -761,7 +961,7 @@ type SecurityInsightTrait_ExternalResourceTarget struct {
 
 func (x *SecurityInsightTrait_ExternalResourceTarget) Reset() {
 	*x = SecurityInsightTrait_ExternalResourceTarget{}
-	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[5]
+	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -773,7 +973,7 @@ func (x *SecurityInsightTrait_ExternalResourceTarget) String() string {
 func (*SecurityInsightTrait_ExternalResourceTarget) ProtoMessage() {}
 
 func (x *SecurityInsightTrait_ExternalResourceTarget) ProtoReflect() protoreflect.Message {
-	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[5]
+	mi := &file_c1_connector_v2_annotation_security_insight_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -828,9 +1028,24 @@ var File_c1_connector_v2_annotation_security_insight_proto protoreflect.FileDesc
 
 const file_c1_connector_v2_annotation_security_insight_proto_rawDesc = "" +
 	"\n" +
-	"1c1/connector/v2/annotation_security_insight.proto\x12\x0fc1.connector.v2\x1a\x1ec1/connector/v2/resource.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x17validate/validate.proto\"!\n" +
-	"\tRiskScore\x12\x14\n" +
-	"\x05value\x18\x01 \x01(\tR\x05value\"E\n" +
+	"1c1/connector/v2/annotation_security_insight.proto\x12\x0fc1.connector.v2\x1a\x1ec1/connector/v2/resource.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x17validate/validate.proto\"\xf3\x01\n" +
+	"\n" +
+	"RiskFactor\x12,\n" +
+	"\vdescription\x18\x01 \x01(\tB\n" +
+	"\xfaB\ar\x05 \x01(\x80 R\vdescription\x12@\n" +
+	"\bseverity\x18\x02 \x01(\x0e2$.c1.connector.v2.RiskFactor.SeverityR\bseverity\"u\n" +
+	"\bSeverity\x12\x18\n" +
+	"\x14SEVERITY_UNSPECIFIED\x10\x00\x12\x10\n" +
+	"\fSEVERITY_LOW\x10\x01\x12\x13\n" +
+	"\x0fSEVERITY_MEDIUM\x10\x02\x12\x11\n" +
+	"\rSEVERITY_HIGH\x10\x03\x12\x15\n" +
+	"\x11SEVERITY_CRITICAL\x10\x04\"\xdc\x01\n" +
+	"\tRiskScore\x12\x18\n" +
+	"\x05value\x18\x01 \x01(\tB\x02\x18\x01R\x05value\x12\x1c\n" +
+	"\afactors\x18\x02 \x03(\tB\x02\x18\x01R\afactors\x124\n" +
+	"\x10normalized_score\x18\x03 \x01(\rB\t\xfaB\x06*\x04\x18d(\x00R\x0fnormalizedScore\x12!\n" +
+	"\fsource_score\x18\x04 \x01(\tR\vsourceScore\x12>\n" +
+	"\frisk_factors\x18\x05 \x03(\v2\x1b.c1.connector.v2.RiskFactorR\vriskFactors\"E\n" +
 	"\x05Issue\x12\x14\n" +
 	"\x05value\x18\x01 \x01(\tR\x05value\x12&\n" +
 	"\bseverity\x18\x02 \x01(\tB\n" +
@@ -862,30 +1077,35 @@ const file_c1_connector_v2_annotation_security_insight_proto_rawDesc = "" +
 	"\finsight_type\x12\x03\xf8B\x01B\r\n" +
 	"\x06target\x12\x03\xf8B\x01B6Z4github.com/conductorone/baton-sdk/pb/c1/connector/v2b\x06proto3"
 
-var file_c1_connector_v2_annotation_security_insight_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_c1_connector_v2_annotation_security_insight_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_c1_connector_v2_annotation_security_insight_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_c1_connector_v2_annotation_security_insight_proto_goTypes = []any{
-	(*RiskScore)(nil),                                   // 0: c1.connector.v2.RiskScore
-	(*Issue)(nil),                                       // 1: c1.connector.v2.Issue
-	(*SecurityInsightTrait)(nil),                        // 2: c1.connector.v2.SecurityInsightTrait
-	(*SecurityInsightTrait_UserTarget)(nil),             // 3: c1.connector.v2.SecurityInsightTrait.UserTarget
-	(*SecurityInsightTrait_AppUserTarget)(nil),          // 4: c1.connector.v2.SecurityInsightTrait.AppUserTarget
-	(*SecurityInsightTrait_ExternalResourceTarget)(nil), // 5: c1.connector.v2.SecurityInsightTrait.ExternalResourceTarget
-	(*timestamppb.Timestamp)(nil),                       // 6: google.protobuf.Timestamp
-	(*ResourceId)(nil),                                  // 7: c1.connector.v2.ResourceId
+	(RiskFactor_Severity)(0),                            // 0: c1.connector.v2.RiskFactor.Severity
+	(*RiskFactor)(nil),                                  // 1: c1.connector.v2.RiskFactor
+	(*RiskScore)(nil),                                   // 2: c1.connector.v2.RiskScore
+	(*Issue)(nil),                                       // 3: c1.connector.v2.Issue
+	(*SecurityInsightTrait)(nil),                        // 4: c1.connector.v2.SecurityInsightTrait
+	(*SecurityInsightTrait_UserTarget)(nil),             // 5: c1.connector.v2.SecurityInsightTrait.UserTarget
+	(*SecurityInsightTrait_AppUserTarget)(nil),          // 6: c1.connector.v2.SecurityInsightTrait.AppUserTarget
+	(*SecurityInsightTrait_ExternalResourceTarget)(nil), // 7: c1.connector.v2.SecurityInsightTrait.ExternalResourceTarget
+	(*timestamppb.Timestamp)(nil),                       // 8: google.protobuf.Timestamp
+	(*ResourceId)(nil),                                  // 9: c1.connector.v2.ResourceId
 }
 var file_c1_connector_v2_annotation_security_insight_proto_depIdxs = []int32{
-	0, // 0: c1.connector.v2.SecurityInsightTrait.risk_score:type_name -> c1.connector.v2.RiskScore
-	1, // 1: c1.connector.v2.SecurityInsightTrait.issue:type_name -> c1.connector.v2.Issue
-	6, // 2: c1.connector.v2.SecurityInsightTrait.observed_at:type_name -> google.protobuf.Timestamp
-	3, // 3: c1.connector.v2.SecurityInsightTrait.user:type_name -> c1.connector.v2.SecurityInsightTrait.UserTarget
-	7, // 4: c1.connector.v2.SecurityInsightTrait.resource_id:type_name -> c1.connector.v2.ResourceId
-	5, // 5: c1.connector.v2.SecurityInsightTrait.external_resource:type_name -> c1.connector.v2.SecurityInsightTrait.ExternalResourceTarget
-	4, // 6: c1.connector.v2.SecurityInsightTrait.app_user:type_name -> c1.connector.v2.SecurityInsightTrait.AppUserTarget
-	7, // [7:7] is the sub-list for method output_type
-	7, // [7:7] is the sub-list for method input_type
-	7, // [7:7] is the sub-list for extension type_name
-	7, // [7:7] is the sub-list for extension extendee
-	0, // [0:7] is the sub-list for field type_name
+	0, // 0: c1.connector.v2.RiskFactor.severity:type_name -> c1.connector.v2.RiskFactor.Severity
+	1, // 1: c1.connector.v2.RiskScore.risk_factors:type_name -> c1.connector.v2.RiskFactor
+	2, // 2: c1.connector.v2.SecurityInsightTrait.risk_score:type_name -> c1.connector.v2.RiskScore
+	3, // 3: c1.connector.v2.SecurityInsightTrait.issue:type_name -> c1.connector.v2.Issue
+	8, // 4: c1.connector.v2.SecurityInsightTrait.observed_at:type_name -> google.protobuf.Timestamp
+	5, // 5: c1.connector.v2.SecurityInsightTrait.user:type_name -> c1.connector.v2.SecurityInsightTrait.UserTarget
+	9, // 6: c1.connector.v2.SecurityInsightTrait.resource_id:type_name -> c1.connector.v2.ResourceId
+	7, // 7: c1.connector.v2.SecurityInsightTrait.external_resource:type_name -> c1.connector.v2.SecurityInsightTrait.ExternalResourceTarget
+	6, // 8: c1.connector.v2.SecurityInsightTrait.app_user:type_name -> c1.connector.v2.SecurityInsightTrait.AppUserTarget
+	9, // [9:9] is the sub-list for method output_type
+	9, // [9:9] is the sub-list for method input_type
+	9, // [9:9] is the sub-list for extension type_name
+	9, // [9:9] is the sub-list for extension extendee
+	0, // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_c1_connector_v2_annotation_security_insight_proto_init() }
@@ -894,7 +1114,7 @@ func file_c1_connector_v2_annotation_security_insight_proto_init() {
 		return
 	}
 	file_c1_connector_v2_resource_proto_init()
-	file_c1_connector_v2_annotation_security_insight_proto_msgTypes[2].OneofWrappers = []any{
+	file_c1_connector_v2_annotation_security_insight_proto_msgTypes[3].OneofWrappers = []any{
 		(*SecurityInsightTrait_RiskScore)(nil),
 		(*SecurityInsightTrait_Issue)(nil),
 		(*SecurityInsightTrait_User)(nil),
@@ -907,13 +1127,14 @@ func file_c1_connector_v2_annotation_security_insight_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_c1_connector_v2_annotation_security_insight_proto_rawDesc), len(file_c1_connector_v2_annotation_security_insight_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   6,
+			NumEnums:      1,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_c1_connector_v2_annotation_security_insight_proto_goTypes,
 		DependencyIndexes: file_c1_connector_v2_annotation_security_insight_proto_depIdxs,
+		EnumInfos:         file_c1_connector_v2_annotation_security_insight_proto_enumTypes,
 		MessageInfos:      file_c1_connector_v2_annotation_security_insight_proto_msgTypes,
 	}.Build()
 	File_c1_connector_v2_annotation_security_insight_proto = out.File

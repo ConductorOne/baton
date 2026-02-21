@@ -13,6 +13,12 @@ import (
 	"go.uber.org/zap"
 )
 
+type contextKeyType struct{}
+
+// ContextHTTPTimeoutKey is the context key used to pass the HTTP timeout duration
+// from the CLI configuration to uhttp.NewClient.
+var ContextHTTPTimeoutKey = contextKeyType{}
+
 type tlsClientConfigOption struct {
 	config *tls.Config
 }
@@ -60,21 +66,41 @@ func WithUserAgent(userAgent string) Option {
 	}
 }
 
+type timeoutOption struct {
+	timeout time.Duration
+}
+
+func (o timeoutOption) Apply(c *Transport) {
+	c.timeout = o.timeout
+}
+
+// WithTimeout sets the HTTP client timeout. Defaults to 300s (5 minutes) if not specified.
+func WithTimeout(timeout time.Duration) Option {
+	return timeoutOption{timeout: timeout}
+}
+
 type Option interface {
 	Apply(*Transport)
 }
 
 // NewClient creates a new HTTP client that uses the given context and options to create a new transport layer.
 func NewClient(ctx context.Context, options ...Option) (*http.Client, error) {
-	httpClient := &http.Client{
-		Timeout: 300 * time.Second, // 5 minutes
-	}
 	t, err := NewTransport(ctx, options...)
 	if err != nil {
 		return nil, err
 	}
-	httpClient.Transport = t
-	return httpClient, nil
+
+	timeout := 300 * time.Second // 5 minutes default
+	if t.timeout > 0 {
+		timeout = t.timeout
+	} else if ctxTimeout, ok := ctx.Value(ContextHTTPTimeoutKey).(time.Duration); ok && ctxTimeout > 0 {
+		timeout = ctxTimeout
+	}
+
+	return &http.Client{
+		Timeout:   timeout,
+		Transport: t,
+	}, nil
 }
 
 type icache interface {

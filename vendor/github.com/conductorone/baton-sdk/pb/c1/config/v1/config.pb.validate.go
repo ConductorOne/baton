@@ -870,6 +870,88 @@ func (m *Field) validate(all bool) error {
 			}
 		}
 
+	case *Field_EntitlementSliceField:
+		if v == nil {
+			err := FieldValidationError{
+				field:  "Field",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+		if all {
+			switch v := interface{}(m.GetEntitlementSliceField()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, FieldValidationError{
+						field:  "EntitlementSliceField",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, FieldValidationError{
+						field:  "EntitlementSliceField",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetEntitlementSliceField()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return FieldValidationError{
+					field:  "EntitlementSliceField",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	case *Field_GrantSliceField:
+		if v == nil {
+			err := FieldValidationError{
+				field:  "Field",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+		if all {
+			switch v := interface{}(m.GetGrantSliceField()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, FieldValidationError{
+						field:  "GrantSliceField",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, FieldValidationError{
+						field:  "GrantSliceField",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetGrantSliceField()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return FieldValidationError{
+					field:  "GrantSliceField",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
 	default:
 		_ = v // ensures v is used
 	}
@@ -1513,6 +1595,649 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ResourceSliceFieldValidationError{}
+
+// Validate checks the field values on Entitlement with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *Entitlement) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on Entitlement with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in EntitlementMultiError, or
+// nil if none found.
+func (m *Entitlement) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *Entitlement) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Id
+
+	// no validation rules for DisplayName
+
+	// no validation rules for Description
+
+	// no validation rules for Slug
+
+	// no validation rules for Purpose
+
+	// no validation rules for ResourceId
+
+	// no validation rules for ResourceTypeId
+
+	if len(errors) > 0 {
+		return EntitlementMultiError(errors)
+	}
+
+	return nil
+}
+
+// EntitlementMultiError is an error wrapping multiple validation errors
+// returned by Entitlement.ValidateAll() if the designated constraints aren't met.
+type EntitlementMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m EntitlementMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m EntitlementMultiError) AllErrors() []error { return m }
+
+// EntitlementValidationError is the validation error returned by
+// Entitlement.Validate if the designated constraints aren't met.
+type EntitlementValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e EntitlementValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e EntitlementValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e EntitlementValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e EntitlementValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e EntitlementValidationError) ErrorName() string { return "EntitlementValidationError" }
+
+// Error satisfies the builtin error interface
+func (e EntitlementValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sEntitlement.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = EntitlementValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = EntitlementValidationError{}
+
+// Validate checks the field values on EntitlementSliceField with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *EntitlementSliceField) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on EntitlementSliceField with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// EntitlementSliceFieldMultiError, or nil if none found.
+func (m *EntitlementSliceField) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *EntitlementSliceField) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetDefaultValue() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, EntitlementSliceFieldValidationError{
+						field:  fmt.Sprintf("DefaultValue[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, EntitlementSliceFieldValidationError{
+						field:  fmt.Sprintf("DefaultValue[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return EntitlementSliceFieldValidationError{
+					field:  fmt.Sprintf("DefaultValue[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return EntitlementSliceFieldMultiError(errors)
+	}
+
+	return nil
+}
+
+// EntitlementSliceFieldMultiError is an error wrapping multiple validation
+// errors returned by EntitlementSliceField.ValidateAll() if the designated
+// constraints aren't met.
+type EntitlementSliceFieldMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m EntitlementSliceFieldMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m EntitlementSliceFieldMultiError) AllErrors() []error { return m }
+
+// EntitlementSliceFieldValidationError is the validation error returned by
+// EntitlementSliceField.Validate if the designated constraints aren't met.
+type EntitlementSliceFieldValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e EntitlementSliceFieldValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e EntitlementSliceFieldValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e EntitlementSliceFieldValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e EntitlementSliceFieldValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e EntitlementSliceFieldValidationError) ErrorName() string {
+	return "EntitlementSliceFieldValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e EntitlementSliceFieldValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sEntitlementSliceField.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = EntitlementSliceFieldValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = EntitlementSliceFieldValidationError{}
+
+// Validate checks the field values on EntitlementRef with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *EntitlementRef) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on EntitlementRef with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in EntitlementRefMultiError,
+// or nil if none found.
+func (m *EntitlementRef) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *EntitlementRef) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Id
+
+	if len(errors) > 0 {
+		return EntitlementRefMultiError(errors)
+	}
+
+	return nil
+}
+
+// EntitlementRefMultiError is an error wrapping multiple validation errors
+// returned by EntitlementRef.ValidateAll() if the designated constraints
+// aren't met.
+type EntitlementRefMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m EntitlementRefMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m EntitlementRefMultiError) AllErrors() []error { return m }
+
+// EntitlementRefValidationError is the validation error returned by
+// EntitlementRef.Validate if the designated constraints aren't met.
+type EntitlementRefValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e EntitlementRefValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e EntitlementRefValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e EntitlementRefValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e EntitlementRefValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e EntitlementRefValidationError) ErrorName() string { return "EntitlementRefValidationError" }
+
+// Error satisfies the builtin error interface
+func (e EntitlementRefValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sEntitlementRef.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = EntitlementRefValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = EntitlementRefValidationError{}
+
+// Validate checks the field values on Grant with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *Grant) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on Grant with the rules defined in the
+// proto definition for this message. If any rules are violated, the result is
+// a list of violation errors wrapped in GrantMultiError, or nil if none found.
+func (m *Grant) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *Grant) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Id
+
+	if all {
+		switch v := interface{}(m.GetEntitlement()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GrantValidationError{
+					field:  "Entitlement",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GrantValidationError{
+					field:  "Entitlement",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetEntitlement()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GrantValidationError{
+				field:  "Entitlement",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetPrincipal()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GrantValidationError{
+					field:  "Principal",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GrantValidationError{
+					field:  "Principal",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetPrincipal()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GrantValidationError{
+				field:  "Principal",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return GrantMultiError(errors)
+	}
+
+	return nil
+}
+
+// GrantMultiError is an error wrapping multiple validation errors returned by
+// Grant.ValidateAll() if the designated constraints aren't met.
+type GrantMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GrantMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GrantMultiError) AllErrors() []error { return m }
+
+// GrantValidationError is the validation error returned by Grant.Validate if
+// the designated constraints aren't met.
+type GrantValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GrantValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GrantValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GrantValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GrantValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GrantValidationError) ErrorName() string { return "GrantValidationError" }
+
+// Error satisfies the builtin error interface
+func (e GrantValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGrant.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GrantValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GrantValidationError{}
+
+// Validate checks the field values on GrantSliceField with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *GrantSliceField) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GrantSliceField with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GrantSliceFieldMultiError, or nil if none found.
+func (m *GrantSliceField) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GrantSliceField) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetDefaultValue() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, GrantSliceFieldValidationError{
+						field:  fmt.Sprintf("DefaultValue[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, GrantSliceFieldValidationError{
+						field:  fmt.Sprintf("DefaultValue[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GrantSliceFieldValidationError{
+					field:  fmt.Sprintf("DefaultValue[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return GrantSliceFieldMultiError(errors)
+	}
+
+	return nil
+}
+
+// GrantSliceFieldMultiError is an error wrapping multiple validation errors
+// returned by GrantSliceField.ValidateAll() if the designated constraints
+// aren't met.
+type GrantSliceFieldMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GrantSliceFieldMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GrantSliceFieldMultiError) AllErrors() []error { return m }
+
+// GrantSliceFieldValidationError is the validation error returned by
+// GrantSliceField.Validate if the designated constraints aren't met.
+type GrantSliceFieldValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GrantSliceFieldValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GrantSliceFieldValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GrantSliceFieldValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GrantSliceFieldValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GrantSliceFieldValidationError) ErrorName() string { return "GrantSliceFieldValidationError" }
+
+// Error satisfies the builtin error interface
+func (e GrantSliceFieldValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGrantSliceField.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GrantSliceFieldValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GrantSliceFieldValidationError{}
 
 // Validate checks the field values on ResourceIdField with the rules defined
 // in the proto definition for this message. If any rules are violated, the
