@@ -63,11 +63,13 @@ func getRatelimitDescriptors(ctx context.Context, method string, in interface{},
 
 	// ListEntitlements, ListGrants
 	if req, ok := in.(hasResource); ok {
-		if resourceType := req.GetResource().GetId().GetResourceType(); resourceType != "" {
-			ret.SetEntries(append(ret.GetEntries(), ratelimitV1.RateLimitDescriptors_Entry_builder{
-				Key:   descriptorKeyConnectorResourceType,
-				Value: resourceType,
-			}.Build()))
+		if r := req.GetResource(); r != nil {
+			if resourceType := r.GetId().GetResourceType(); resourceType != "" {
+				ret.SetEntries(append(ret.GetEntries(), ratelimitV1.RateLimitDescriptors_Entry_builder{
+					Key:   descriptorKeyConnectorResourceType,
+					Value: resourceType,
+				}.Build()))
+			}
 		}
 		return ret
 	}
@@ -132,7 +134,7 @@ func UnaryInterceptor(now func() time.Time, descriptors ...*ratelimitV1.RateLimi
 						nil,
 					)
 					if rlErr != nil {
-						return fmt.Errorf("ratelimit: error reporting ratelimit after request error: %w", err)
+						return fmt.Errorf("ratelimit: error reporting ratelimit after request error: %w", rlErr)
 					}
 
 					l.Error("ratelimit: error running client request", zap.Error(err))
@@ -140,7 +142,7 @@ func UnaryInterceptor(now func() time.Time, descriptors ...*ratelimitV1.RateLimi
 				}
 
 				if reply != nil {
-					if resp, ok := req.(hasAnnos); ok {
+					if resp, ok := reply.(hasAnnos); ok {
 						err = reportRatelimit(ctx, rlClient, rlReq.GetRequestToken(), ratelimitV1.RateLimitDescription_STATUS_OK, rlDescriptors, resp.GetAnnotations())
 						if err != nil {
 							l.Error("ratelimit: error reporting rate limit", zap.Error(err))

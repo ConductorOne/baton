@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -22,6 +23,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
+	"github.com/conductorone/baton-sdk/pkg/metrics"
 	"github.com/conductorone/baton-sdk/pkg/ratelimit"
 )
 
@@ -33,6 +35,11 @@ const (
 	applicationVndApiJSON     = "application/vnd.api+json"
 	acceptHeader              = "Accept"
 	authorizationHeader       = "Authorization"
+
+	httpCacheHitCounterName  = "baton_sdk.http_cache_hit"
+	httpCacheMissCounterName = "baton_sdk.http_cache_miss"
+	httpCacheHitCounterDesc  = "number of HTTP cache hits"
+	httpCacheMissCounterDesc = "number of HTTP cache misses"
 )
 
 type WrapperResponse struct {
@@ -63,25 +70,44 @@ func WithRateLimiter(rate int, per time.Duration) WrapperOption {
 	return rateLimiterOption{rate: rate, per: per}
 }
 
+type metricsHandlerOption struct {
+	handler metrics.Handler
+}
+
+func (o metricsHandlerOption) Apply(c *BaseHttpClient) {
+	c.metricsHandler = o.handler
+}
+
+// WithMetricsHandler returns a WrapperOption that sets the metrics handler for the http client.
+// When set, cache hits and misses will be recorded as metrics.
+func WithMetricsHandler(handler metrics.Handler) WrapperOption {
+	return metricsHandlerOption{handler: handler}
+}
+
 type WrapperOption interface {
 	Apply(*BaseHttpClient)
 }
 
 // Keep a handle on all caches so we can clear them later.
-var caches []icache
+var (
+	caches    []icache
+	cachesMtx sync.RWMutex
+)
 
 func ClearCaches(ctx context.Context) error {
 	l := ctxzap.Extract(ctx)
 	l.Debug("clearing caches")
-	var err error
+	var errs []error
+	cachesMtx.RLock()
+	defer cachesMtx.RUnlock()
 	for _, cache := range caches {
 		l.Debug("clearing cache", zap.String("cache", fmt.Sprintf("%T", cache)), zap.Any("stats", cache.Stats(ctx)))
-		err = cache.Clear(ctx)
+		err := cache.Clear(ctx)
 		if err != nil {
-			err = errors.Join(err, err)
+			errs = append(errs, err)
 		}
 	}
-	return err
+	return errors.Join(errs...)
 }
 
 type (
@@ -91,9 +117,10 @@ type (
 		NewRequest(ctx context.Context, method string, url *url.URL, options ...RequestOption) (*http.Request, error)
 	}
 	BaseHttpClient struct {
-		HttpClient    *http.Client
-		rateLimiter   uRateLimit.Limiter
-		baseHttpCache icache
+		HttpClient     *http.Client
+		rateLimiter    uRateLimit.Limiter
+		baseHttpCache  icache
+		metricsHandler metrics.Handler
 	}
 
 	DoOption      func(resp *WrapperResponse) error
@@ -122,7 +149,9 @@ func NewBaseHttpClientWithContext(ctx context.Context, httpClient *http.Client, 
 		baseHttpCache: cache,
 	}
 
+	cachesMtx.Lock()
 	caches = append(caches, cache)
+	cachesMtx.Unlock()
 
 	for _, opt := range opts {
 		opt.Apply(cli)
@@ -295,16 +324,15 @@ func WithGenericResponse(response *map[string]any) DoOption {
 		}
 
 		if IsXMLContentType(resp.Header.Get(ContentType)) {
-			err = WithXMLResponse(response)(resp)
+			var xm xmlMap
+			err = WithXMLResponse(&xm)(resp)
 			if err != nil {
 				return err
 			}
-			if list, ok := v.([]any); ok {
-				(*response)["items"] = list
-			} else if vMap, ok := v.(map[string]any); ok {
+			if vMap, ok := xm.data.(map[string]any); ok {
 				*response = vMap
 			} else {
-				return status.Errorf(codes.Internal, "unsupported content type: %T", v)
+				return status.Errorf(codes.Internal, "unsupported XML structure: %T", xm.data)
 			}
 			return nil
 		}
@@ -341,6 +369,22 @@ func WrapErrorsWithRateLimitInfo(preferredCode codes.Code, resp *http.Response, 
 	return errors.Join(allErrs...)
 }
 
+func (c *BaseHttpClient) recordCacheHit(ctx context.Context) {
+	if c.metricsHandler == nil {
+		return
+	}
+	counter := c.metricsHandler.Int64Counter(httpCacheHitCounterName, httpCacheHitCounterDesc, metrics.Dimensionless)
+	counter.Add(ctx, 1, nil)
+}
+
+func (c *BaseHttpClient) recordCacheMiss(ctx context.Context) {
+	if c.metricsHandler == nil {
+		return
+	}
+	counter := c.metricsHandler.Int64Counter(httpCacheMissCounterName, httpCacheMissCounterDesc, metrics.Dimensionless)
+	counter.Add(ctx, 1, nil)
+}
+
 func (c *BaseHttpClient) Do(req *http.Request, options ...DoOption) (*http.Response, error) {
 	var (
 		err  error
@@ -359,13 +403,14 @@ func (c *BaseHttpClient) Do(req *http.Request, options ...DoOption) (*http.Respo
 			return nil, err
 		}
 		if resp == nil {
-			l.Debug("http cache miss", zap.String("url", req.URL.String()))
+			c.recordCacheMiss(req.Context())
 		} else {
-			l.Debug("http cache hit", zap.String("url", req.URL.String()))
+			c.recordCacheHit(req.Context())
 		}
 	}
 
 	if resp == nil {
+		//nolint:gosec // this HTTP wrapper intentionally supports arbitrary connector-defined endpoints.
 		resp, err = c.HttpClient.Do(req)
 		if err != nil {
 			l.Error("base-http-client: HTTP error response", zap.Error(err))

@@ -33,8 +33,8 @@ var allTableDescriptors = []tableDescriptor{
 	resourceTypes,
 	resources,
 	entitlements,
+	syncRuns, // Must be before grants since grants migration joins sync_runs.
 	grants,
-	syncRuns,
 	assets,
 	sessionStore,
 }
@@ -83,6 +83,10 @@ type hasPrincipalResourceTypeIDsListRequest interface {
 	GetPrincipalResourceTypeIds() []string
 }
 
+type hasParentResourceIdListRequest interface {
+	listRequest
+	GetParentResourceId() *v2.ResourceId
+}
 type protoHasID interface {
 	proto.Message
 	GetId() string
@@ -105,6 +109,36 @@ func (c *C1File) throttledWarnSlowQuery(ctx context.Context, query string, durat
 	}
 }
 
+func resolveSyncID(ctx context.Context, c *C1File, req listRequest) (string, error) {
+	annoSyncID, err := annotations.GetSyncIdFromAnnotations(req.GetAnnotations())
+	if err != nil {
+		return "", fmt.Errorf("error getting sync id from annotations for list request: %w", err)
+	}
+
+	if annoSyncID != "" {
+		return annoSyncID, nil
+	}
+	// We are currently syncing, so use the current sync id
+	if c.currentSyncID != "" {
+		return c.currentSyncID, nil
+	}
+	// We are viewing a sync, so use the view sync id
+	if c.viewSyncID != "" {
+		return c.viewSyncID, nil
+	}
+
+	latestSyncRun, err := c.getCachedViewSyncRun(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	if latestSyncRun != nil {
+		return latestSyncRun.ID, nil
+	}
+
+	return "", nil
+}
+
 // listConnectorObjects uses a connector list request to fetch the corresponding data from the local db.
 // It returns a slice of typed proto messages constructed via the provided factory function.
 func listConnectorObjects[T proto.Message](ctx context.Context, c *C1File, tableName string, req listRequest, factory func() T) ([]T, string, error) {
@@ -116,28 +150,9 @@ func listConnectorObjects[T proto.Message](ctx context.Context, c *C1File, table
 		return nil, "", err
 	}
 
-	annoSyncID, err := annotations.GetSyncIdFromAnnotations(req.GetAnnotations())
+	reqSyncID, err := resolveSyncID(ctx, c, req)
 	if err != nil {
-		return nil, "", fmt.Errorf("error getting sync id from annotations for list request: %w", err)
-	}
-
-	var reqSyncID string
-	switch {
-	// If the request has a sync id annotation, use that
-	case annoSyncID != "":
-		reqSyncID = annoSyncID
-
-	// We are currently syncing, so use the current sync id
-	case c.currentSyncID != "":
-		reqSyncID = c.currentSyncID
-
-	// We are viewing a sync, so use the view sync id
-	case c.viewSyncID != "":
-		reqSyncID = c.viewSyncID
-
-	// Be explicit that we have no sync ID set
-	default:
-		reqSyncID = ""
+		return nil, "", err
 	}
 
 	q := c.db.From(tableName).Prepared(true)
@@ -189,20 +204,17 @@ func listConnectorObjects[T proto.Message](ctx context.Context, c *C1File, table
 		}
 	}
 
-	// If a sync is running, be sure we only select from the current values
-	switch {
-	case reqSyncID != "":
-		q = q.Where(goqu.C("sync_id").Eq(reqSyncID))
-	default:
-		// Use cached sync run to avoid N+1 queries during pagination
-		latestSyncRun, err := c.getCachedViewSyncRun(ctx)
-		if err != nil {
-			return nil, "", err
+	if parentResourceIdReq, ok := req.(hasParentResourceIdListRequest); ok {
+		p := parentResourceIdReq.GetParentResourceId()
+		if p != nil && p.GetResource() != "" {
+			q = q.Where(goqu.C("parent_resource_id").Eq(p.GetResource()))
+			q = q.Where(goqu.C("parent_resource_type_id").Eq(p.GetResourceType()))
 		}
+	}
 
-		if latestSyncRun != nil {
-			q = q.Where(goqu.C("sync_id").Eq(latestSyncRun.ID))
-		}
+	// If a sync is running, be sure we only select from the current values
+	if reqSyncID != "" {
+		q = q.Where(goqu.C("sync_id").Eq(reqSyncID))
 	}
 
 	// If a page token is provided, begin listing rows greater than or equal to the token
@@ -288,11 +300,9 @@ func prepareSingleConnectorObjectRow[T proto.Message](
 	msg T,
 	extractFields func(m T) (goqu.Record, error),
 ) (*goqu.Record, error) {
-	messageBlob, err := protoMarshaler.Marshal(msg)
-	if err != nil {
-		return nil, err
-	}
-
+	// Call extractFields before marshaling so that any mutations it makes
+	// (e.g. stripping GrantExpandable from grant annotations) are reflected
+	// in the serialized data blob.
 	fields, err := extractFields(msg)
 	if err != nil {
 		return nil, err
@@ -308,7 +318,15 @@ func prepareSingleConnectorObjectRow[T proto.Message](
 		}
 		fields["external_id"] = idGetter.GetId()
 	}
-	fields["data"] = messageBlob
+	// Only set "data" if extractFields didn't already provide a pre-marshaled blob
+	// (e.g. grants strip GrantExpandable from a clone and marshal it themselves).
+	if _, dataSet := fields["data"]; !dataSet {
+		messageBlob, err := protoMarshaler.Marshal(msg)
+		if err != nil {
+			return nil, err
+		}
+		fields["data"] = messageBlob
+	}
 	fields["sync_id"] = c.currentSyncID
 	fields["discovered_at"] = time.Now().Format("2006-01-02 15:04:05.999999999")
 
@@ -373,12 +391,8 @@ func prepareConnectorObjectRowsParallel[T proto.Message](
 			for i := start; i < end; i++ {
 				m := msgs[i]
 
-				messageBlob, err := protoMarshallers[worker].Marshal(m)
-				if err != nil {
-					errs[i] = err
-					continue
-				}
-
+				// Call extractFields before marshaling so that any mutations
+				// (e.g. stripping GrantExpandable) are reflected in the data blob.
 				fields, err := extractFields(m)
 				if err != nil {
 					errs[i] = err
@@ -396,7 +410,14 @@ func prepareConnectorObjectRowsParallel[T proto.Message](
 					}
 					fields["external_id"] = idGetter.GetId()
 				}
-				fields["data"] = messageBlob
+				if _, dataSet := fields["data"]; !dataSet {
+					messageBlob, err := protoMarshallers[worker].Marshal(m)
+					if err != nil {
+						errs[i] = err
+						continue
+					}
+					fields["data"] = messageBlob
+				}
 				fields["sync_id"] = syncID
 				fields["discovered_at"] = discoveredAt
 				rows[i] = &fields
@@ -676,7 +697,7 @@ func (c *C1File) getConnectorObject(ctx context.Context, tableName string, id st
 		return err
 	}
 
-	data := make([]byte, 0)
+	var data []byte
 	row := c.db.QueryRowContext(ctx, query, args...)
 	err = row.Scan(&data)
 	if err != nil {

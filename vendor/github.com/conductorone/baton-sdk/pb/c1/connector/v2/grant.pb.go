@@ -755,6 +755,7 @@ func (b0 GrantManagerServiceRevokeResponse_builder) Build() *GrantManagerService
 
 type GrantSources_GrantSource struct {
 	state         protoimpl.MessageState `protogen:"hybrid.v1"`
+	IsDirect      bool                   `protobuf:"varint,1,opt,name=is_direct,json=isDirect,proto3" json:"is_direct,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -784,15 +785,28 @@ func (x *GrantSources_GrantSource) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
+func (x *GrantSources_GrantSource) GetIsDirect() bool {
+	if x != nil {
+		return x.IsDirect
+	}
+	return false
+}
+
+func (x *GrantSources_GrantSource) SetIsDirect(v bool) {
+	x.IsDirect = v
+}
+
 type GrantSources_GrantSource_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
+	IsDirect bool
 }
 
 func (b0 GrantSources_GrantSource_builder) Build() *GrantSources_GrantSource {
 	m0 := &GrantSources_GrantSource{}
 	b, x := &b0, m0
 	_, _ = b, x
+	x.IsDirect = b.IsDirect
 	return m0
 }
 
@@ -800,10 +814,11 @@ var File_c1_connector_v2_grant_proto protoreflect.FileDescriptor
 
 const file_c1_connector_v2_grant_proto_rawDesc = "" +
 	"\n" +
-	"\x1bc1/connector/v2/grant.proto\x12\x0fc1.connector.v2\x1a!c1/connector/v2/entitlement.proto\x1a\x1ec1/connector/v2/resource.proto\x1a\x19google/protobuf/any.proto\x1a\x17validate/validate.proto\"\xca\x01\n" +
+	"\x1bc1/connector/v2/grant.proto\x12\x0fc1.connector.v2\x1a!c1/connector/v2/entitlement.proto\x1a\x1ec1/connector/v2/resource.proto\x1a\x19google/protobuf/any.proto\x1a\x17validate/validate.proto\"\xe7\x01\n" +
 	"\fGrantSources\x12D\n" +
-	"\asources\x18\x01 \x03(\v2*.c1.connector.v2.GrantSources.SourcesEntryR\asources\x1a\r\n" +
-	"\vGrantSource\x1ae\n" +
+	"\asources\x18\x01 \x03(\v2*.c1.connector.v2.GrantSources.SourcesEntryR\asources\x1a*\n" +
+	"\vGrantSource\x12\x1b\n" +
+	"\tis_direct\x18\x01 \x01(\bR\bisDirect\x1ae\n" +
 	"\fSourcesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12?\n" +
 	"\x05value\x18\x02 \x01(\v2).c1.connector.v2.GrantSources.GrantSourceR\x05value:\x028\x01\"\xab\x02\n" +
