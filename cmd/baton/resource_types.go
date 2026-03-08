@@ -55,6 +55,7 @@ func runResourceTypes(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	defer store.Close(ctx)
 
 	if syncID != "" {
 		err = store.ViewSync(ctx, syncID)

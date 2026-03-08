@@ -47,6 +47,7 @@ func runSyncList(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	defer store.Close(ctx)
 
 	var syncRuns []*v1.SyncOutput
 	pageToken := ""

@@ -54,6 +54,7 @@ func runAccess(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	defer store.Close(ctx)
 
 	sc := storecache.NewStoreCache(ctx, store)
 

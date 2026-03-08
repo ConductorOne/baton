@@ -45,11 +45,13 @@ func runExportC1Z(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	defer m.Close(ctx)
 
 	store, err := m.LoadC1Z(ctx)
 	if err != nil {
 		return err
 	}
+	defer store.Close(ctx)
 
 	err = store.CloneSync(ctx, outPath, syncID)
 	if err != nil {

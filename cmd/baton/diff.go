@@ -48,6 +48,7 @@ func runDiff(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	defer store.Close(ctx)
 
 	newSyncID, err := store.LatestSyncID(ctx, connectorstore.SyncTypeFull)
 	if err != nil {

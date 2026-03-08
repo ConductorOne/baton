@@ -54,6 +54,7 @@ func runPrincipalsCompare(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	defer store.Close(ctx)
 
 	sc := storecache.NewStoreCache(ctx, store)
 
@@ -66,12 +67,13 @@ func runPrincipalsCompare(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	defer m.Close(ctx)
+	defer mCompare.Close(ctx)
 
 	storeCompare, err := mCompare.LoadC1Z(ctx)
 	if err != nil {
 		return err
 	}
+	defer storeCompare.Close(ctx)
 
 	scDiff := storecache.NewStoreCache(ctx, storeCompare)
 

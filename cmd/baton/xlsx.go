@@ -189,6 +189,7 @@ func runExportXLSX(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	defer store.Close(ctx)
 
 	resourceTypes, err := fetchResourceTypes(ctx, store)
 	if err != nil {
