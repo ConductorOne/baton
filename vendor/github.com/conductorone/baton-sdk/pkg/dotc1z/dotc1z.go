@@ -7,8 +7,10 @@ import (
 	"io"
 
 	"go.opentelemetry.io/otel"
+	"go.uber.org/zap"
 
 	"github.com/conductorone/baton-sdk/pkg/connectorstore"
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 )
 
 var tracer = otel.Tracer("baton-sdk/pkg.dotc1z")
@@ -54,6 +56,16 @@ func NewExternalC1FileReader(ctx context.Context, tmpDir string, externalResourc
 	if err != nil {
 		return nil, fmt.Errorf("error loading external resource c1z file: %w", err)
 	}
+	l := ctxzap.Extract(ctx)
+	l.Debug("new-external-c1z-file: decompressed c1z",
+		zap.String("db_file_path", dbFilePath),
+		zap.String("external_resource_c1z_path", externalResourceC1ZPath),
+	)
 
-	return NewC1File(ctx, dbFilePath)
+	c1File, err := NewC1File(ctx, dbFilePath, WithC1FReadOnly(true))
+	if err != nil {
+		return nil, cleanupDbDir(dbFilePath, err)
+	}
+
+	return c1File, nil
 }

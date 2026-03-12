@@ -127,6 +127,14 @@ type decoder struct {
 	decoderInitErr error
 }
 
+func (d *decoder) getMaxMemSize() uint64 {
+	maxMemSize := d.o.maxMemorySize
+	if maxMemSize == 0 {
+		maxMemSize = defaultDecoderMaxMemory
+	}
+	return maxMemSize
+}
+
 func (d *decoder) Read(p []byte) (int, error) {
 	// Init
 	d.initOnce.Do(func() {
@@ -136,14 +144,9 @@ func (d *decoder) Read(p []byte) (int, error) {
 			return
 		}
 
-		maxMemSize := d.o.maxMemorySize
-		if maxMemSize == 0 {
-			maxMemSize = defaultDecoderMaxMemory
-		}
-
 		zstdOpts := []zstd.DOption{
-			zstd.WithDecoderLowmem(true),          // uses lower memory, trading potentially more allocations
-			zstd.WithDecoderMaxMemory(maxMemSize), // sets limit on maximum memory used when decoding stream
+			zstd.WithDecoderLowmem(true),                 // uses lower memory, trading potentially more allocations
+			zstd.WithDecoderMaxMemory(d.getMaxMemSize()), // sets limit on maximum memory used when decoding stream
 		}
 		if d.o.decoderConcurrency >= 0 {
 			zstdOpts = append(zstdOpts, zstd.WithDecoderConcurrency(d.o.decoderConcurrency))
@@ -166,7 +169,7 @@ func (d *decoder) Read(p []byte) (int, error) {
 	}
 
 	// Check we have a valid decoder
-	if d.zd != nil && d.decoderInitErr != nil {
+	if d.decoderInitErr != nil {
 		return 0, d.decoderInitErr
 	}
 
@@ -181,7 +184,7 @@ func (d *decoder) Read(p []byte) (int, error) {
 		maxDecodedSize = defaultMaxDecodedSize
 	}
 	if d.decodedBytes > maxDecodedSize {
-		return 0, ErrMaxSizeExceeded
+		return 0, fmt.Errorf("c1z: max decoded size exceeded: %d > %d: %w", d.decodedBytes, maxDecodedSize, ErrMaxSizeExceeded)
 	}
 
 	// Do underlying read
@@ -191,7 +194,7 @@ func (d *decoder) Read(p []byte) (int, error) {
 	if err != nil {
 		// NOTE(morgabra) This happens if you set a small DecoderMaxMemory
 		if errors.Is(err, zstd.ErrWindowSizeExceeded) {
-			return n, ErrWindowSizeExceeded
+			return n, fmt.Errorf("c1z: window size (%d) exceeded:  %w: %w", d.getMaxMemSize(), err, ErrWindowSizeExceeded)
 		}
 		return n, err
 	}

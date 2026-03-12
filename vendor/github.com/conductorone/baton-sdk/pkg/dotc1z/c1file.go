@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -262,7 +263,7 @@ func NewC1ZFile(ctx context.Context, outputFilePath string, opts ...C1ZOption) (
 
 func cleanupDbDir(dbFilePath string, err error) error {
 	// Stat dbFilePath to make sure it's a file, not a directory.
-	stat, statErr := os.Stat(dbFilePath) //nolint:gosec // G703 -- dbFilePath is a caller-provided path by design.
+	stat, statErr := os.Stat(dbFilePath)
 	if statErr != nil {
 		if errors.Is(statErr, os.ErrNotExist) {
 			// If the file doesn't exist, we can't clean up the directory.
@@ -275,7 +276,7 @@ func cleanupDbDir(dbFilePath string, err error) error {
 		return errors.Join(err, fmt.Errorf("cleanupDbDir: dbFilePath %s is a directory, not a file: %w", dbFilePath, statErr))
 	}
 
-	cleanupErr := os.RemoveAll(filepath.Dir(dbFilePath)) //nolint:gosec // G703 -- dbFilePath is a caller-provided path by design.
+	cleanupErr := os.RemoveAll(filepath.Dir(dbFilePath))
 	if cleanupErr != nil {
 		err = errors.Join(err, cleanupErr)
 	}
@@ -284,9 +285,13 @@ func cleanupDbDir(dbFilePath string, err error) error {
 
 var ErrReadOnly = errors.New("c1z: read only mode")
 
+const defaultCheckpointTimeout = 120
+
+var checkpointTimeout, _ = strconv.ParseInt(os.Getenv("BATON_WAL_CHECKPOINT_TIMEOUT"), 10, 64)
+
 // Close ensures that the sqlite database is flushed to disk, and if any changes were made we update the original database
 // with our changes. The provided context is used for the WAL checkpoint operation. If the context is already expired,
-// a fresh context with a 30-second timeout is used to ensure the checkpoint completes.
+// a fresh context with a timeout is used to ensure the checkpoint completes.
 func (c *C1File) Close(ctx context.Context) error {
 	var err error
 	l := ctxzap.Extract(ctx)
@@ -316,8 +321,11 @@ func (c *C1File) Close(ctx context.Context) error {
 			// saving a stale c1z.
 			checkpointCtx := ctx
 			if ctx.Err() != nil {
+				if checkpointTimeout <= 0 {
+					checkpointTimeout = defaultCheckpointTimeout
+				}
 				var checkpointCancel context.CancelFunc
-				checkpointCtx, checkpointCancel = context.WithTimeout(context.Background(), 30*time.Second)
+				checkpointCtx, checkpointCancel = context.WithTimeout(context.Background(), time.Duration(checkpointTimeout)*time.Second)
 				defer checkpointCancel()
 			}
 
@@ -325,9 +333,8 @@ func (c *C1File) Close(ctx context.Context) error {
 			// ExecContext silently discards these values, making partial
 			// checkpoints undetectable — the PRAGMA returns nil error even when
 			// it can't checkpoint all frames due to concurrent readers.
-			var busy, log, checkpointed int
-			row := c.rawDb.QueryRowContext(checkpointCtx, "PRAGMA wal_checkpoint(TRUNCATE)")
-			if err = row.Scan(&busy, &log, &checkpointed); err != nil {
+			busy, log, checkpointed, err := c.truncateWAL(checkpointCtx)
+			if err != nil {
 				l.Error("WAL checkpoint failed before close",
 					zap.Error(err),
 					zap.String("db_path", c.dbFilePath))
@@ -390,6 +397,32 @@ func (c *C1File) Close(ctx context.Context) error {
 	c.closed = true
 
 	return nil
+}
+
+// truncateWAL truncates the WAL file.
+// Returns the busy, log, and checkpointed values.
+func (c *C1File) truncateWAL(ctx context.Context) (int, int, int, error) {
+	ctx, span := tracer.Start(ctx, "C1File.truncateWAL")
+	defer span.End()
+
+	// Use QueryRowContext to read the (busy, log, checkpointed) result.
+	// ExecContext silently discards these values, making partial
+	// checkpoints undetectable — the PRAGMA returns nil error even when
+	// it can't checkpoint all frames due to concurrent readers.
+	var busy, log, checkpointed int
+	row := c.rawDb.QueryRowContext(ctx, "PRAGMA wal_checkpoint(TRUNCATE)")
+	if err := row.Scan(&busy, &log, &checkpointed); err != nil {
+		return 0, 0, 0, err
+	}
+	// TODO: Return an error here?
+	if busy != 0 || (log >= 0 && checkpointed < log) {
+		ctxzap.Extract(ctx).Info("WAL checkpoint incomplete",
+			zap.Int("busy", busy),
+			zap.Int("log", log),
+			zap.Int("checkpointed", checkpointed),
+			zap.String("db_path", c.dbFilePath))
+	}
+	return busy, log, checkpointed, nil
 }
 
 // init ensures that the database has all of the required schema.
@@ -473,18 +506,14 @@ func (c *C1File) InitTables(ctx context.Context) error {
 		query, args := t.Schema()
 		_, err = c.db.ExecContext(ctx, fmt.Sprintf(query, args...))
 		if err != nil {
+			l.Error("c1file-init-tables: error initializing table schema", zap.Error(err), zap.String("table_name", t.Name()))
 			return fmt.Errorf("c1file-init-tables: error initializing table %s: %w", t.Name(), err)
 		}
-		l.Debug("c1file-init-tables: initialized table schema, running migrations",
-			zap.String("table_name", t.Name()),
-		)
 		err = t.Migrations(ctx, c.db)
 		if err != nil {
+			l.Error("c1file-init-tables: error running migration", zap.Error(err), zap.String("table_name", t.Name()))
 			return fmt.Errorf("c1file-init-tables: error running migration for table %s: %w", t.Name(), err)
 		}
-		l.Debug("c1file-init-tables: ran migrations for table",
-			zap.String("table_name", t.Name()),
-		)
 	}
 
 	return nil

@@ -358,9 +358,9 @@ func extractAndStripExpansion(grant *v2.Grant) ([]byte, bool) {
 }
 
 func backfillGrantExpansionColumn(ctx context.Context, db *goqu.Database, tableName string) error {
-	// Only backfill grants from syncs that don't support diff (old syncs created before
-	// this code change). New syncs set supports_diff=1 at creation and write grants with
-	// the expansion column populated correctly, so they don't need backfilling.
+	// Backfill grants only for syncs that have not yet been processed.
+	// The grants_backfilled flag is the single source of truth for whether
+	// this migration work still needs to run for a sync.
 	//
 	// We unmarshal every grant with expansion IS NULL from old syncs, extract the
 	// GrantExpandable annotation (if present), and populate the expansion column.
@@ -369,18 +369,52 @@ func backfillGrantExpansionColumn(ctx context.Context, db *goqu.Database, tableN
 	//
 	// Uses cursor-based pagination (g.id > ?) so each query jumps to unprocessed
 	// rows via the primary key index instead of rescanning from the start.
+
+	// Collect un-backfilled sync IDs upfront. sync_runs is tiny, so this is
+	// cheap and lets us skip the grants scan entirely when there's nothing to do.
+	syncRows, err := db.QueryContext(ctx, fmt.Sprintf(
+		`SELECT sync_id FROM %s WHERE grants_backfilled = 0`, syncRuns.Name(),
+	))
+	if err != nil {
+		return err
+	}
+	var pendingSyncIDs []any
+	for syncRows.Next() {
+		var sid string
+		if err := syncRows.Scan(&sid); err != nil {
+			_ = syncRows.Close()
+			return err
+		}
+		pendingSyncIDs = append(pendingSyncIDs, sid)
+	}
+	if err := syncRows.Err(); err != nil {
+		_ = syncRows.Close()
+		return err
+	}
+	_ = syncRows.Close()
+
+	if len(pendingSyncIDs) == 0 {
+		return nil
+	}
+
+	placeholders := strings.Repeat("?,", len(pendingSyncIDs))
+	placeholders = placeholders[:len(placeholders)-1] // trim trailing comma
+
 	var lastID int64
 	for {
+		args := make([]any, 0, len(pendingSyncIDs)+1)
+		args = append(args, lastID)
+		args = append(args, pendingSyncIDs...)
+
 		rows, err := db.QueryContext(ctx, fmt.Sprintf(
 			`SELECT g.id, g.data FROM %s g
-			 JOIN %s sr ON g.sync_id = sr.sync_id
 			 WHERE g.id > ?
 			   AND g.expansion IS NULL
-			   AND sr.supports_diff = 0
+			   AND g.sync_id IN (%s)
 			 ORDER BY g.id
 			 LIMIT 1000`,
-			tableName, syncRuns.Name(),
-		), lastID)
+			tableName, placeholders,
+		), args...)
 		if err != nil {
 			return err
 		}
@@ -410,64 +444,103 @@ func backfillGrantExpansionColumn(ctx context.Context, db *goqu.Database, tableN
 
 		lastID = batch[len(batch)-1].id
 
-		tx, err := db.BeginTx(ctx, nil)
-		if err != nil {
-			return err
+		// Split grants into expandable (need full data rewrite) and
+		// non-expandable (just need sentinel marker).
+		var sentinelIDs []any
+		type expandableRow struct {
+			id             int64
+			expansionBytes []byte
+			needsExpansion bool
+			data           []byte
 		}
-
-		stmt, err := tx.PrepareContext(ctx, fmt.Sprintf(
-			`UPDATE %s SET expansion=?, needs_expansion=?, data=? WHERE id=?`,
-			tableName,
-		))
-		if err != nil {
-			_ = tx.Rollback()
-			return err
-		}
+		var expandableRows []expandableRow
 
 		for _, r := range batch {
 			g := &v2.Grant{}
 			if err := proto.Unmarshal(r.data, g); err != nil {
-				_ = stmt.Close()
-				_ = tx.Rollback()
 				return err
 			}
 
 			expansionBytes, needsExpansion := extractAndStripExpansion(g)
 
-			// Re-serialize the grant with the annotation stripped.
+			if expansionBytes == nil {
+				sentinelIDs = append(sentinelIDs, r.id)
+				continue
+			}
+
 			newData, err := proto.Marshal(g)
 			if err != nil {
-				_ = stmt.Close()
-				_ = tx.Rollback()
 				return err
 			}
+			expandableRows = append(expandableRows, expandableRow{
+				id:             r.id,
+				expansionBytes: expansionBytes,
+				needsExpansion: needsExpansion,
+				data:           newData,
+			})
+		}
 
-			// Use empty blob for non-expandable grants so they won't match
-			// "expansion IS NULL" on the next iteration. Cleaned up below.
-			var expansionVal interface{}
-			if expansionBytes != nil {
-				expansionVal = expansionBytes
-			} else {
-				expansionVal = []byte{}
-			}
+		tx, err := db.BeginTx(ctx, nil)
+		if err != nil {
+			return err
+		}
 
-			if _, err := stmt.ExecContext(ctx, expansionVal, needsExpansion, newData, r.id); err != nil {
-				_ = stmt.Close()
+		// Batch-mark non-expandable grants with the sentinel in one statement.
+		if len(sentinelIDs) > 0 {
+			sp := strings.Repeat("?,", len(sentinelIDs))
+			sp = sp[:len(sp)-1]
+			if _, err := tx.ExecContext(ctx, fmt.Sprintf(
+				`UPDATE %s SET expansion=X'' WHERE id IN (%s)`, tableName, sp,
+			), sentinelIDs...); err != nil {
 				_ = tx.Rollback()
 				return err
 			}
 		}
 
-		_ = stmt.Close()
+		// Expandable grants need per-row updates (each has unique data).
+		if len(expandableRows) > 0 {
+			fullStmt, err := tx.PrepareContext(ctx, fmt.Sprintf(
+				`UPDATE %s SET expansion=?, needs_expansion=?, data=? WHERE id=?`, tableName,
+			))
+			if err != nil {
+				_ = tx.Rollback()
+				return err
+			}
+			for _, er := range expandableRows {
+				if _, err := fullStmt.ExecContext(ctx, er.expansionBytes, er.needsExpansion, er.data, er.id); err != nil {
+					_ = fullStmt.Close()
+					_ = tx.Rollback()
+					return err
+				}
+			}
+			_ = fullStmt.Close()
+		}
+
 		if err := tx.Commit(); err != nil {
 			return err
 		}
 	}
 
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
 	// Convert empty-blob sentinels back to NULL.
-	if _, err := db.ExecContext(ctx, fmt.Sprintf(
+	if _, err := tx.ExecContext(ctx, fmt.Sprintf(
 		`UPDATE %s SET expansion = NULL WHERE expansion = X''`, tableName,
 	)); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	// Mark all not-yet-processed syncs as backfilled so migration work only runs once.
+	if _, err := tx.ExecContext(ctx, fmt.Sprintf(
+		`UPDATE %s SET grants_backfilled = 1 WHERE grants_backfilled = 0`,
+		syncRuns.Name(),
+	)); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	if err := tx.Commit(); err != nil {
 		return err
 	}
 

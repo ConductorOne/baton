@@ -186,6 +186,38 @@ func (m *GrantExpandable) validate(all bool) error {
 
 	var errors []error
 
+	if len(m.GetEntitlementIds()) < 1 {
+		err := GrantExpandableValidationError{
+			field:  "EntitlementIds",
+			reason: "value must contain at least 1 item(s)",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	_GrantExpandable_EntitlementIds_Unique := make(map[string]struct{}, len(m.GetEntitlementIds()))
+
+	for idx, item := range m.GetEntitlementIds() {
+		_, _ = idx, item
+
+		if _, exists := _GrantExpandable_EntitlementIds_Unique[item]; exists {
+			err := GrantExpandableValidationError{
+				field:  fmt.Sprintf("EntitlementIds[%v]", idx),
+				reason: "repeated value must contain unique items",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		} else {
+			_GrantExpandable_EntitlementIds_Unique[item] = struct{}{}
+		}
+
+		// no validation rules for EntitlementIds[idx]
+	}
+
 	// no validation rules for Shallow
 
 	if len(errors) > 0 {

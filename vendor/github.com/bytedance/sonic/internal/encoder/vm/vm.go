@@ -24,9 +24,9 @@ import (
 
 	"github.com/bytedance/sonic/internal/encoder/alg"
 	"github.com/bytedance/sonic/internal/encoder/ir"
+	"github.com/bytedance/sonic/internal/encoder/prim"
 	"github.com/bytedance/sonic/internal/encoder/vars"
 	"github.com/bytedance/sonic/internal/rt"
-	"github.com/bytedance/sonic/internal/base64"
 )
 
 const (
@@ -176,7 +176,7 @@ func Execute(b *[]byte, p unsafe.Pointer, s *vars.Stack, flags uint64, prog *ir.
 			buf = alg.F64toa(buf, v)
 		case ir.OP_bin:
 			v := *(*[]byte)(p)
-			buf = base64.EncodeBase64(buf, v)
+			buf = rt.EncodeBase64(buf, v)
 		case ir.OP_quote:
 			v := *(*string)(p)
 			buf = alg.Quote(buf, v, true)
@@ -184,7 +184,7 @@ func Execute(b *[]byte, p unsafe.Pointer, s *vars.Stack, flags uint64, prog *ir.
 			v := *(*json.Number)(p)
 			if v == "" {
 				buf = append(buf, '0')
-			} else if !rt.IsValidNumber(string(v)) {
+			} else if !alg.IsValidNumber(string(v)) {
 				return vars.Error_number(v)
 			} else {
 				buf = append(buf, v...)
@@ -202,13 +202,13 @@ func Execute(b *[]byte, p unsafe.Pointer, s *vars.Stack, flags uint64, prog *ir.
 			}
 			buf = *b
 		case ir.OP_is_zero_map:
-			v := *(**rt.GoMap)(p)
-			if v == nil || v.Count == 0 {
+			v := *(*unsafe.Pointer)(p)
+			if v == nil || rt.Maplen(v) == 0 {
 				pc = ins.Vi()
 				continue
 			}
 		case ir.OP_map_iter:
-			v := *(**rt.GoMap)(p)
+			v := *(*unsafe.Pointer)(p)
 			vt := ins.Vr()
 			it, err := alg.IteratorStart(rt.MapType(vt), v, flags)
 			if err != nil {
@@ -243,13 +243,13 @@ func Execute(b *[]byte, p unsafe.Pointer, s *vars.Stack, flags uint64, prog *ir.
 				case reflect.Ptr, reflect.Map : it = convT2I(p, true, itab)
 				default                       : it = convT2I(p, !vt.Indirect(), itab)
 			}
-			if err := alg.EncodeTextMarshaler(&buf, *(*encoding.TextMarshaler)(unsafe.Pointer(&it)), (flags)); err != nil {
+			if err := prim.EncodeTextMarshaler(&buf, *(*encoding.TextMarshaler)(unsafe.Pointer(&it)), (flags)); err != nil {
 				return err
 			}
 		case ir.OP_marshal_text_p:
 			_, itab := ins.Vtab()
 			it := convT2I(p, false, itab)
-			if err := alg.EncodeTextMarshaler(&buf, *(*encoding.TextMarshaler)(unsafe.Pointer(&it)), (flags)); err != nil {
+			if err := prim.EncodeTextMarshaler(&buf, *(*encoding.TextMarshaler)(unsafe.Pointer(&it)), (flags)); err != nil {
 				return err
 			}
 		case ir.OP_map_write_key:
@@ -281,6 +281,12 @@ func Execute(b *[]byte, p unsafe.Pointer, s *vars.Stack, flags uint64, prog *ir.
 		case ir.OP_cond_testc:
 			if has_opts(f, _S_cond) {
 				f &= ^uint64(1 << _S_cond)
+				pc = ins.Vi()
+				continue
+			}
+		case ir.OP_is_zero:
+			fv := ins.VField()
+			if prim.IsZero(p, fv) {
 				pc = ins.Vi()
 				continue
 			}
@@ -329,15 +335,17 @@ func Execute(b *[]byte, p unsafe.Pointer, s *vars.Stack, flags uint64, prog *ir.
 				case reflect.Ptr, reflect.Map : it = convT2I(p, true, itab)
 				default                       : it = convT2I(p, !vt.Indirect(), itab)
 			}
-			if err := alg.EncodeJsonMarshaler(&buf, *(*json.Marshaler)(unsafe.Pointer(&it)), (flags)); err != nil {
+			if err := prim.EncodeJsonMarshaler(&buf, *(*json.Marshaler)(unsafe.Pointer(&it)), (flags)); err != nil {
 				return err
 			}
 		case ir.OP_marshal_p:
 			_, itab := ins.Vtab()
 			it := convT2I(p, false, itab)
-			if err := alg.EncodeJsonMarshaler(&buf, *(*json.Marshaler)(unsafe.Pointer(&it)), (flags)); err != nil {
+			if err := prim.EncodeJsonMarshaler(&buf, *(*json.Marshaler)(unsafe.Pointer(&it)), (flags)); err != nil {
 				return err
 			}
+		case ir.OP_unsupported:
+			return vars.Error_unsuppoted(ins.GoType())
 		default:
 			panic(fmt.Sprintf("not implement %s at %d", ins.Op().String(), pc))
 		}
@@ -347,13 +355,6 @@ func Execute(b *[]byte, p unsafe.Pointer, s *vars.Stack, flags uint64, prog *ir.
 	return nil
 }
 
-// func to_buf(w unsafe.Pointer, l int, c int) []byte {
-// 	return rt.BytesFrom(unsafe.Pointer(uintptr(w)-uintptr(l)), l, c)
-// }
-
-// func from_buf(buf []byte) (unsafe.Pointer, int, int) {
-// 	return rt.IndexByte(buf, len(buf)), len(buf), cap(buf)
-// }
 
 func has_opts(opts uint64, bit int) bool {
 	return opts & (1<<bit) != 0

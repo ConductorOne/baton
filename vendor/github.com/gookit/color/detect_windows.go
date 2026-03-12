@@ -1,6 +1,8 @@
 //go:build windows
 // +build windows
 
+package color
+
 // Display color on Windows
 //
 // refer:
@@ -8,14 +10,11 @@
 //	golang.org/x/sys/windows
 //	golang.org/x/crypto/ssh/terminal
 //	https://docs.microsoft.com/en-us/windows/console
-package color
-
 import (
 	"os"
 	"syscall"
 	"unsafe"
 
-	"github.com/xo/terminfo"
 	"golang.org/x/sys/windows"
 )
 
@@ -31,13 +30,11 @@ var (
 )
 
 func init() {
-	if !SupportColor() {
-		isLikeInCmd = true
+	// if support color 16+, don't need to enable VTP
+	if colorLevel > Level16 {
 		return
 	}
-
-	// if disabled.
-	if !Enable {
+	if !Enable { // disable color
 		return
 	}
 
@@ -109,9 +106,7 @@ func tryEnableOnStdout() bool {
 }
 
 // Get the Windows Version and Build Number
-var (
-	winVersion, _, buildNumber = windows.RtlGetNtVersionNumbers()
-)
+var winVersion, _, buildNumber = windows.RtlGetNtVersionNumbers()
 
 // refer
 //
@@ -127,7 +122,7 @@ func detectSpecialTermColor(termVal string) (tl Level, needVTP bool) {
 		// I am just assuming that people wouldn't have disabled it
 		// Even if it is not enabled then ConEmu will auto round off
 		// accordingly
-		return terminfo.ColorLevelMillions, false
+		return LevelRgb, false
 	}
 
 	// Before Windows 10 Build Number 10586, console never supported ANSI Colors
@@ -137,22 +132,22 @@ func detectSpecialTermColor(termVal string) (tl Level, needVTP bool) {
 			conVersion := os.Getenv("ANSICON_VER")
 			// 8-bit Colors were only supported after v1.81 release
 			if conVersion >= "181" {
-				return terminfo.ColorLevelHundreds, false
+				return Level256, false
 			}
-			return terminfo.ColorLevelBasic, false
+			return Level16, false
 		}
 
-		return terminfo.ColorLevelNone, false
+		return LevelNo, false
 	}
 
 	// True Color is not available before build 14931 so fallback to 8-bit color.
 	if buildNumber < 14931 {
-		return terminfo.ColorLevelHundreds, true
+		return Level256, true
 	}
 
 	// Windows 10 build 14931 is the first release that supports 16m/TrueColor
 	debugf("support True Color on windows version is >= build 14931")
-	return terminfo.ColorLevelMillions, true
+	return LevelRgb, true
 }
 
 /*************************************************************
@@ -161,7 +156,7 @@ func detectSpecialTermColor(termVal string) (tl Level, needVTP bool) {
 
 // docs https://docs.microsoft.com/zh-cn/windows/console/getconsolemode#parameters
 const (
-	// equals to docs page's ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+	// EnableVirtualTerminalProcessingMode equals to docs page's ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
 	EnableVirtualTerminalProcessingMode uint32 = 0x4
 )
 
@@ -230,7 +225,7 @@ func IsTty(fd uintptr) bool {
 	initKernel32Proc()
 
 	var st uint32
-	r, _, e := syscall.Syscall(procGetConsoleMode.Addr(), 2, fd, uintptr(unsafe.Pointer(&st)), 0)
+	r, _, e := syscall.SyscallN(procGetConsoleMode.Addr(), 2, fd, uintptr(unsafe.Pointer(&st)), 0)
 	return r != 0 && e == 0
 }
 
@@ -245,6 +240,6 @@ func IsTerminal(fd uintptr) bool {
 	initKernel32Proc()
 
 	var st uint32
-	r, _, e := syscall.Syscall(procGetConsoleMode.Addr(), 2, fd, uintptr(unsafe.Pointer(&st)), 0)
+	r, _, e := syscall.SyscallN(procGetConsoleMode.Addr(), 2, fd, uintptr(unsafe.Pointer(&st)), 0)
 	return r != 0 && e == 0
 }

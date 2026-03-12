@@ -295,6 +295,8 @@ func WithResponse(response any) DoOption {
 
 // Handle anything that can be marshaled into JSON or XML.
 // If the response is a list, its values will be put into the "items" field.
+// If the response is a single value (int, string, bool, etc), it will be put into the "value" field.
+// A response of `null` results in the "value" field being set to `nil`.
 func WithGenericResponse(response *map[string]any) DoOption {
 	return func(resp *WrapperResponse) error {
 		if response == nil {
@@ -302,6 +304,10 @@ func WithGenericResponse(response *map[string]any) DoOption {
 		}
 
 		if resp.StatusCode == http.StatusNoContent {
+			return nil
+		}
+
+		if resp.StatusCode >= 200 && resp.StatusCode < 300 && len(resp.Body) == 0 {
 			return nil
 		}
 
@@ -317,8 +323,17 @@ func WithGenericResponse(response *map[string]any) DoOption {
 				(*response)["items"] = list
 			} else if vMap, ok := v.(map[string]any); ok {
 				*response = vMap
+			} else if boolValue, ok := v.(bool); ok {
+				(*response) = map[string]any{"value": boolValue}
+			} else if floatValue, ok := v.(float64); ok {
+				(*response) = map[string]any{"value": floatValue}
+			} else if stringValue, ok := v.(string); ok {
+				(*response) = map[string]any{"value": stringValue}
+			} else if v == nil {
+				// JSON response is literally `null`.
+				(*response) = map[string]any{"value": nil}
 			} else {
-				return status.Errorf(codes.Internal, "unsupported content type: %T", v)
+				return status.Errorf(codes.Internal, "unsupported value type: %T", v)
 			}
 			return nil
 		}

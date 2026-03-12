@@ -9,6 +9,7 @@
 package v2
 
 import (
+	_ "github.com/envoyproxy/protoc-gen-validate/validate"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	structpb "google.golang.org/protobuf/types/known/structpb"
@@ -395,11 +396,12 @@ var File_c1_connector_v2_annotation_grant_proto protoreflect.FileDescriptor
 
 const file_c1_connector_v2_annotation_grant_proto_rawDesc = "" +
 	"\n" +
-	"&c1/connector/v2/annotation_grant.proto\x12\x0fc1.connector.v2\x1a\x1cgoogle/protobuf/struct.proto\"D\n" +
+	"&c1/connector/v2/annotation_grant.proto\x12\x0fc1.connector.v2\x1a\x1cgoogle/protobuf/struct.proto\x1a\x17validate/validate.proto\"D\n" +
 	"\rGrantMetadata\x123\n" +
-	"\bmetadata\x18\x01 \x01(\v2\x17.google.protobuf.StructR\bmetadata\"\x80\x01\n" +
-	"\x0fGrantExpandable\x12'\n" +
-	"\x0fentitlement_ids\x18\x01 \x03(\tR\x0eentitlementIds\x12\x18\n" +
+	"\bmetadata\x18\x01 \x01(\v2\x17.google.protobuf.StructR\bmetadata\"\x8c\x01\n" +
+	"\x0fGrantExpandable\x123\n" +
+	"\x0fentitlement_ids\x18\x01 \x03(\tB\n" +
+	"\xfaB\a\x92\x01\x04\b\x01\x18\x01R\x0eentitlementIds\x12\x18\n" +
 	"\ashallow\x18\x02 \x01(\bR\ashallow\x12*\n" +
 	"\x11resource_type_ids\x18\x03 \x03(\tR\x0fresourceTypeIds\"b\n" +
 	"\x0eGrantImmutable\x12\x1b\n" +

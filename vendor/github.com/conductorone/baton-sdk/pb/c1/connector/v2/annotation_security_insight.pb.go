@@ -157,7 +157,7 @@ type RiskScore struct {
 	//
 	// Deprecated: Marked as deprecated in c1/connector/v2/annotation_security_insight.proto.
 	Factors []string `protobuf:"bytes,2,rep,name=factors,proto3" json:"factors,omitempty"`
-	// Required. Normalized risk score as a percentage [0, 100]. Higher means more risk.
+	// Normalized risk score as a percentage [0, 100]. Higher means more risk.
 	// Connector authors must normalize their source system's score to this range.
 	NormalizedScore uint32 `protobuf:"varint,3,opt,name=normalized_score,json=normalizedScore,proto3" json:"normalized_score,omitempty"`
 	// The original score from the source system for reference/auditability (e.g., "0.48", "7.5/10").
@@ -263,7 +263,7 @@ type RiskScore_builder struct {
 	//
 	// Deprecated: Marked as deprecated in c1/connector/v2/annotation_security_insight.proto.
 	Factors []string
-	// Required. Normalized risk score as a percentage [0, 100]. Higher means more risk.
+	// Normalized risk score as a percentage [0, 100]. Higher means more risk.
 	// Connector authors must normalize their source system's score to this range.
 	NormalizedScore uint32
 	// The original score from the source system for reference/auditability (e.g., "0.48", "7.5/10").

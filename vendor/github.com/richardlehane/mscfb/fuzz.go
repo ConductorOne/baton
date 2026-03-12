@@ -1,3 +1,4 @@
+//go:build gofuzz
 // +build gofuzz
 
 // fuzzing with https://github.com/dvyukov/go-fuzz
@@ -8,6 +9,7 @@ import (
 	"io"
 )
 
+// todo: replace with Fuzzing from go test package
 func Fuzz(data []byte) int {
 	doc, err := New(bytes.NewReader(data))
 	if err != nil {

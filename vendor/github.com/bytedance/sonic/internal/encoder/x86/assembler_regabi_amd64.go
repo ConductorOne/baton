@@ -1,5 +1,5 @@
-//go:build go1.17 && !go1.24
-// +build go1.17,!go1.24
+//go:build go1.17 && !go1.27
+// +build go1.17,!go1.27
 
 /*
  * Copyright 2021 ByteDance Inc.
@@ -28,6 +28,7 @@ import (
 	"github.com/bytedance/sonic/internal/cpu"
 	"github.com/bytedance/sonic/internal/encoder/alg"
 	"github.com/bytedance/sonic/internal/encoder/ir"
+	"github.com/bytedance/sonic/internal/encoder/prim"
 	"github.com/bytedance/sonic/internal/encoder/vars"
 	"github.com/bytedance/sonic/internal/jit"
 	"github.com/bytedance/sonic/internal/native/types"
@@ -265,6 +266,8 @@ var _OpFuncTab = [256]func(*Assembler, *ir.Instr){
 	ir.OP_marshal_text_p: (*Assembler)._asm_OP_marshal_text_p,
 	ir.OP_cond_set:       (*Assembler)._asm_OP_cond_set,
 	ir.OP_cond_testc:     (*Assembler)._asm_OP_cond_testc,
+	ir.OP_unsupported:    (*Assembler)._asm_OP_unsupported,
+	ir.OP_is_zero:        (*Assembler)._asm_OP_is_zero,
 }
 
 func (self *Assembler) instr(v *ir.Instr) {
@@ -660,6 +663,8 @@ var (
 func (self *Assembler) go_panic() {
 	self.Link(_LB_panic)
 	self.Emit("MOVQ", _SP_p, _BX)
+	self.Emit("MOVQ", _RP, _CX)
+	self.Emit("MOVQ", _RL, _DI)
 	self.call_go(_F_panic)
 }
 
@@ -756,13 +761,13 @@ var (
 	_F_f32toa    = jit.Imm(int64(native.S_f32toa))
 	_F_i64toa    = jit.Imm(int64(native.S_i64toa))
 	_F_u64toa    = jit.Imm(int64(native.S_u64toa))
-	_F_b64encode = jit.Imm(int64(_subr__b64encode))
+	_F_b64encode = jit.Imm(int64(rt.SubrB64Encode))
 )
 
 var (
 	_F_memmove       = jit.Func(rt.Memmove)
 	_F_error_number  = jit.Func(vars.Error_number)
-	_F_isValidNumber = jit.Func(rt.IsValidNumber)
+	_F_isValidNumber = jit.Func(alg.IsValidNumber)
 )
 
 var (
@@ -782,8 +787,8 @@ const (
 )
 
 func init() {
-	_F_encodeJsonMarshaler = jit.Func(alg.EncodeJsonMarshaler)
-	_F_encodeTextMarshaler = jit.Func(alg.EncodeTextMarshaler)
+	_F_encodeJsonMarshaler = jit.Func(prim.EncodeJsonMarshaler)
+	_F_encodeTextMarshaler = jit.Func(prim.EncodeTextMarshaler)
 	_F_encodeTypedPointer  = jit.Func(EncodeTypedPointer)
 }
 
@@ -1097,6 +1102,20 @@ func (self *Assembler) _asm_OP_is_zero_map(p *ir.Instr) {
 	self.Xjmp("JE", p.Vi())                        // JE    p.Vi()
 }
 
+var (
+	_F_is_zero = jit.Func(prim.IsZero)
+	_T_reflect_Type = rt.UnpackIface(reflect.Type(nil))
+)
+
+func (self *Assembler) _asm_OP_is_zero(p *ir.Instr) {
+	fv := p.VField()
+	self.Emit("MOVQ", _SP_p, _AX) // ptr
+	self.Emit("MOVQ", jit.ImmPtr(unsafe.Pointer(fv)), _BX) // fv
+	self.call_go(_F_is_zero) // CALL  $fn
+	self.Emit("CMPB", _AX, jit.Imm(0)) // CMPB (SP.p), $0
+	self.Xjmp("JNE", p.Vi())                          // JE   p.Vi()
+}
+
 func (self *Assembler) _asm_OP_goto(p *ir.Instr) {
 	self.Xjmp("JMP", p.Vi())
 }
@@ -1185,6 +1204,15 @@ func (self *Assembler) _asm_OP_cond_set(_ *ir.Instr) {
 func (self *Assembler) _asm_OP_cond_testc(p *ir.Instr) {
 	self.Emit("BTRQ", jit.Imm(_S_cond), _SP_f) // BTRQ $_S_cond, SP.f
 	self.Xjmp("JC", p.Vi())
+}
+
+var _F_error_unsupported = jit.Func(vars.Error_unsuppoted)
+
+func (self *Assembler) _asm_OP_unsupported(i *ir.Instr) {
+	typ := int64(uintptr(unsafe.Pointer(i.GoType())))
+	self.Emit("MOVQ", jit.Imm(typ), _AX)
+	self.call_go(_F_error_unsupported)
+	self.Sjmp("JMP", _LB_error)
 }
 
 func (self *Assembler) print_gc(i int, p1 *ir.Instr, p2 *ir.Instr) {

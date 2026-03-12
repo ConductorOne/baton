@@ -42,7 +42,7 @@ const (
 	Whitespace     = " "
 	Zero           = "0"
 	// DatesTimesCodeChars defined dates and times control codes in upper case
-	DatesTimesCodeChars = "AEYMDHSG"
+	DatesTimesCodeChars = "ABDEGHMRSY"
 	// NumCodeChars defined numeric code character
 	NumCodeChars = "0123456789"
 	// Token section types
@@ -362,6 +362,18 @@ func (ps *Parser) getTokens() Tokens {
 					ps.Offset++
 					continue
 				}
+				if strings.ToUpper(ps.Token.TValue) == "B" {
+					if ps.currentChar() == "1" || ps.currentChar() == "2" {
+						ps.Tokens.add(ps.Token.TValue+ps.currentChar(), ps.Token.TType, ps.Token.Parts)
+						ps.Token = Token{}
+						ps.Offset++
+						continue
+					}
+					ps.Token.TType = TokenTypeLiteral
+					ps.Token.TValue += ps.currentChar()
+					ps.Offset++
+					continue
+				}
 				if ps.Token.TType != "" {
 					ps.Tokens.add(ps.Token.TValue, ps.Token.TType, ps.Token.Parts)
 					ps.Token = Token{}
@@ -558,7 +570,7 @@ func (ps *Parser) getTokens() Tokens {
 
 		if ps.currentChar() == QuoteDouble {
 			ps.Offset++
-			if ps.InString && len(ps.Token.TValue) > 0 {
+			if ps.InString {
 				ps.Tokens.add(ps.Token.TValue, TokenTypeLiteral, ps.Token.Parts)
 				ps.Token = Token{}
 				ps.InString = false

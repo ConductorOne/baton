@@ -18,20 +18,21 @@
 // early MS software such as MS Office.
 //
 // Example:
-//   file, _ := os.Open("test/test.doc")
-//   defer file.Close()
-//   doc, err := mscfb.New(file)
-//   if err != nil {
-//     log.Fatal(err)
-//   }
-//   for entry, err := doc.Next(); err == nil; entry, err = doc.Next() {
-//     buf := make([]byte, 512)
-//     i, _ := entry.Read(buf)
-//     if i > 0 {
-//       fmt.Println(buf[:i])
-//     }
-//     fmt.Println(entry.Name)
-//   }
+//
+//	file, _ := os.Open("test/test.doc")
+//	defer file.Close()
+//	doc, err := mscfb.New(file)
+//	if err != nil {
+//	  log.Fatal(err)
+//	}
+//	for entry, err := doc.Next(); err == nil; entry, err = doc.Next() {
+//	  buf := make([]byte, 512)
+//	  i, _ := entry.Read(buf)
+//	  if i > 0 {
+//	    fmt.Println(buf[:i])
+//	  }
+//	  fmt.Println(entry.Name)
+//	}
 package mscfb
 
 import (
@@ -63,6 +64,8 @@ const (
 )
 
 const lenHeader int = 8 + 16 + 10 + 6 + 12 + 8 + 16 + 109*4
+
+const sliceLimit uint32 = 64000
 
 type headerFields struct {
 	signature           uint64
@@ -158,10 +161,14 @@ func (r *Reader) setDifats() error {
 		return nil
 	}
 	sz := (r.sectorSize / 4) - 1
-	n := make([]uint32, 109, r.header.numDifatSectors*sz+109)
-	copy(n, r.header.difats)
-	r.header.difats = n
+	// prevent creation of an arbitrarily large slice
+	if r.header.numDifatSectors < sliceLimit {
+		n := make([]uint32, 109, r.header.numDifatSectors*sz+109)
+		copy(n, r.header.difats)
+		r.header.difats = n
+	}
 	off := r.header.difatSectorLoc
+	cycles := make(map[uint32]bool)
 	for i := 0; i < int(r.header.numDifatSectors); i++ {
 		buf, err := r.readAt(fileOffset(r.sectorSize, off), int(r.sectorSize))
 		if err != nil {
@@ -170,7 +177,15 @@ func (r *Reader) setDifats() error {
 		for j := 0; j < int(sz); j++ {
 			r.header.difats = append(r.header.difats, binary.LittleEndian.Uint32(buf[j*4:j*4+4]))
 		}
-		off = binary.LittleEndian.Uint32(buf[len(buf)-4:])
+		// detect cycles in difat
+		noff := binary.LittleEndian.Uint32(buf[len(buf)-4:])
+		if noff <= off {
+			if noff == off || cycles[noff] {
+				return Error{ErrRead, "cycle detected in difat", int64(noff)}
+			}
+			cycles[noff] = true
+		}
+		off = noff
 	}
 	return nil
 }
@@ -194,6 +209,10 @@ func (r *Reader) setMiniStream() error {
 	}
 	// build a slice of ministream sectors
 	c = int(r.sectorSize / 4 * r.header.numMiniFatSectors)
+	// prevent creation of an arbitrarily large slice
+	if r.header.numMiniFatSectors > sliceLimit {
+		c = int(sliceLimit)
+	}
 	r.header.miniStreamLocs = make([]uint32, 0, c)
 	cycles := make(map[uint32]bool)
 	sn := r.direntries[0].startingSectorLoc
@@ -262,7 +281,8 @@ func (r *Reader) findNext(sn uint32, mini bool) (uint32, error) {
 	}
 	fatIndex := sn % entries // find position within FAT or MiniFAT sector
 	offset := fileOffset(r.sectorSize, sect) + int64(fatIndex*4)
-	buf, err := r.readAt(offset, 4)
+	buf := make([]byte, 4)
+	_, err := r.ra.ReadAt(buf, offset)
 	if err != nil {
 		return 0, Error{ErrRead, "bad read finding next sector (" + err.Error() + ")", offset}
 	}
@@ -349,11 +369,11 @@ func (r *Reader) Read(b []byte) (n int, err error) {
 // Debug provides granular information from an mscfb file to assist with debugging
 func (r *Reader) Debug() map[string][]uint32 {
 	ret := map[string][]uint32{
-		"sector size":            []uint32{r.sectorSize},
+		"sector size":            {r.sectorSize},
 		"mini fat locs":          r.header.miniFatLocs,
 		"mini stream locs":       r.header.miniStreamLocs,
-		"directory sector":       []uint32{r.header.directorySectorLoc},
-		"mini stream start/size": []uint32{r.File[0].startingSectorLoc, binary.LittleEndian.Uint32(r.File[0].streamSize[:])},
+		"directory sector":       {r.header.directorySectorLoc},
+		"mini stream start/size": {r.File[0].startingSectorLoc, binary.LittleEndian.Uint32(r.File[0].streamSize[:])},
 	}
 	for f, err := r.Next(); err == nil; f, err = r.Next() {
 		ret[f.Name+" start/size"] = []uint32{f.startingSectorLoc, binary.LittleEndian.Uint32(f.streamSize[:])}

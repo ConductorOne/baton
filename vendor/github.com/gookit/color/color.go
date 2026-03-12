@@ -6,7 +6,7 @@ Source code and other details for the project are available at GitHub:
 
 	https://github.com/gookit/color
 
-More usage please see README and tests.
+For more usage, please see README and tests.
 */
 package color
 
@@ -16,8 +16,6 @@ import (
 	"os"
 	"regexp"
 	"strings"
-
-	"github.com/xo/terminfo"
 )
 
 // color render templates
@@ -49,6 +47,9 @@ var (
 	Enable = os.Getenv("NO_COLOR") == ""
 	// RenderTag render HTML tag on call color.Xprint, color.PrintX
 	RenderTag = true
+)
+
+var (
 	// debug mode for development.
 	//
 	// set env:
@@ -60,43 +61,24 @@ var (
 	innerErrs []error
 	// output the default io.Writer message print
 	output io.Writer = os.Stdout
-	// mark current env, It's like in `cmd.exe`
-	// if not in windows, it's always False.
-	isLikeInCmd bool
 	// the color support level for current terminal
 	// needVTP - need enable VTP, only for Windows OS
 	colorLevel, needVTP = detectTermColorLevel()
 	// match color codes
 	codeRegex = regexp.MustCompile(CodeExpr)
-	// mark current env is support color.
-	// Always: isLikeInCmd != supportColor
-	// supportColor = IsSupportColor()
 )
 
 // TermColorLevel Get the currently supported color level
-func TermColorLevel() Level {
-	return colorLevel
-}
+func TermColorLevel() Level { return colorLevel }
 
 // SupportColor Whether the current environment supports color output
-func SupportColor() bool {
-	return colorLevel > terminfo.ColorLevelNone
-}
-
-// Support16Color on the current ENV
-// func Support16Color() bool {
-// 	return colorLevel > terminfo.ColorLevelNone
-// }
+func SupportColor() bool { return colorLevel > LevelNo }
 
 // Support256Color Whether the current environment supports 256-color output
-func Support256Color() bool {
-	return colorLevel > terminfo.ColorLevelBasic
-}
+func Support256Color() bool { return colorLevel > Level16 }
 
 // SupportTrueColor Whether the current environment supports (RGB)True-color output
-func SupportTrueColor() bool {
-	return colorLevel > terminfo.ColorLevelHundreds
-}
+func SupportTrueColor() bool { return colorLevel > Level256 }
 
 /*************************************************************
  * global settings
@@ -123,19 +105,13 @@ func Disable() bool {
 }
 
 // NotRenderTag on call color.Xprint, color.PrintX
-func NotRenderTag() {
-	RenderTag = false
-}
+func NotRenderTag() { RenderTag = false }
 
 // SetOutput set default colored text output
-func SetOutput(w io.Writer) {
-	output = w
-}
+func SetOutput(w io.Writer) { output = w }
 
 // ResetOutput reset output
-func ResetOutput() {
-	output = os.Stdout
-}
+func ResetOutput() { output = os.Stdout }
 
 // ResetOptions reset all package option setting
 func ResetOptions() {
@@ -145,34 +121,29 @@ func ResetOptions() {
 }
 
 // ForceSetColorLevel force open color render
-func ForceSetColorLevel(level terminfo.ColorLevel) terminfo.ColorLevel {
+func ForceSetColorLevel(level Level) Level {
 	oldLevelVal := colorLevel
 	colorLevel = level
 	return oldLevelVal
 }
 
 // ForceColor force open color render
-func ForceColor() terminfo.ColorLevel {
-	return ForceOpenColor()
-}
+func ForceColor() Level { return ForceOpenColor() }
 
 // ForceOpenColor force open color render
-func ForceOpenColor() terminfo.ColorLevel {
+func ForceOpenColor() Level {
 	// TODO should set level to ?
-	return ForceSetColorLevel(terminfo.ColorLevelMillions)
+	return ForceSetColorLevel(LevelRgb)
 }
 
-// IsLikeInCmd check result
-//
-// Deprecated: please don't use
-func IsLikeInCmd() bool {
-	return isLikeInCmd
-}
+// EnableDebug enable debug mode
+func EnableDebug() { debugMode = true }
+
+// ResetDebug reset debug mode
+func ResetDebug() { debugMode = false }
 
 // InnerErrs info
-func InnerErrs() []error {
-	return innerErrs
-}
+func InnerErrs() []error { return innerErrs }
 
 /*************************************************************
  * render color code
@@ -185,11 +156,33 @@ func InnerErrs() []error {
 //	msg := RenderCode("3;32;45", "some", "message")
 func RenderCode(code string, args ...any) string {
 	var message string
-	if ln := len(args); ln == 0 {
+
+	// Fast path optimizations
+	if ln := len(args); ln == 1 {
+		// Single argument - avoid fmt.Sprint overhead
+		if str, ok := args[0].(string); ok {
+			message = str
+		} else {
+			message = fmt.Sprint(args[0])
+		}
+	} else if ln == 2 {
+		// Two arguments - common case, try to optimize if both are strings
+		if str1, ok1 := args[0].(string); ok1 {
+			if str2, ok2 := args[1].(string); ok2 {
+				message = str1 + str2
+			} else {
+				message = fmt.Sprint(args...)
+			}
+		} else {
+			message = fmt.Sprint(args...)
+		}
+	} else if ln == 0 {
 		return ""
+	} else {
+		// Multiple arguments - use fmt.Sprint for safety
+		message = fmt.Sprint(args...)
 	}
 
-	message = fmt.Sprint(args...)
 	if len(code) == 0 {
 		return message
 	}
@@ -206,7 +199,7 @@ func RenderCode(code string, args ...any) string {
 // RenderWithSpaces Render code with spaces.
 // If the number of args is > 1, a space will be added between the args
 func RenderWithSpaces(code string, args ...any) string {
-	msg := formatArgsForPrintln(args)
+	msg := formatLikePrintln(args)
 	if len(code) == 0 {
 		return msg
 	}

@@ -473,10 +473,7 @@ func executeChunkedInsert(
 
 	for i := 0; i < chunks; i++ {
 		start := i * chunkSize
-		end := (i + 1) * chunkSize
-		if end > len(rows) {
-			end = len(rows)
-		}
+		end := min((i+1)*chunkSize, len(rows))
 		chunkedRows := rows[start:end]
 
 		// Create the base insert dataset

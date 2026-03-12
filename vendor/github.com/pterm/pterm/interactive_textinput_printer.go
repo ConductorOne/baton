@@ -293,7 +293,7 @@ func (p InteractiveTextInputPrinter) updateArea(area *cursor.Area) string {
 		p.cursorXPos = -internal.GetStringMaxWidth(p.input[p.cursorYPos])
 	}
 
-	area.Update(Gray(areaText))
+	area.Update(areaText)
 	area.Top()
 	area.Down(p.cursorYPos + 1)
 	area.StartOfLine()

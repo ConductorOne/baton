@@ -50,12 +50,19 @@ var pretouchType func(_vt reflect.Type, opts option.CompileOptions, v uint8) (ma
 func pretouchTypeVM(_vt reflect.Type, opts option.CompileOptions, v uint8) (map[reflect.Type]uint8, error) {
 	/* compile function */
 	compiler := NewCompiler().apply(opts)
+	encoder := func(vt *rt.GoType, ex ...interface{}) (interface{}, error) {
+		pp, err := compiler.Compile(vt.Pack(), ex[0].(bool))
+		if err != nil {
+			return nil, err
+		}
+		return &pp, nil
+	}
 
 	/* find or compile */
 	vt := rt.UnpackType(_vt)
 	if val := vars.GetProgram(vt); val != nil {
 		return nil, nil
-	} else if _, err := vars.ComputeProgram(vt, makeEncoderVM, v == 1); err == nil {
+	} else if _, err := vars.ComputeProgram(vt, encoder, v == 1); err == nil {
 		return compiler.rec, nil
 	} else {
 		return nil, err
@@ -219,7 +226,7 @@ func (self *Compiler) compileOps(p *ir.Program, sp int, vt reflect.Type) {
 	case reflect.Struct:
 		self.compileStruct(p, sp, vt)
 	default:
-		panic(vars.Error_type(vt))
+		self.compileUnsupportedType(p, vt)
 	}
 }
 
@@ -287,6 +294,12 @@ func (self *Compiler) compileMapBody(p *ir.Program, sp int, vt reflect.Type) {
 }
 
 func (self *Compiler) compileMapBodyKey(p *ir.Program, vk reflect.Type) {
+	// followed as `encoding/json/emcode.go:resolveKeyName
+	if vk.Kind() == reflect.String {
+		self.compileString(p, vk)
+		return
+	}
+
 	if !vk.Implements(vars.EncodingTextMarshalerType) {
 		self.compileMapBodyTextKey(p, vk)
 	} else {
@@ -440,7 +453,8 @@ func (self *Compiler) compileStructBody(p *ir.Program, sp int, vt reflect.Type) 
 	p.Add(ir.OP_cond_set)
 
 	/* compile each field */
-	for _, fv := range resolver.ResolveStruct(vt) {
+	fvs := resolver.ResolveStruct(vt)
+	for i, fv := range fvs {
 		var s []int
 		var o resolver.Offset
 
@@ -463,7 +477,12 @@ func (self *Compiler) compileStructBody(p *ir.Program, sp int, vt reflect.Type) 
 		/* check for "omitempty" option */
 		if fv.Type.Kind() != reflect.Struct && fv.Type.Kind() != reflect.Array && (fv.Opts&resolver.F_omitempty) != 0 {
 			s = append(s, p.PC())
-			self.compileStructFieldZero(p, fv.Type)
+			self.compileStructFieldEmpty(p, fv.Type)
+		}
+		/* check for "omitzero" option */
+		if fv.Opts&resolver.F_omitzero != 0 {
+			s = append(s, p.PC())
+			p.VField(ir.OP_is_zero, &fvs[i])
 		}
 
 		/* add the comma if not the first element */
@@ -495,7 +514,7 @@ func (self *Compiler) compileStructBody(p *ir.Program, sp int, vt reflect.Type) 
 
 func (self *Compiler) compileStructFieldStr(p *ir.Program, sp int, vt reflect.Type) {
 	// NOTICE: according to encoding/json, Marshaler type has higher priority than string option
-	// see issue: 
+	// see issue:
 	if self.tryCompileMarshaler(p, vt, self.pv) {
 		return
 	}
@@ -574,7 +593,7 @@ func (self *Compiler) compileStructFieldStr(p *ir.Program, sp int, vt reflect.Ty
 	}
 }
 
-func (self *Compiler) compileStructFieldZero(p *ir.Program, vt reflect.Type) {
+func (self *Compiler) compileStructFieldEmpty(p *ir.Program, vt reflect.Type) {
 	switch vt.Kind() {
 	case reflect.Bool:
 		p.Add(ir.OP_is_zero_1)
@@ -626,15 +645,15 @@ func (self *Compiler) compileStructFieldQuoted(p *ir.Program, sp int, vt reflect
 }
 
 func (self *Compiler) compileInterface(p *ir.Program, vt reflect.Type) {
-	x := p.PC()
-	p.Add(ir.OP_is_nil_p1)
-
 	/* iface and efaces are different */
 	if vt.NumMethod() == 0 {
 		p.Add(ir.OP_eface)
-	} else {
-		p.Add(ir.OP_iface)
+		return
 	}
+
+	x := p.PC()
+	p.Add(ir.OP_is_nil_p1)
+	p.Add(ir.OP_iface)
 
 	/* the "null" value */
 	e := p.PC()
@@ -642,6 +661,10 @@ func (self *Compiler) compileInterface(p *ir.Program, vt reflect.Type) {
 	p.Pin(x)
 	p.Add(ir.OP_null)
 	p.Pin(e)
+}
+
+func (self *Compiler) compileUnsupportedType(p *ir.Program, vt reflect.Type) {
+	p.Rtt(ir.OP_unsupported, vt)
 }
 
 func (self *Compiler) compileMarshaler(p *ir.Program, op ir.Op, vt reflect.Type, mt reflect.Type) {
@@ -670,7 +693,7 @@ func addMarshalerOp(p *ir.Program, op ir.Op, vt reflect.Type, mt reflect.Type) {
 		itab := rt.GetItab(rt.IfaceType(rt.UnpackType(mt)), rt.UnpackType(vt), true)
 		p.Vtab(op, vt, itab)
 	} else {
-		// OPT: get itab here 
+		// OPT: get itab here
 		p.Rtt(op, vt)
 	}
 }

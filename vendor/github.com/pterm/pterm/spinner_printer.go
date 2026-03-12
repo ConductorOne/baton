@@ -138,7 +138,7 @@ func (s *SpinnerPrinter) SetStartedAt(t time.Time) {
 func (s *SpinnerPrinter) UpdateText(text string) {
 	s.Text = text
 	if !RawOutput {
-		Fprinto(s.Writer, s.Style.Sprint(s.currentSequence)+" "+s.MessageStyle.Sprint(s.Text))
+		Fprinto(s.Writer, "\033[K"+s.Style.Sprint(s.currentSequence)+" "+s.MessageStyle.Sprint(s.Text))
 	} else {
 		Fprintln(s.Writer, s.Text)
 	}
@@ -152,10 +152,6 @@ func (s SpinnerPrinter) Start(text ...any) (*SpinnerPrinter, error) {
 
 	if len(text) != 0 {
 		s.Text = Sprint(text...)
-	}
-
-	if RawOutput {
-		Fprintln(s.Writer, s.Text)
 	}
 
 	go func() {
@@ -189,6 +185,9 @@ func (s *SpinnerPrinter) Stop() error {
 		return nil
 	}
 	s.IsActive = false
+	if RawOutput {
+		return nil
+	}
 	if s.RemoveWhenDone {
 		fClearLine(s.Writer)
 		Fprinto(s.Writer)
@@ -226,7 +225,9 @@ func (s *SpinnerPrinter) Info(message ...any) {
 	if len(message) == 0 {
 		message = []any{s.Text}
 	}
+
 	fClearLine(s.Writer)
+
 	Fprinto(s.Writer, s.InfoPrinter.Sprint(message...))
 	_ = s.Stop()
 }
@@ -241,7 +242,9 @@ func (s *SpinnerPrinter) Success(message ...any) {
 	if len(message) == 0 {
 		message = []any{s.Text}
 	}
+
 	fClearLine(s.Writer)
+
 	Fprinto(s.Writer, s.SuccessPrinter.Sprint(message...))
 	_ = s.Stop()
 }
@@ -256,7 +259,9 @@ func (s *SpinnerPrinter) Fail(message ...any) {
 	if len(message) == 0 {
 		message = []any{s.Text}
 	}
+
 	fClearLine(s.Writer)
+
 	Fprinto(s.Writer, s.FailPrinter.Sprint(message...))
 	_ = s.Stop()
 }
@@ -271,7 +276,9 @@ func (s *SpinnerPrinter) Warning(message ...any) {
 	if len(message) == 0 {
 		message = []any{s.Text}
 	}
+
 	fClearLine(s.Writer)
+
 	Fprinto(s.Writer, s.WarningPrinter.Sprint(message...))
 	_ = s.Stop()
 }
