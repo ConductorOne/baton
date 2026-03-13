@@ -7,9 +7,7 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
-	"os"
 	"os/exec"
-	"path/filepath"
 	"runtime"
 
 	"github.com/conductorone/baton-sdk/pkg/dotc1z"
@@ -58,51 +56,14 @@ func (ctrl *Controller) Run(addr string) error {
 	return ctrl.router(addr).Run(addr)
 }
 
-// TODO - this is a hack to get the frontend to work. Should be rewritten.
-func runNpmInstallAndBuild(ctx context.Context, projectPath string) error {
-	nodeModulesPath := filepath.Join(projectPath, "node_modules")
-	if _, err := os.Stat(nodeModulesPath); os.IsNotExist(err) {
-		log.Default().Print("node_modules folder not found. Running npm install...")
-		cmd := exec.CommandContext(ctx, "npm", "install")
-		cmd.Dir = projectPath
-		output, err := cmd.CombinedOutput()
-		if err != nil {
-			log.Default().Print("Error running npm install:", err)
-			log.Default().Print(string(output))
-			return fmt.Errorf("error running 'npm install': %w", err)
-		}
-
-		log.Default().Print("npm install completed successfully.")
-	}
-
-	buildPath := filepath.Join(projectPath, "build")
-	if _, err := os.Stat(buildPath); os.IsNotExist(err) {
-		log.Default().Print("Build folder not found. Running npm build...")
-
-		cmd := exec.CommandContext(ctx, "npm", "run", "build")
-		cmd.Dir = projectPath
-		output, err := cmd.CombinedOutput()
-		if err != nil {
-			log.Default().Print("Error running npm build:", err)
-			log.Default().Print(string(output))
-			return fmt.Errorf("error running 'npm run build': %w", err)
-		}
-
-		log.Default().Print("npm build completed successfully.")
-	}
-	return nil
-}
 
 func (ctrl *Controller) router(addr string) *gin.Engine {
 	ctx := context.Background()
+	if !ctrl.baton.devMode {
+		gin.SetMode(gin.ReleaseMode)
+	}
 	router := gin.Default()
 	api := router.Group("/api")
-	if !ctrl.baton.devMode {
-		err := runNpmInstallAndBuild(ctx, "frontend")
-		if err != nil {
-			log.Default().Println("error setting up frontend: ", err)
-		}
-	}
 
 	efs := newEmbeddedFS(frontend)
 	router.Use(static.Serve("/", efs))
