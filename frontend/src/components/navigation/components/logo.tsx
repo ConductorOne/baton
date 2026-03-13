@@ -11,7 +11,7 @@ const StyledLogo = styled('div')(({ theme }) => ({
   justifyContent: "center",
   alignItems: "center",
   borderRadius: "0px 0px 7px 7px",
-  background: theme.palette.mode === "light" ? theme.palette.secondary.main : theme.palette.primary.dark,    
+  background: "rgba(255,255,255,0.08)",
 }));
 
 export const Logo = () => {

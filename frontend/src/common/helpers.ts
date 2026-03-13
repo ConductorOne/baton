@@ -36,7 +36,7 @@ export const getResourceById = (resourceArray, resourceId: string) => {
 };
 
 export const extractPrincipalId = (nodeId) => {
-  const parts = nodeId.split(/source-|target-|expandable-/);
+  const parts = nodeId.split(/source-|target-|expandable-|entitlement-|aggregate-/);
   const principalId = parts[parts.length - 1];
   return principalId;
 };

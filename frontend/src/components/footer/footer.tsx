@@ -5,23 +5,28 @@ import { Divider } from "@mui/material";
 import { colors } from "../../style/colors";
 
 const FooterWrapper = styled("div")(() => ({
-  position: "absolute",
-  top: "0",
-  right: "0",
+  position: "fixed",
+  top: "12px",
+  right: "12px",
   display: "flex",
   alignItems: "center",
-  padding: "20px",
+  padding: "6px 10px",
+  borderRadius: "6px",
+  backgroundColor: "rgba(255,255,255,0.8)",
+  backdropFilter: "blur(4px)",
+  zIndex: 100,
+  pointerEvents: "none",
 
   hr: {
-    margin: "0 8px",
+    margin: "0 6px",
     backgroundColor: colors.gray200,
   },
 }));
 
-const StyledSpan = styled("span")(({ theme }) => ({
+const StyledSpan = styled("span")(() => ({
   fontSize: "6px",
   marginRight: "5px",
-  color: colors.gray400
+  color: colors.gray400,
 }));
 
 const Footer = () => (

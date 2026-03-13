@@ -4,41 +4,42 @@ import { colors } from "../../../../style/colors";
 export const SizeMap = {
   s: {
     count: {
-      fontSize: "36px",
+      fontSize: "28px",
       fontWeight: 600,
     },
     label: {
-      fontSize: "16px",
+      fontSize: "13px",
     },
   },
   m: {
     count: {
-      fontSize: "60px",
+      fontSize: "40px",
       fontWeight: 600,
     },
     label: {
-      fontSize: "18px",
+      fontSize: "14px",
     },
   },
   l: {
     count: {
-      fontSize: "72px",
+      fontSize: "48px",
       fontWeight: 700,
     },
     label: {
-      fontSize: "20px",
+      fontSize: "16px",
     },
   },
 };
 
 export const Label = styled("span", {
   shouldForwardProp: (prop) => prop !== "size" && prop !== "marginRight",
-})<{ size?: any, marginRight?: boolean }>(({ size, theme, marginRight }) => ({
+})<{ size?: any; marginRight?: boolean }>(({ size, theme, marginRight }) => ({
   textTransform: "uppercase",
   fontSize: size.fontSize,
-  color: theme.palette.mode === "light" ? colors.batonGreen1000 : colors.gray200,
-  marginBottom: marginRight ? "0" : "10px",
-  marginRight: marginRight ? "20px" : '0'
+  letterSpacing: "0.3px",
+  color: theme.palette.text.secondary,
+  marginBottom: marginRight ? "0" : "6px",
+  marginRight: marginRight ? "16px" : "0",
 }));
 
 export const Count = styled("span", {
@@ -47,9 +48,11 @@ export const Count = styled("span", {
   justifyContent: "center",
   fontSize: size.fontSize,
   fontWeight: size.fontWeight,
-  color: theme.palette.mode === "light" ? colors.batonGreen800 : colors.batonGreen500,
+  color:
+    theme.palette.mode === "light"
+      ? colors.batonGreen700
+      : colors.batonGreen500,
 }));
-
 
 export const Score = styled("div")(({ theme }) => ({
   justifyContent: "center",
@@ -58,8 +61,9 @@ export const Score = styled("div")(({ theme }) => ({
   color: colors.batonGreen600,
 
   "> span": {
-    color: theme.palette.mode === "light" ? colors.orange600 : colors.orange500,
-    fontSize: "72px",
+    color:
+      theme.palette.mode === "light" ? colors.orange600 : colors.orange500,
+    fontSize: "48px",
     fontWeight: 700,
-  }
+  },
 }));

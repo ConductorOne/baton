@@ -9,17 +9,15 @@ export const StyledDrawer = styled(MuiDrawer)(({ theme }) => ({
   alignItems: "center",
   justifyContent: "space-between",
   "& .MuiDrawer-paper": {
-    backgroundColor: theme.palette.primary.main,
-    boxShadow:
-      theme.palette.mode === "light"
-        ? "2px 0px 16px 0px rgba(0, 0, 0, 0.02), 3px 0px 8px 0px rgba(0, 0, 0, 0.03)"
-        : `0px 0px 48px 5px ${colors.gray900}`,
+    backgroundColor:
+      theme.palette.mode === "light" ? colors.gray900 : colors.gray950,
+    boxShadow: "1px 0 4px rgba(0,0,0,0.08)",
     boxSizing: "border-box",
     alignItems: "center",
     padding: "0 20px 20px 20px",
     maxWidth: "78px",
     width: "100%",
-    color: theme.palette.primary.contrastText,
+    color: colors.gray50,
     zIndex: 99999,
     borderRight: "none",
   },
@@ -38,13 +36,17 @@ export const IconWrapper = styled("div", {
   justifyContent: "center",
   borderRadius: "6px",
   border: isSelected
-    ? `1px solid ${theme.palette.secondary.main}`
-    : theme.palette.primary.main,
+    ? `1px solid ${colors.batonGreen500}`
+    : "1px solid transparent",
   background: isSelected
-    ? theme.palette.mode === "light"
-      ? theme.palette.secondary.light
-      : theme.palette.primary.dark
-    : theme.palette.primary.main,
+    ? "rgba(155,237,117,0.12)"
+    : "transparent",
+  transition: "all 0.15s ease",
+  "&:hover": {
+    background: isSelected
+      ? "rgba(155,237,117,0.16)"
+      : "rgba(255,255,255,0.06)",
+  },
 }));
 
 export const NavWrapper = styled("div")(() => ({
@@ -55,10 +57,7 @@ export const NavWrapper = styled("div")(() => ({
   height: "100%",
 }));
 
-export const StyledLink = styled(Link)(({ theme }) => ({
+export const StyledLink = styled(Link)(() => ({
   textDecoration: "none",
-  color:
-    theme.palette.mode === "light"
-      ? theme.palette.primary.dark
-      : theme.palette.primary.contrastText,
+  color: colors.gray200,
 }));

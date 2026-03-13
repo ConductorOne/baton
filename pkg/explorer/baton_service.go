@@ -3,8 +3,8 @@ package explorer
 import (
 	"context"
 	"fmt"
+	"sync"
 
-	"github.com/conductorone/baton-sdk/pkg/connectorstore"
 	"github.com/conductorone/baton-sdk/pkg/dotc1z"
 	v1 "github.com/conductorone/baton/pb/baton/v1"
 	"github.com/conductorone/baton/pkg/storecache"
@@ -13,147 +13,206 @@ import (
 	reader_v2 "github.com/conductorone/baton-sdk/pb/c1/reader/v2"
 )
 
+// extractProfileFields extracts profile attributes from a resource's UserTrait annotations.
+func extractProfileFields(r *v2.Resource) map[string]string {
+	result := make(map[string]string)
+	for _, ann := range r.GetAnnotations() {
+		ut := &v2.UserTrait{}
+		if err := ann.UnmarshalTo(ut); err != nil {
+			continue
+		}
+		if ut.GetProfile() != nil {
+			for k, v := range ut.GetProfile().GetFields() {
+				result[k] = v.GetStringValue()
+			}
+		}
+		for _, email := range ut.GetEmails() {
+			if email.GetIsPrimary() && email.GetAddress() != "" {
+				result["email"] = email.GetAddress()
+				break
+			}
+		}
+	}
+	return result
+}
+
 type BatonService struct {
 	syncID       string
 	resourceType string
 	store        *dotc1z.C1File
 	storeCache   *storecache.StoreCache
 	devMode      bool
+	cache        sync.Map
 }
 
-func (b *BatonService) GetEntitlements(ctx context.Context) (*v1.EntitlementListOutput, error) {
-	var err error
-	if b.syncID != "" {
-		err = b.store.ViewSync(ctx, b.syncID)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	var entitlements []*v1.EntitlementOutput
-	pageToken := ""
-	for {
-		req := &v2.EntitlementsServiceListEntitlementsRequest{PageToken: pageToken}
-
-		resp, err := b.store.ListEntitlements(ctx, req)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, en := range resp.List {
-			rt, err := b.storeCache.GetResourceType(ctx, en.Resource.Id.ResourceType)
-			if err != nil {
-				return nil, err
-			}
-			resource, err := b.storeCache.GetResource(ctx, en.Resource.Id)
-			if err != nil {
-				return nil, err
-			}
-
-			entitlements = append(entitlements, &v1.EntitlementOutput{
-				Entitlement:  en,
-				Resource:     resource,
-				ResourceType: rt,
-			})
-		}
-
-		if resp.NextPageToken == "" {
-			break
-		}
-
-		pageToken = resp.NextPageToken
-	}
-
-	return &v1.EntitlementListOutput{
-		Entitlements: entitlements,
-	}, err
+// AccessCounts holds aggregated principal counts by resource type for a given resource.
+type AccessCounts struct {
+	TotalPrincipals int            `json:"total_principals"`
+	CountsByType    map[string]int `json:"counts_by_type"`
 }
 
-func (b *BatonService) GetResources(ctx context.Context) (*v1.ResourceListOutput, error) {
-	err := b.store.ViewSync(ctx, "")
-	if err != nil {
-		return nil, err
-	}
-
-	var resources []*v1.ResourceOutput
-	pageToken := ""
-	for {
-		resp, err := b.store.ListResources(ctx, &v2.ResourcesServiceListResourcesRequest{
-			ResourceTypeId: b.resourceType,
-			PageToken:      pageToken,
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		for _, r := range resp.List {
-			rt, err := b.storeCache.GetResourceType(ctx, r.Id.ResourceType)
-			if err != nil {
-				return nil, err
-			}
-			var parent *v2.Resource
-
-			if r.ParentResourceId != nil {
-				parent, err = b.storeCache.GetResource(ctx, r.ParentResourceId)
-				if err != nil {
-					return nil, err
-				}
-			}
-
-			resources = append(resources, &v1.ResourceOutput{
-				Resource:     r,
-				ResourceType: rt,
-				Parent:       parent,
-			})
-		}
-
-		if resp.NextPageToken == "" {
-			break
-		}
-
-		pageToken = resp.NextPageToken
-	}
-
-	return &v1.ResourceListOutput{
-		Resources: resources,
-	}, nil
+func (b *BatonService) ensureSync(ctx context.Context) error {
+	return b.store.ViewSync(ctx, b.syncID)
 }
 
-func (b *BatonService) GetResourceTypes(ctx context.Context) (*v1.ResourceTypeListOutput, error) {
-	var err error
-
-	if b.syncID != "" {
-		err = b.store.ViewSync(ctx, b.syncID)
-		if err != nil {
-			return nil, err
-		}
+func (b *BatonService) getUserTraitTypes(ctx context.Context) (map[string]bool, error) {
+	if v, ok := b.cache.Load("userTraitTypes"); ok {
+		return v.(map[string]bool), nil
 	}
 
-	var resourceTypes []*v1.ResourceTypeOutput
+	userTraitTypes := make(map[string]bool)
 	pageToken := ""
 	for {
 		resp, err := b.store.ListResourceTypes(ctx, &v2.ResourceTypesServiceListResourceTypesRequest{PageToken: pageToken})
 		if err != nil {
 			return nil, err
 		}
-
 		for _, rt := range resp.List {
-			resourceTypes = append(resourceTypes, &v1.ResourceTypeOutput{ResourceType: rt})
+			if len(rt.Traits) > 0 && rt.Traits[0] == v2.ResourceType_TRAIT_USER {
+				userTraitTypes[rt.Id] = true
+			}
 		}
-
 		if resp.NextPageToken == "" {
 			break
 		}
-
 		pageToken = resp.NextPageToken
+	}
+
+	b.cache.Store("userTraitTypes", userTraitTypes)
+	return userTraitTypes, nil
+}
+
+func (b *BatonService) countResources(ctx context.Context, resourceTypeID string) (int, error) {
+	cacheKey := "count:resources:" + resourceTypeID
+	if v, ok := b.cache.Load(cacheKey); ok {
+		return v.(int), nil
+	}
+
+	count := 0
+	pageToken := ""
+	for {
+		resp, err := b.store.ListResources(ctx, &v2.ResourcesServiceListResourcesRequest{
+			ResourceTypeId: resourceTypeID,
+			PageToken:      pageToken,
+		})
+		if err != nil {
+			return 0, err
+		}
+		count += len(resp.List)
+		if resp.NextPageToken == "" {
+			break
+		}
+		pageToken = resp.NextPageToken
+	}
+
+	b.cache.Store(cacheKey, count)
+	return count, nil
+}
+
+func (b *BatonService) GetEntitlements(ctx context.Context, pageToken string) (*v1.EntitlementListOutput, string, error) {
+	if err := b.ensureSync(ctx); err != nil {
+		return nil, "", err
+	}
+
+	resp, err := b.store.ListEntitlements(ctx, &v2.EntitlementsServiceListEntitlementsRequest{PageToken: pageToken})
+	if err != nil {
+		return nil, "", err
+	}
+
+	var entitlements []*v1.EntitlementOutput
+	for _, en := range resp.List {
+		rt, err := b.storeCache.GetResourceType(ctx, en.Resource.Id.ResourceType)
+		if err != nil {
+			return nil, "", err
+		}
+		resource, err := b.storeCache.GetResource(ctx, en.Resource.Id)
+		if err != nil {
+			return nil, "", err
+		}
+
+		entitlements = append(entitlements, &v1.EntitlementOutput{
+			Entitlement:  en,
+			Resource:     resource,
+			ResourceType: rt,
+		})
+	}
+
+	return &v1.EntitlementListOutput{
+		Entitlements: entitlements,
+	}, resp.NextPageToken, nil
+}
+
+func (b *BatonService) GetResources(ctx context.Context, resourceTypeID string, pageToken string) (*v1.ResourceListOutput, string, error) {
+	if err := b.ensureSync(ctx); err != nil {
+		return nil, "", err
+	}
+
+	filterType := resourceTypeID
+	if filterType == "" {
+		filterType = b.resourceType
+	}
+
+	resp, err := b.store.ListResources(ctx, &v2.ResourcesServiceListResourcesRequest{
+		ResourceTypeId: filterType,
+		PageToken:      pageToken,
+	})
+	if err != nil {
+		return nil, "", err
+	}
+
+	var resources []*v1.ResourceOutput
+	for _, r := range resp.List {
+		rt, err := b.storeCache.GetResourceType(ctx, r.Id.ResourceType)
+		if err != nil {
+			return nil, "", err
+		}
+		var parent *v2.Resource
+
+		if r.ParentResourceId != nil {
+			parent, err = b.storeCache.GetResource(ctx, r.ParentResourceId)
+			if err != nil {
+				return nil, "", err
+			}
+		}
+
+		resources = append(resources, &v1.ResourceOutput{
+			Resource:     r,
+			ResourceType: rt,
+			Parent:       parent,
+		})
+	}
+
+	return &v1.ResourceListOutput{
+		Resources: resources,
+	}, resp.NextPageToken, nil
+}
+
+func (b *BatonService) GetResourceTypes(ctx context.Context, pageToken string) (*v1.ResourceTypeListOutput, string, error) {
+	if err := b.ensureSync(ctx); err != nil {
+		return nil, "", err
+	}
+
+	resp, err := b.store.ListResourceTypes(ctx, &v2.ResourceTypesServiceListResourceTypesRequest{PageToken: pageToken})
+	if err != nil {
+		return nil, "", err
+	}
+
+	var resourceTypes []*v1.ResourceTypeOutput
+	for _, rt := range resp.List {
+		resourceTypes = append(resourceTypes, &v1.ResourceTypeOutput{ResourceType: rt})
 	}
 
 	return &v1.ResourceTypeListOutput{
 		ResourceTypes: resourceTypes,
-	}, nil
+	}, resp.NextPageToken, nil
 }
 
+// GetAccess returns grants for a principal (user). Since users typically have <100 grants, this exhausts pagination.
 func (b *BatonService) GetAccess(ctx context.Context, resourceType, resourceID string) (*v1.ResourceAccessListOutput, error) {
+	if err := b.ensureSync(ctx); err != nil {
+		return nil, err
+	}
+
 	principal, err := b.storeCache.GetResource(ctx, &v2.ResourceId{
 		ResourceType: resourceType,
 		Resource:     resourceID,
@@ -165,21 +224,24 @@ func (b *BatonService) GetAccess(ctx context.Context, resourceType, resourceID s
 	var entitlements []*v2.Entitlement
 	pageToken := ""
 	for {
-		resp, err := b.store.ListGrants(ctx, &v2.GrantsServiceListGrantsRequest{
+		req := reader_v2.GrantsReaderServiceListGrantsForEntitlementRequest_builder{
+			PrincipalId: &v2.ResourceId{
+				ResourceType: resourceType,
+				Resource:     resourceID,
+			},
 			PageToken: pageToken,
-		})
+		}.Build()
+		resp, err := b.store.ListGrantsForPrincipal(ctx, req)
 		if err != nil {
 			return nil, err
 		}
 
 		for _, g := range resp.List {
-			if g.Principal.Id.ResourceType == resourceType && g.Principal.Id.Resource == resourceID {
-				en, err := b.storeCache.GetEntitlement(ctx, g.Entitlement.Id)
-				if err != nil {
-					return nil, err
-				}
-				entitlements = append(entitlements, en)
+			en, err := b.storeCache.GetEntitlement(ctx, g.Entitlement.Id)
+			if err != nil {
+				return nil, err
 			}
+			entitlements = append(entitlements, en)
 		}
 
 		if resp.NextPageToken == "" {
@@ -228,11 +290,8 @@ func (b *BatonService) GetAccess(ctx context.Context, resourceType, resourceID s
 	}, nil
 }
 
-func (b *BatonService) GetResourceById(ctx context.Context, resourceType, resourceID string) (*v1.ResourceOutput, error) {
-	var err error
-
-	err = b.store.ViewSync(ctx, "")
-	if err != nil {
+func (b *BatonService) GetResourceById(ctx context.Context, resourceType, resourceID string) (*ResourceDetailOutput, error) {
+	if err := b.ensureSync(ctx); err != nil {
 		return nil, err
 	}
 
@@ -250,23 +309,19 @@ func (b *BatonService) GetResourceById(ctx context.Context, resourceType, resour
 		return nil, err
 	}
 
-	return &v1.ResourceOutput{
+	return &ResourceDetailOutput{
 		Resource:     r,
 		ResourceType: rt,
+		Profile:      extractProfileFields(r),
 	}, nil
 }
 
-func listGrantsForResourceType(ctx context.Context, store connectorstore.Reader, pageToken string, resourceID string) ([]*v2.Grant, string, error) {
-	req := &reader_v2.GrantsReaderServiceListGrantsForResourceTypeRequest{
-		ResourceTypeId: resourceID,
-		PageToken:      pageToken,
-	}
-	resp, err := store.ListGrantsForResourceType(ctx, req)
-	if err != nil {
-		return nil, "", err
-	}
-
-	return resp.List, resp.NextPageToken, nil
+// ResourceDetailOutput wraps a resource with its extracted profile fields for JSON serialization.
+type ResourceDetailOutput struct {
+	Resource     *v2.Resource      `json:"resource,omitempty"`
+	ResourceType *v2.ResourceType  `json:"resource_type,omitempty"`
+	Parent       *v2.Resource      `json:"parent,omitempty"`
+	Profile      map[string]string `json:"profile,omitempty"`
 }
 
 func getResourceIdString(p *v2.Resource) string {
@@ -275,94 +330,162 @@ func getResourceIdString(p *v2.Resource) string {
 
 type GrantsWithPrincipalResourceType struct {
 	*v1.GrantOutput
-	PrincipalResourceType *v2.ResourceType `protobuf:"bytes,6,opt,name=principal_resource_type,json=principalResourceType,proto3" json:"principal_resource_type,omitempty"`
+	PrincipalResourceType *v2.ResourceType `json:"principal_resource_type,omitempty"`
 }
 
 type GrantsWithPrincipalResourceTypeListOutput struct {
-	Grants []*GrantsWithPrincipalResourceType `protobuf:"bytes,1,rep,name=grants,proto3" json:"grants,omitempty"`
+	Grants []*GrantsWithPrincipalResourceType `json:"grants,omitempty"`
 }
 
 type ResourceAccessOutput struct {
-	ResourceType *v2.ResourceType  `protobuf:"bytes,1,opt,name=resource_type,json=resourceType,proto3" json:"resource_type,omitempty"`
-	Resource     *v2.Resource      `protobuf:"bytes,2,opt,name=resource,proto3" json:"resource,omitempty"`
-	Grants       []*v2.Grant       `protobuf:"bytes,3,rep,name=grants,proto3" json:"grants,omitempty"`
-	Entitlements []*v2.Entitlement `protobuf:"bytes,4,rep,name=entitlements,proto3" json:"entitlements,omitempty"`
+	ResourceType *v2.ResourceType  `json:"resource_type,omitempty"`
+	Resource     *v2.Resource      `json:"resource,omitempty"`
+	Grants       []*v2.Grant       `json:"grants,omitempty"`
+	Entitlements []*v2.Entitlement `json:"entitlements,omitempty"`
+	Profile      map[string]string `json:"profile,omitempty"`
 }
 
 type ResourceAccessListOutput struct {
-	Resource        *v2.Resource            `protobuf:"bytes,1,opt,name=resource,proto3" json:"resource,omitempty"`
-	ResourceType    *v2.ResourceType        `protobuf:"bytes,2,opt,name=resource_type,json=resourceType,proto3" json:"resource_type,omitempty"`
-	PrincipalAccess []*ResourceAccessOutput `protobuf:"bytes,3,rep,name=access,proto3" json:"access,omitempty"`
+	Resource        *v2.Resource            `json:"resource,omitempty"`
+	ResourceType    *v2.ResourceType        `json:"resource_type,omitempty"`
+	PrincipalAccess []*ResourceAccessOutput `json:"access,omitempty"`
 }
 
-func (b *BatonService) GetAccessForResource(ctx context.Context, resourceType, resourceID string) (*ResourceAccessListOutput, error) {
+// GetAccessForResource returns grants for a resource (group/role), paginated by distinct principals.
+// When computeCounts is true (first page), it performs a full scan to collect both paginated results
+// and total counts by type in a single pass, avoiding a separate full scan for counts.
+func (b *BatonService) GetAccessForResource(
+	ctx context.Context, resourceType, resourceID string, pageSize int, pageToken string, computeCounts bool,
+) (*ResourceAccessListOutput, string, *AccessCounts, error) {
+	if err := b.ensureSync(ctx); err != nil {
+		return nil, "", nil, err
+	}
+
 	grantResource, err := b.storeCache.GetResource(ctx, &v2.ResourceId{
 		ResourceType: resourceType,
 		Resource:     resourceID,
 	})
 	if err != nil {
-		return nil, err
+		return nil, "", nil, err
 	}
 
 	grantResourceType, err := b.storeCache.GetResourceType(ctx, resourceType)
-
 	if err != nil {
-		return nil, err
+		return nil, "", nil, err
 	}
 
-	var resourceGrants []*v2.Grant
-	pageToken := ""
-	for {
-		grants, nextToken, err := listGrantsForResourceType(ctx, b.store, pageToken, resourceType)
-		if err != nil {
-			return nil, err
-		}
+	if pageSize <= 0 {
+		pageSize = 100
+	}
 
-		for _, g := range grants {
-			if g.Entitlement.Resource.Id.ResourceType == resourceType && g.Entitlement.Resource.Id.Resource == resourceID {
-				resourceGrants = append(resourceGrants, g)
-			}
+	// Check cache for counts when computing them
+	var cachedCounts *AccessCounts
+	if computeCounts {
+		cacheKey := fmt.Sprintf("accessCounts:%s:%s", resourceType, resourceID)
+		if v, ok := b.cache.Load(cacheKey); ok {
+			cachedCounts = v.(*AccessCounts)
+			computeCounts = false // Already have counts, no need for full scan
 		}
-
-		if nextToken == "" {
-			break
-		}
-		pageToken = nextToken
 	}
 
 	grantsByResource := make(map[string]*ResourceAccessOutput)
+	pageFull := false
+	nextPageToken := ""
 
-	for _, g := range resourceGrants {
-		rKey := getResourceIdString(g.Principal)
+	// For counts: track distinct principals by type across all pages
+	var seenByType map[string]map[string]struct{}
+	if computeCounts {
+		seenByType = make(map[string]map[string]struct{})
+	}
 
-		var accessOutput *ResourceAccessOutput
-		if rAccess, ok := grantsByResource[rKey]; ok {
-			accessOutput = rAccess
-		} else {
-			resource, err := b.storeCache.GetResource(ctx, g.Principal.Id)
-			if err != nil {
-				return nil, err
-			}
+	currentToken := pageToken
 
-			rType, err := b.storeCache.GetResourceType(ctx, g.Principal.Id.ResourceType)
-			if err != nil {
-				return nil, err
-			}
-
-			accessOutput = &ResourceAccessOutput{
-				Resource:     resource,
-				ResourceType: rType,
-			}
-		}
-
-		en, err := b.storeCache.GetEntitlement(ctx, g.Entitlement.Id)
+	for {
+		resp, err := b.store.ListGrants(ctx, &v2.GrantsServiceListGrantsRequest{
+			Resource: &v2.Resource{Id: &v2.ResourceId{
+				ResourceType: resourceType,
+				Resource:     resourceID,
+			}},
+			PageToken: currentToken,
+		})
 		if err != nil {
-			return nil, err
+			return nil, "", nil, err
 		}
 
-		accessOutput.Grants = append(accessOutput.Grants, g)
-		accessOutput.Entitlements = append(accessOutput.Entitlements, en)
-		grantsByResource[rKey] = accessOutput
+		for _, g := range resp.List {
+			rKey := getResourceIdString(g.Principal)
+
+			// Always count for the full scan when computing counts
+			if computeCounts {
+				pType := g.Principal.Id.ResourceType
+				if _, ok := seenByType[pType]; !ok {
+					seenByType[pType] = make(map[string]struct{})
+				}
+				seenByType[pType][g.Principal.Id.Resource] = struct{}{}
+			}
+
+			// Only collect detailed access data while we haven't filled the page
+			if !pageFull {
+				var accessOutput *ResourceAccessOutput
+				if rAccess, ok := grantsByResource[rKey]; ok {
+					accessOutput = rAccess
+				} else {
+					if len(grantsByResource) >= pageSize {
+						// We've hit pageSize distinct principals
+						pageFull = true
+						nextPageToken = resp.NextPageToken
+						if !computeCounts {
+							// Not computing counts, we can stop early
+							break
+						}
+						continue
+					}
+
+					resource, err := b.storeCache.GetResource(ctx, g.Principal.Id)
+					if err != nil {
+						return nil, "", nil, err
+					}
+
+					rType, err := b.storeCache.GetResourceType(ctx, g.Principal.Id.ResourceType)
+					if err != nil {
+						return nil, "", nil, err
+					}
+
+					accessOutput = &ResourceAccessOutput{
+						Resource:     resource,
+						ResourceType: rType,
+						Profile:      extractProfileFields(resource),
+					}
+				}
+
+				en, err := b.storeCache.GetEntitlement(ctx, g.Entitlement.Id)
+				if err != nil {
+					return nil, "", nil, err
+				}
+
+				accessOutput.Grants = append(accessOutput.Grants, g)
+				accessOutput.Entitlements = append(accessOutput.Entitlements, en)
+				grantsByResource[rKey] = accessOutput
+			}
+		}
+
+		// If not computing counts, stop once we have enough principals or no more pages
+		if !computeCounts && (pageFull || resp.NextPageToken == "") {
+			if !pageFull {
+				nextPageToken = resp.NextPageToken
+			}
+			break
+		}
+
+		// If computing counts, we must exhaust all pages
+		if resp.NextPageToken == "" {
+			if !pageFull {
+				nextPageToken = ""
+			}
+			break
+		}
+
+		currentToken = resp.NextPageToken
 	}
 
 	var outputs []*ResourceAccessOutput
@@ -370,14 +493,32 @@ func (b *BatonService) GetAccessForResource(ctx context.Context, resourceType, r
 		outputs = append(outputs, o)
 	}
 
+	var counts *AccessCounts
+	if computeCounts {
+		counts = &AccessCounts{
+			CountsByType: make(map[string]int),
+		}
+		for pType, ids := range seenByType {
+			counts.CountsByType[pType] = len(ids)
+			counts.TotalPrincipals += len(ids)
+		}
+		// Cache the counts for future requests
+		cacheKey := fmt.Sprintf("accessCounts:%s:%s", resourceType, resourceID)
+		b.cache.Store(cacheKey, counts)
+	} else if cachedCounts != nil {
+		counts = cachedCounts
+	}
+
 	return &ResourceAccessListOutput{
 		Resource:        grantResource,
 		ResourceType:    grantResourceType,
 		PrincipalAccess: outputs,
-	}, nil
+	}, nextPageToken, counts, nil
 }
 
-func listPrincipalsForResource(ctx context.Context, resourceType, resourceID, pageToken string, sc *storecache.StoreCache) ([]*v2.Resource, string, error) {
+func listPrincipalsForResource(
+	ctx context.Context, resourceType, resourceID, pageToken string, sc *storecache.StoreCache,
+) ([]*v2.Resource, string, error) {
 	var ret []*v2.Resource
 
 	resource := &v2.Resource{Id: &v2.ResourceId{
@@ -406,77 +547,81 @@ func listPrincipalsForResource(ctx context.Context, resourceType, resourceID, pa
 	return ret, resp.NextPageToken, nil
 }
 
-func (b *BatonService) GetPrincipals(ctx context.Context, resourceType, resourceID string) (*v1.ResourceListOutput, error) {
-	var err error
-	if b.syncID != "" {
-		err = b.store.ViewSync(ctx, b.syncID)
-		if err != nil {
-			return nil, err
-		}
+// GetPrincipals returns one page of user-trait principals for a resource.
+func (b *BatonService) GetPrincipals(
+	ctx context.Context, resourceType, resourceID string, pageToken string,
+) (*v1.ResourceListOutput, string, error) {
+	if err := b.ensureSync(ctx); err != nil {
+		return nil, "", err
 	}
-
-	sc := storecache.NewStoreCache(ctx, b.store)
 
 	seenPrincipals := make(map[string]struct{})
 	var outputs []*v1.ResourceOutput
-	pageToken := ""
-	for {
-		var principals []*v2.Resource
-		principals, pageToken, err = listPrincipalsForResource(ctx, resourceType, resourceID, pageToken, sc)
-		if err != nil {
-			return nil, err
-		}
+	currentToken := pageToken
 
-		for _, p := range principals {
-			cacheKey := getResourceIdString(p)
-			if _, ok := seenPrincipals[cacheKey]; !ok {
-				resourceType, err := sc.GetResourceType(ctx, p.Id.ResourceType)
-				if err != nil {
-					return nil, err
-				}
+	// Fetch a single SDK page of grants and extract unique user principals.
+	principals, nextToken, err := listPrincipalsForResource(ctx, resourceType, resourceID, currentToken, b.storeCache)
+	if err != nil {
+		return nil, "", err
+	}
 
-				var parent *v2.Resource
-				if p.ParentResourceId != nil {
-					parent, err = sc.GetResource(ctx, p.ParentResourceId)
-					if err != nil {
-						return nil, err
-					}
-				}
-
-				if resourceType.Traits[0] == v2.ResourceType_TRAIT_USER {
-					outputs = append(outputs, &v1.ResourceOutput{
-						Resource:     p,
-						ResourceType: resourceType,
-						Parent:       parent,
-					})
-				}
-				seenPrincipals[cacheKey] = struct{}{}
+	for _, p := range principals {
+		cacheKey := getResourceIdString(p)
+		if _, ok := seenPrincipals[cacheKey]; !ok {
+			rt, err := b.storeCache.GetResourceType(ctx, p.Id.ResourceType)
+			if err != nil {
+				return nil, "", err
 			}
-		}
 
-		if pageToken == "" {
-			break
+			var parent *v2.Resource
+			if p.ParentResourceId != nil {
+				parent, err = b.storeCache.GetResource(ctx, p.ParentResourceId)
+				if err != nil {
+					return nil, "", err
+				}
+			}
+
+			if len(rt.Traits) > 0 && rt.Traits[0] == v2.ResourceType_TRAIT_USER {
+				outputs = append(outputs, &v1.ResourceOutput{
+					Resource:     p,
+					ResourceType: rt,
+					Parent:       parent,
+				})
+			}
+			seenPrincipals[cacheKey] = struct{}{}
 		}
 	}
 
 	return &v1.ResourceListOutput{
 		Resources: outputs,
-	}, nil
+	}, nextToken, nil
 }
 
 type ResourceOutputWithCount struct {
-	Resource     *v2.Resource     `protobuf:"bytes,1,opt,name=resource,proto3" json:"resource,omitempty"`
-	ResourceType *v2.ResourceType `protobuf:"bytes,2,opt,name=resource_type,json=resourceType,proto3" json:"resource_type,omitempty"`
-	Parent       *v2.Resource     `protobuf:"bytes,3,opt,name=parent,proto3" json:"parent,omitempty"`
-	UserCount    int              `protobuf:"bytes,4,rep,name=userCount,proto3" json:"userCount"`
+	Resource     *v2.Resource     `json:"resource,omitempty"`
+	ResourceType *v2.ResourceType `json:"resource_type,omitempty"`
+	Parent       *v2.Resource     `json:"parent,omitempty"`
+	UserCount    int              `json:"userCount"`
 }
 
 type ResourceListOutputWithCount struct {
-	Resources []*ResourceOutputWithCount `protobuf:"bytes,1,rep,name=resources,proto3" json:"resources,omitempty"`
+	Resources []*ResourceOutputWithCount `json:"resources,omitempty"`
 }
 
-func (b *BatonService) GetResourcesWithPrincipalCount(ctx context.Context, resourceType string) (*ResourceListOutputWithCount, error) {
-	err := b.store.ViewSync(ctx, "")
+// GetResourcesWithPrincipalCount returns resources of a type with user principal counts. Results are cached.
+func (b *BatonService) GetResourcesWithPrincipalCount(
+	ctx context.Context, resourceType string,
+) (*ResourceListOutputWithCount, error) {
+	cacheKey := "principalCounts:" + resourceType
+	if v, ok := b.cache.Load(cacheKey); ok {
+		return v.(*ResourceListOutputWithCount), nil
+	}
+
+	if err := b.ensureSync(ctx); err != nil {
+		return nil, err
+	}
+
+	userTraitTypes, err := b.getUserTraitTypes(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -506,23 +651,36 @@ func (b *BatonService) GetResourcesWithPrincipalCount(ctx context.Context, resou
 				}
 			}
 
-			principals, err := b.GetPrincipals(ctx, r.Id.ResourceType, r.Id.Resource)
-			if err != nil {
-				return nil, err
-			}
-
-			var principalsLength int
-			if principals != nil {
-				principalsLength = len(principals.Resources)
-			} else {
-				principalsLength = 0
+			seenPrincipals := make(map[string]struct{})
+			grantPageToken := ""
+			for {
+				grantResp, err := b.store.ListGrants(ctx, &v2.GrantsServiceListGrantsRequest{
+					Resource: &v2.Resource{Id: &v2.ResourceId{
+						ResourceType: r.Id.ResourceType,
+						Resource:     r.Id.Resource,
+					}},
+					PageToken: grantPageToken,
+				})
+				if err != nil {
+					return nil, err
+				}
+				for _, g := range grantResp.List {
+					if userTraitTypes[g.Principal.Id.ResourceType] {
+						key := fmt.Sprintf("%s:%s", g.Principal.Id.ResourceType, g.Principal.Id.Resource)
+						seenPrincipals[key] = struct{}{}
+					}
+				}
+				if grantResp.NextPageToken == "" {
+					break
+				}
+				grantPageToken = grantResp.NextPageToken
 			}
 
 			resources = append(resources, &ResourceOutputWithCount{
 				Resource:     r,
 				ResourceType: rt,
 				Parent:       parent,
-				UserCount:    principalsLength,
+				UserCount:    len(seenPrincipals),
 			})
 		}
 
@@ -533,7 +691,9 @@ func (b *BatonService) GetResourcesWithPrincipalCount(ctx context.Context, resou
 		pageToken = resp.NextPageToken
 	}
 
-	return &ResourceListOutputWithCount{
+	result := &ResourceListOutputWithCount{
 		Resources: resources,
-	}, nil
+	}
+	b.cache.Store(cacheKey, result)
+	return result, nil
 }

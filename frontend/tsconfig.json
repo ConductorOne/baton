@@ -1,16 +1,20 @@
 {
   "compilerOptions": {
-    "sourceMap": true,
-    "esModuleInterop": true,
-    "moduleResolution": "node",
-    "lib": ["es2017", "dom"],
-    "resolveJsonModule": true,
-    "target": "ES6",
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
-    "jsx": "react",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": false,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "sourceMap": true
   },
-  "exclude": [
-    "node_modules",
-    "build",
-  ]
+  "include": ["src"],
+  "exclude": ["node_modules"]
 }

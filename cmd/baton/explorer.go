@@ -22,6 +22,7 @@ func explorerCmd() *cobra.Command {
 	addResourceTypeFlag(cmd)
 	addSyncIDFlag(cmd)
 
+	cmd.Flags().IntP("port", "p", 8080, "Port to run the explorer server on")
 	cmd.Flags().Bool("dev", false, "Runs the frontend in development mode")
 	err := cmd.Flags().MarkHidden("dev")
 	if err != nil {
@@ -41,7 +42,7 @@ func runNpmInstallAndStart(projectPath string) error {
 		return fmt.Errorf("error running 'npm install': %w", err)
 	}
 
-	startCmd := exec.CommandContext(ctx, "npm", "start")
+	startCmd := exec.CommandContext(ctx, "npm", "run", "dev")
 	startCmd.Stdout = os.Stdout
 	startCmd.Stderr = os.Stderr
 	startCmd.Dir = projectPath
@@ -61,7 +62,7 @@ func startFrontendServer() error {
 	return nil
 }
 
-func startExplorerAPI(cmd *cobra.Command, devMode bool) {
+func startExplorerAPI(cmd *cobra.Command, devMode bool, port int) {
 	ctx := cmd.Context()
 
 	filePath, err := cmd.Flags().GetString("file")
@@ -91,8 +92,9 @@ func startExplorerAPI(cmd *cobra.Command, devMode bool) {
 	}
 	defer store.Close(ctx)
 
+	addr := fmt.Sprintf(":%d", port)
 	ctrl := explorer.NewController(ctx, store, syncID, resourceType, devMode)
-	e := ctrl.Run(":8080")
+	e := ctrl.Run(addr)
 	if e != nil {
 		log.Fatal("error running explorer", err) //nolint:gocritic // reason
 	}
@@ -104,14 +106,19 @@ func runExplorer(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error getting dev flag: %w", err)
 	}
 
+	port, err := cmd.Flags().GetInt("port")
+	if err != nil {
+		return fmt.Errorf("error getting port flag: %w", err)
+	}
+
 	if isDevMode {
-		go startExplorerAPI(cmd, isDevMode)
+		go startExplorerAPI(cmd, isDevMode, port)
 		err = startFrontendServer()
 		if err != nil {
 			log.Fatal(err) //nolint:gocritic // reason
 		}
 	}
-	startExplorerAPI(cmd, isDevMode)
+	startExplorerAPI(cmd, isDevMode, port)
 
 	return nil
 }

@@ -1,12 +1,11 @@
-import React, { Fragment } from "react";
+import React, { Fragment, useMemo } from "react";
 import { Close, LinkIcon } from "../icons/icons";
-import { useTheme } from "@mui/material/styles";
 import { Button, Typography } from "@mui/material";
 import {
   Container,
   Details,
   Label,
-  ResourceDetailsDrawer,
+  ResourceDetailsPanel,
   StyledDiv,
   Value,
   CloseButton,
@@ -34,15 +33,34 @@ export const ResourceDetailsModal = ({
   resource,
   resourceDetails,
   closeDetails,
+  anchorPosition,
 }) => {
-  const theme = useTheme();
+  const panelStyle = useMemo(() => {
+    if (!anchorPosition) {
+      // Fallback: top-right corner
+      return { top: 80, right: 16 };
+    }
+    const panelWidth = 336;
+    const panelMaxHeight = window.innerHeight * 0.7;
+    let left = anchorPosition.left + 16;
+    let top = anchorPosition.top - 20;
+
+    // Flip to left of click if it would overflow right edge
+    if (left + panelWidth > window.innerWidth - 16) {
+      left = anchorPosition.left - panelWidth - 16;
+    }
+    // Clamp to not overflow bottom
+    if (top + panelMaxHeight > window.innerHeight - 16) {
+      top = window.innerHeight - panelMaxHeight - 16;
+    }
+    // Clamp to not go above viewport
+    if (top < 16) top = 16;
+
+    return { top, left };
+  }, [anchorPosition]);
 
   return (
-    <ResourceDetailsDrawer
-      theme={theme}
-      variant="permanent"
-      anchor="right"
-    >
+    <ResourceDetailsPanel style={panelStyle}>
       <ModalHeader>
         <StyledDiv>
           <Typography variant="h5">
@@ -71,9 +89,9 @@ export const ResourceDetailsModal = ({
           <EntitlementDetails entitlement={resource} />
         )}
         {resourceDetails.resourceOpened && (
-          <ResourceDetails resource={resource.resource} />
+          <ResourceDetails resource={resource.resource} profile={resource.profile} />
         )}
       </Details>
-    </ResourceDetailsDrawer>
+    </ResourceDetailsPanel>
   );
 };

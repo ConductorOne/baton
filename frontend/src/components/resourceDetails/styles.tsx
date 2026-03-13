@@ -1,27 +1,26 @@
 import { styled } from "@mui/material/styles";
-import MuiDrawer from "@mui/material/Drawer";
-import { IconButton, Typography } from "@mui/material";
+import { IconButton, Paper, Typography } from "@mui/material";
 import { Link } from "react-router-dom";
 import { colors } from "../../style/colors";
 
-export const ResourceDetailsDrawer = styled(MuiDrawer)(({ theme }) => ({
-  "& .MuiDrawer-paper": {
-    padding: "20px",
-    margin: "20px",
-    display: "flex",
-    maxWidth: "336px",
-    width: "100%",
-    height: "auto",
-    flexDirection: "column",
-    alignItems: "flex-start",
-    borderRadius: "16px",
-    border:
-      theme.palette.mode === "light" ? `1px solid ${colors.gray200}` : "none",
-    boxShadow:
-      "2px 0px 16px 0px rgba(0, 0, 0, 0.02), 3px 0px 8px 0px rgba(0, 0, 0, 0.03)",
-    backgroundColor:
-      theme.palette.mode === "light" ? colors.white : colors.gray800,
-  },
+export const ResourceDetailsPanel = styled(Paper)(({ theme }) => ({
+  position: "fixed",
+  zIndex: 1000,
+  padding: "20px",
+  maxWidth: "336px",
+  width: "336px",
+  maxHeight: "70vh",
+  overflowY: "auto",
+  borderRadius: "12px",
+  border: `1px solid ${
+    theme.palette.mode === "light" ? colors.gray200 : "rgba(255,255,255,0.08)"
+  }`,
+  boxShadow:
+    theme.palette.mode === "light"
+      ? "0px 4px 16px rgba(0,0,0,0.08)"
+      : "0px 4px 16px rgba(0,0,0,0.3)",
+  backgroundColor:
+    theme.palette.mode === "light" ? colors.white : colors.gray800,
 }));
 
 export const StyledDiv = styled("div")(() => ({
@@ -29,14 +28,16 @@ export const StyledDiv = styled("div")(() => ({
   justifyContent: "space-between",
   alignItems: "center",
   width: "100%",
-  marginBottom: "15px",
+  marginBottom: "12px",
 }));
 
-export const ModalHeader = styled("div")(() => ({
-  paddingBottom: "15px",
-  borderBottom: `1px solid ${colors.gray200}`,
+export const ModalHeader = styled("div")(({ theme }) => ({
+  paddingBottom: "12px",
+  borderBottom: `1px solid ${
+    theme.palette.mode === "light" ? colors.gray200 : "rgba(255,255,255,0.08)"
+  }`,
   width: "100%",
-  marginBottom: "20px",
+  marginBottom: "16px",
 }));
 
 export const Details = styled("div")(() => ({
@@ -45,14 +46,16 @@ export const Details = styled("div")(() => ({
 }));
 
 export const Label = styled(Typography)(({ theme }) => ({
-  color:
-    theme.palette.mode === "light"
-      ? theme.palette.primary.dark
-      : colors.gray400,
+  color: theme.palette.text.secondary,
+  fontSize: "12px",
+  fontWeight: 500,
+  textTransform: "uppercase",
+  letterSpacing: "0.3px",
 }));
 
 export const Value = styled(Typography)(({ theme }) => ({
-  color: theme.palette.primary.contrastText,
+  color: theme.palette.text.primary,
+  fontSize: "13px",
 }));
 
 export const Container = styled("div")(() => ({
@@ -61,13 +64,13 @@ export const Container = styled("div")(() => ({
 
 export const CloseButton = styled(IconButton)(() => ({
   marginLeft: "5px",
-  borderRadius: "8px",
+  borderRadius: "6px",
 }));
 
 export const StyledLink = styled(Link)(({ theme }) => ({
   textDecoration: "none",
-  color:
-    theme.palette.mode === "light"
-      ? theme.palette.primary.dark
-      : theme.palette.primary.contrastText,
+  color: theme.palette.text.primary,
+  "&:hover": {
+    color: theme.palette.secondary.main,
+  },
 }));

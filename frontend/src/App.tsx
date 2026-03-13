@@ -21,7 +21,9 @@ type ResourcesListState = {
 };
 
 function App() {
-  const [mode, setMode] = useState("light");
+  const [mode, setMode] = useState(() => {
+    return localStorage.getItem("baton-theme") || "light";
+  });
   const [resourceList, setResourceList] = useState<ResourcesListState>({
     opened: false,
   });
@@ -29,7 +31,11 @@ function App() {
   const colorMode = React.useMemo(
     () => ({
       toggleColorMode: () => {
-        setMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
+        setMode((prevMode) => {
+          const next = prevMode === "light" ? "dark" : "light";
+          localStorage.setItem("baton-theme", next);
+          return next;
+        });
       },
     }),
     []

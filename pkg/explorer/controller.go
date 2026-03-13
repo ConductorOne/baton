@@ -55,7 +55,7 @@ func NewController(ctx context.Context, store *dotc1z.C1File, syncID, resourceTy
 }
 
 func (ctrl *Controller) Run(addr string) error {
-	return ctrl.router().Run(addr)
+	return ctrl.router(addr).Run(addr)
 }
 
 // TODO - this is a hack to get the frontend to work. Should be rewritten.
@@ -93,7 +93,7 @@ func runNpmInstallAndBuild(ctx context.Context, projectPath string) error {
 	return nil
 }
 
-func (ctrl *Controller) router() *gin.Engine {
+func (ctrl *Controller) router(addr string) *gin.Engine {
 	ctx := context.Background()
 	router := gin.Default()
 	api := router.Group("/api")
@@ -109,7 +109,7 @@ func (ctrl *Controller) router() *gin.Engine {
 
 	// todo: make this configurable
 	if !ctrl.baton.devMode {
-		err := openBrowser(ctx, "http://localhost:8080")
+		err := openBrowser(ctx, "http://localhost"+addr)
 		if err != nil {
 			log.Default().Print("error opening browser: ", err)
 		}

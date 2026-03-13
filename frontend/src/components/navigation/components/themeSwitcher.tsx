@@ -12,10 +12,7 @@ const CustomSwitch = styled(Switch)(({ theme }) => ({
   padding: "8px",
   "& .MuiSwitch-track": {
     borderRadius: "12px",
-    backgroundColor:
-      theme.palette.mode === "light"
-        ? `${colors.gray200} !important`
-        : `${colors.gray950} !important`,
+    backgroundColor: "rgba(255,255,255,0.12) !important",
     "&:before, &:after": {
       content: '""',
       position: "absolute",
@@ -41,8 +38,7 @@ const CustomSwitch = styled(Switch)(({ theme }) => ({
     },
   },
   "& .MuiSwitch-thumb": {
-    backgroundColor:
-      theme.palette.mode === "light" ? colors.white : colors.gray300,
+    backgroundColor: colors.gray300,
     width: "16px",
     height: "16px",
     margin: "2px",

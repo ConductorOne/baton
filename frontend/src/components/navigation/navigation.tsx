@@ -14,6 +14,7 @@ import { Logo } from "./components/logo";
 import { IconPerType } from "../icons/resourceTypeIcon";
 import { DashboardButton } from "./components/dashboardButton";
 import { useLocation } from "react-router-dom";
+import { colors } from "../../style/colors";
 
 export const Navigation = ({ openResourceList, resourceState, closeResourceList }) => {
   const theme = useTheme();
@@ -78,10 +79,8 @@ export const Navigation = ({ openResourceList, resourceState, closeResourceList 
                       color={
                         resourceState.resource === type.resource_type.id &&
                         !isDashboard
-                          ? theme.palette.secondary.main
-                          : theme.palette.mode === "light"
-                          ? theme.palette.primary.dark
-                          : theme.palette.primary.contrastText
+                          ? colors.batonGreen400
+                          : colors.gray400
                       }
                       resourceType={type.resource_type.id}
                       resourceTrait={

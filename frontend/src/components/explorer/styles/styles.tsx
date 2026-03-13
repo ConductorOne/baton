@@ -3,18 +3,34 @@ import { styled } from "@mui/material/styles";
 import { IconButton, ListItemButton, List, Typography } from "@mui/material";
 import { colors } from "../../../style/colors";
 
+export const ExplorerLayout = styled("div", {
+  shouldForwardProp: (prop) => prop !== "sidebarOpen",
+})<{ sidebarOpen?: boolean }>(({ sidebarOpen }) => {
+  const navWidth = 78;
+  const sidebarWidth = sidebarOpen ? 270 : 0;
+  const totalOffset = navWidth + sidebarWidth;
+  return {
+    display: "flex",
+    flexDirection: "column",
+    width: `calc(100vw - ${totalOffset}px)`,
+    height: "100vh",
+    marginLeft: `${totalOffset}px`,
+    transition: "margin-left 0.2s ease, width 0.2s ease",
+  };
+});
+
 export const TreeWrapper = styled("div")(() => ({
-  width: "100vw",
-  height: "100vh",
+  flex: 1,
+  minHeight: 0,
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
-  padding: "20px",
+  padding: "16px",
 }));
 
 export const ResourcesListWrapper = styled(List)(() => ({
   width: "100%",
-  marginTop: "20px",
+  marginTop: "16px",
 }));
 
 export const Sidebar = styled(MuiDrawer)(({ theme }) => ({
@@ -23,45 +39,33 @@ export const Sidebar = styled(MuiDrawer)(({ theme }) => ({
     width: "100%",
     display: "flex",
     backgroundColor:
-      theme.palette.mode === "light"
-        ? theme.palette.primary.main
-        : colors.gray900,
-    color: theme.palette.primary.contrastText,
-    boxShadow:
-      "2px 0px 16px 0px rgba(0, 0, 0, 0.02), 3px 0px 8px 0px rgba(0, 0, 0, 0.03)",
+      theme.palette.mode === "light" ? colors.gray900 : colors.gray950,
+    color: colors.gray50,
+    boxShadow: "2px 0 8px rgba(0,0,0,0.08)",
     marginLeft: "78px",
-    padding: "20px",
+    padding: "16px",
   },
 }));
 
 export const ResourceLabel = styled(ListItemButton)(({ theme }) => ({
-  borderRadius: "8px",
-  color: "white",
-  padding: "8px 16px",
-  marginBottom: "2px",
-  marginRight: "0px",
+  borderRadius: "6px",
+  color: colors.gray100,
+  padding: "6px 12px",
+  marginBottom: "1px",
   p: {
-    fontSize: "14px",
+    fontSize: "13px",
   },
   "&:hover": {
-    backgroundColor:
-      theme.palette.mode === "light"
-        ? theme.palette.secondary.light
-        : theme.palette.primary.dark,
+    backgroundColor: "rgba(255,255,255,0.06)",
   },
   "&.Mui-selected": {
-    backgroundColor:
-      theme.palette.mode === "light"
-        ? theme.palette.secondary.light
-        : theme.palette.primary.dark,
+    backgroundColor: "rgba(155,237,117,0.12)",
     "> p": {
-      fontWeight: "bolder",
+      fontWeight: 600,
+      color: colors.batonGreen300,
     },
     "&:hover": {
-      backgroundColor:
-        theme.palette.mode === "light"
-          ? theme.palette.secondary.light
-          : theme.palette.primary.dark,
+      backgroundColor: "rgba(155,237,117,0.16)",
     },
   },
 }));
@@ -70,13 +74,16 @@ export const SidebarHeader = styled("div")(() => ({
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
-  padding: "0 0 20px 16px",
+  padding: "0 0 12px 12px",
 }));
 
-export const StyledButton = styled(IconButton)(({ theme }) => ({
-  borderRadius: "8px",
-  boxShadow: "0px 1px 2px 0px rgba(16, 24, 40, 0.05)",
-  marginLeft: "5px",
+export const StyledButton = styled(IconButton)(() => ({
+  borderRadius: "6px",
+  border: "1px solid rgba(255,255,255,0.12)",
+  color: colors.gray300,
+  "&:hover": {
+    backgroundColor: "rgba(255,255,255,0.06)",
+  },
 }));
 
 export const NodeInfoWrapper = styled("div")(() => ({
@@ -94,7 +101,7 @@ export const IconWrapper = styled("div", {
   shouldForwardProp: (prop) =>
     prop !== "backgroundColor" && prop !== "borderColor",
 })<{ backgroundColor?: string; borderColor?: string }>(
-  ({ backgroundColor, borderColor, theme }) => ({
+  ({ backgroundColor, borderColor }) => ({
     backgroundColor: backgroundColor,
     borderRadius: "1000px",
     display: "flex",
@@ -107,7 +114,8 @@ export const IconWrapper = styled("div", {
 );
 
 export const EmptyResourceLabel = styled(Typography)(() => ({
-  padding: "0 20px",
+  padding: "0 16px",
+  color: colors.gray400,
 }));
 
 export const EntitlementNumberLabel = styled("span")(({ theme }) => ({
@@ -119,7 +127,7 @@ export const EntitlementNumberLabel = styled("span")(({ theme }) => ({
   fontSize: "8px",
 }));
 
-export const SelectedEntitlementWrapper = styled("div")(({ theme }) => ({
+export const SelectedEntitlementWrapper = styled("div")(() => ({
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
@@ -130,39 +138,37 @@ export const Node = styled("div", {
 })<{ isSelected: boolean }>(({ theme, isSelected }) => ({
   backgroundColor: isSelected
     ? theme.palette.mode === "light"
-      ? colors.batonGreen200
-      : colors.batonGreen900
+      ? colors.batonGreen100
+      : "rgba(155,237,117,0.08)"
     : theme.palette.mode === "light"
     ? colors.white
-    : colors.gray700,
+    : colors.gray800,
   border: isSelected
-    ? `1.2px solid ${
+    ? `1.5px solid ${
         theme.palette.mode === "light"
-          ? colors.batonGreen700
+          ? colors.batonGreen600
           : colors.batonGreen500
       }`
-    : `1.2px solid ${
-        theme.palette.mode === "light" ? colors.white : colors.gray700
+    : `1px solid ${
+        theme.palette.mode === "light" ? colors.gray200 : "rgba(255,255,255,0.08)"
       }`,
   display: "flex",
-  padding: " 16px 16px 16px 12px",
+  padding: "12px 14px",
   alignItems: "center",
-  borderRadius: "12px",
+  borderRadius: "10px",
   maxWidth: "300px",
   minWidth: "200px",
   boxShadow: isSelected
     ? "none"
-    : "0px 2px 4px -2px rgba(16, 24, 40, 0.06), 0px 4px 8px -2px rgba(16, 24, 40, 0.10)",
+    : theme.palette.mode === "light"
+    ? "0px 1px 3px rgba(0,0,0,0.06)"
+    : "none",
 
   color:
-    theme.palette.mode === "light"
-      ? colors.batonGreen1000
-      : colors.batonGreen100,
+    theme.palette.mode === "light" ? colors.gray900 : colors.gray50,
   span: {
     color:
-      theme.palette.mode === "light"
-        ? colors.batonGreen1000
-        : colors.batonGreen200,
+      theme.palette.mode === "light" ? colors.gray600 : colors.gray300,
   },
 
   ".react-flow__handle": {
