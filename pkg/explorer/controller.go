@@ -56,7 +56,6 @@ func (ctrl *Controller) Run(addr string) error {
 	return ctrl.router(addr).Run(addr)
 }
 
-
 func (ctrl *Controller) router(addr string) *gin.Engine {
 	ctx := context.Background()
 	if !ctrl.baton.devMode {
