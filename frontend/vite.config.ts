@@ -12,5 +12,14 @@ export default defineConfig({
   build: {
     outDir: "../pkg/explorer/frontend",
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ["react", "react-dom", "react-router-dom"],
+          mui: ["@mui/material", "@mui/icons-material"],
+          reactflow: ["reactflow"],
+        },
+      },
+    },
   },
 });

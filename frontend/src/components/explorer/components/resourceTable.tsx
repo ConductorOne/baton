@@ -16,7 +16,6 @@ import { FixedSizeList } from "react-window";
 import InfiniteLoader from "react-window-infinite-loader";
 import { normalizeString } from "../../../common/helpers";
 
-type SortField = "name" | "type";
 type SortDirection = "asc" | "desc";
 
 interface ResourceTableProps {
@@ -31,7 +30,6 @@ interface ResourceTableProps {
 }
 
 const ROW_HEIGHT = 44;
-const HEADER_HEIGHT = 44;
 
 export const ResourceTable: React.FC<ResourceTableProps> = ({
   data,
@@ -43,10 +41,10 @@ export const ResourceTable: React.FC<ResourceTableProps> = ({
   countsByType,
   totalCount,
 }) => {
-  const [sortField, setSortField] = useState<SortField>("name");
+  const [sortField, setSortField] = useState<string>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
-  const handleSort = (field: SortField) => {
+  const handleSort = (field: string) => {
     if (sortField === field) {
       setSortDirection((d) => (d === "asc" ? "desc" : "asc"));
     } else {
@@ -68,6 +66,20 @@ export const ResourceTable: React.FC<ResourceTableProps> = ({
     return ents.map((e: any) => e.display_name || e.slug || "").filter(Boolean);
   };
 
+  // Show department and job_title profile columns when available
+  const PROFILE_COLUMNS = ["department", "job_title"];
+  const profileKeys = useMemo(() => {
+    const available = new Set<string>();
+    for (const item of data) {
+      if (item.profile) {
+        for (const k of Object.keys(item.profile)) {
+          available.add(k);
+        }
+      }
+    }
+    return PROFILE_COLUMNS.filter((k) => available.has(k));
+  }, [data]);
+
   const sortedData = useMemo(() => {
     const sorted = [...data];
     sorted.sort((a, b) => {
@@ -75,9 +87,13 @@ export const ResourceTable: React.FC<ResourceTableProps> = ({
       if (sortField === "name") {
         aVal = getName(a).toLowerCase();
         bVal = getName(b).toLowerCase();
-      } else {
+      } else if (sortField === "type") {
         aVal = getType(a).toLowerCase();
         bVal = getType(b).toLowerCase();
+      } else {
+        // Profile column sort
+        aVal = (a.profile?.[sortField] || "").toLowerCase();
+        bVal = (b.profile?.[sortField] || "").toLowerCase();
       }
       const cmp = aVal.localeCompare(bVal);
       return sortDirection === "asc" ? cmp : -cmp;
@@ -93,6 +109,12 @@ export const ResourceTable: React.FC<ResourceTableProps> = ({
   }, [onLoadMore]);
 
   const showSummaryChips = !isUserTrait && countsByType && totalCount && totalCount > 100;
+
+  // Compute flex values: fixed columns get base flex, profile columns share remaining space
+  const nameFlex = 2;
+  const typeFlex = 1;
+  const entFlex = 2;
+  const profileFlex = profileKeys.length > 0 ? 1 : 0;
 
   const Row = ({ index, style }: { index: number; style: React.CSSProperties }) => {
     if (!isItemLoaded(index)) {
@@ -115,7 +137,7 @@ export const ResourceTable: React.FC<ResourceTableProps> = ({
       >
         <TableCell
           component="div"
-          sx={{ flex: 2, border: "none", py: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+          sx={{ flex: nameFlex, border: "none", py: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
         >
           <Typography variant="body2" noWrap>
             {getName(item)}
@@ -123,15 +145,26 @@ export const ResourceTable: React.FC<ResourceTableProps> = ({
         </TableCell>
         <TableCell
           component="div"
-          sx={{ flex: 1, border: "none", py: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+          sx={{ flex: typeFlex, border: "none", py: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
         >
           <Typography variant="body2" color="text.secondary" noWrap>
             {normalizeString(getType(item), true)}
           </Typography>
         </TableCell>
+        {profileKeys.map((key) => (
+          <TableCell
+            key={key}
+            component="div"
+            sx={{ flex: profileFlex, border: "none", py: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+          >
+            <Typography variant="body2" color="text.secondary" noWrap>
+              {item.profile?.[key] || ""}
+            </Typography>
+          </TableCell>
+        ))}
         <TableCell
           component="div"
-          sx={{ flex: 2, border: "none", py: 0, overflow: "hidden" }}
+          sx={{ flex: entFlex, border: "none", py: 0, overflow: "hidden" }}
         >
           <Box sx={{ display: "flex", gap: 0.5, flexWrap: "nowrap", overflow: "hidden" }}>
             {entitlements.slice(0, 3).map((e, i) => (
@@ -186,7 +219,7 @@ export const ResourceTable: React.FC<ResourceTableProps> = ({
         <Table component="div" size="small" sx={{ tableLayout: "fixed" }}>
           <TableHead component="div">
             <TableRow component="div" sx={{ display: "flex" }}>
-              <TableCell component="div" sx={{ flex: 2 }}>
+              <TableCell component="div" sx={{ flex: nameFlex }}>
                 <TableSortLabel
                   active={sortField === "name"}
                   direction={sortField === "name" ? sortDirection : "asc"}
@@ -195,7 +228,7 @@ export const ResourceTable: React.FC<ResourceTableProps> = ({
                   {isUserTrait ? "Name" : "Principal Name"}
                 </TableSortLabel>
               </TableCell>
-              <TableCell component="div" sx={{ flex: 1 }}>
+              <TableCell component="div" sx={{ flex: typeFlex }}>
                 <TableSortLabel
                   active={sortField === "type"}
                   direction={sortField === "type" ? sortDirection : "asc"}
@@ -204,7 +237,18 @@ export const ResourceTable: React.FC<ResourceTableProps> = ({
                   {isUserTrait ? "Type" : "Principal Type"}
                 </TableSortLabel>
               </TableCell>
-              <TableCell component="div" sx={{ flex: 2 }}>
+              {profileKeys.map((key) => (
+                <TableCell key={key} component="div" sx={{ flex: profileFlex }}>
+                  <TableSortLabel
+                    active={sortField === key}
+                    direction={sortField === key ? sortDirection : "asc"}
+                    onClick={() => handleSort(key)}
+                  >
+                    {normalizeString(key, true)}
+                  </TableSortLabel>
+                </TableCell>
+              ))}
+              <TableCell component="div" sx={{ flex: entFlex }}>
                 Entitlements
               </TableCell>
             </TableRow>
