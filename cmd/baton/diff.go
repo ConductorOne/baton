@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	"github.com/conductorone/baton-sdk/pkg/connectorstore"
@@ -18,17 +19,74 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+var (
+	legacyDiffRunner = runLegacyDiff
+	parityDiffRunner = runParityDiff
+)
+
+const (
+	diffModeFlag   = "mode"
+	diffModeLegacy = "legacy"
+	diffModeParity = "parity"
+)
+
 func diffCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "diff",
 		Short: "Perform a diff between sync runs",
-		RunE:  runDiff,
+		Example: strings.Join([]string{
+			"  baton diff -f sync.c1z",
+			"  baton diff --mode parity --left left.c1z --right right.c1z",
+			"  baton diff --mode parity --left left.c1z --right right.c1z --scope grant --resource-type enterprise_application,directory_role --output-format json",
+		}, "\n"),
+		RunE: runDiff,
 	}
+
+	cmd.Flags().String(diffModeFlag, diffModeLegacy, "Diff mode: legacy or parity")
+	cmd.Flags().String("left", "", "Compare the latest full sync from this c1z file in parity mode")
+	cmd.Flags().String("right", "", "Compare the latest full sync from this c1z file in parity mode")
+	cmd.Flags().String("scope", "all", "In parity mode, compare resource, entitlement, grant, or all")
+	cmd.Flags().String(resourceTypeFlag, "", "In parity mode, compare only these comma-separated resource types")
+	cmd.MarkFlagsRequiredTogether("left", "right")
 
 	return cmd
 }
 
 func runDiff(cmd *cobra.Command, args []string) error {
+	mode, err := cmd.Flags().GetString(diffModeFlag)
+	if err != nil {
+		return err
+	}
+
+	leftPath, err := cmd.Flags().GetString("left")
+	if err != nil {
+		return err
+	}
+
+	rightPath, err := cmd.Flags().GetString("right")
+	if err != nil {
+		return err
+	}
+
+	switch mode {
+	case diffModeLegacy:
+		if leftPath != "" || rightPath != "" {
+			return fmt.Errorf("--left/--right require --%s %s", diffModeFlag, diffModeParity)
+		}
+		return legacyDiffRunner(cmd, args)
+	case diffModeParity:
+		switch {
+		case leftPath == "" || rightPath == "":
+			return fmt.Errorf("both --left and --right are required with --%s %s", diffModeFlag, diffModeParity)
+		default:
+			return parityDiffRunner(cmd, args)
+		}
+	default:
+		return fmt.Errorf("invalid --%s %q: must be one of %s, %s", diffModeFlag, mode, diffModeLegacy, diffModeParity)
+	}
+}
+
+func runLegacyDiff(cmd *cobra.Command, args []string) error {
 	ctx, err := logging.Init(context.Background(), logging.WithLogFormat("console"), logging.WithLogLevel("error"))
 	if err != nil {
 		return err
