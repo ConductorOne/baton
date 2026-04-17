@@ -3,6 +3,7 @@ package ratelimit
 import (
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
@@ -63,6 +64,20 @@ func parseTime(timeStr string) (time.Time, error) {
 	return t, nil
 }
 
+// normalizeRateLimitValue extracts the leading integer from a rate limit header
+// that may use the weighted format from the RateLimit header RFC draft
+// (e.g. "500, 500;w=1, 20000;w=60" → "500", "100;w=60" → "100").
+// docs: https://www.ietf.org/archive/id/draft-polli-ratelimit-headers-02.html#name-ratelimit-limit
+func normalizeRateLimitValue(s string) string {
+	s = strings.TrimSpace(s)
+	for i := 0; i < len(s); i++ {
+		if s[i] < '0' || s[i] > '9' {
+			return s[:i]
+		}
+	}
+	return s
+}
+
 func ExtractRateLimitData(statusCode int, header *http.Header) (*v2.RateLimitDescription, error) {
 	if header == nil {
 		return nil, nil
@@ -75,7 +90,7 @@ func ExtractRateLimitData(statusCode int, header *http.Header) (*v2.RateLimitDes
 	for _, limitHeader := range limitHeaders {
 		limitStr := header.Get(limitHeader)
 		if limitStr != "" {
-			limit, err = strconv.ParseInt(limitStr, 10, 64)
+			limit, err = strconv.ParseInt(normalizeRateLimitValue(limitStr), 10, 64)
 			if err != nil {
 				return nil, err
 			}
@@ -87,7 +102,7 @@ func ExtractRateLimitData(statusCode int, header *http.Header) (*v2.RateLimitDes
 	for _, remainingHeader := range remainingHeaders {
 		remainingStr := header.Get(remainingHeader)
 		if remainingStr != "" {
-			remaining, err = strconv.ParseInt(remainingStr, 10, 64)
+			remaining, err = strconv.ParseInt(normalizeRateLimitValue(remainingStr), 10, 64)
 			if err != nil {
 				return nil, err
 			}

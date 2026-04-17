@@ -13,6 +13,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/conductorone/baton-sdk/pkg/dotc1z"
+	"github.com/conductorone/baton-sdk/pkg/uotel"
 	"github.com/conductorone/baton-sdk/pkg/us3"
 )
 
@@ -42,7 +43,8 @@ func WithDecoderOptions(opts ...dotc1z.DecoderOption) Option {
 
 func (s *s3Manager) copyToTempFile(ctx context.Context, r io.Reader) error {
 	_, span := tracer.Start(ctx, "s3Manager.copyToTempFile")
-	defer span.End()
+	var err error
+	defer func() { uotel.EndSpanWithError(span, err) }()
 
 	f, err := os.CreateTemp(s.tmpDir, "sync-*.c1z")
 	if err != nil {
@@ -53,29 +55,15 @@ func (s *s3Manager) copyToTempFile(ctx context.Context, r io.Reader) error {
 	s.tmpFile = f.Name()
 
 	if r != nil {
-		written, err := io.Copy(f, r)
+		_, err = io.Copy(f, r)
 		if err != nil {
 			_ = f.Close()
 			return err
 		}
 
-		// CRITICAL: Sync to ensure all data is written before file is used.
-		// This is especially important on ZFS ARC where writes may be cached
-		// and reads can happen before buffers are flushed to disk.
 		if err := f.Sync(); err != nil {
 			_ = f.Close()
 			return fmt.Errorf("failed to sync temp file: %w", err)
-		}
-
-		// Verify file size matches what we wrote (defensive check)
-		stat, err := f.Stat()
-		if err != nil {
-			_ = f.Close()
-			return fmt.Errorf("failed to stat temp file: %w", err)
-		}
-		if stat.Size() != written {
-			_ = f.Close()
-			return fmt.Errorf("file size mismatch: wrote %d bytes but file is %d bytes", written, stat.Size())
 		}
 	}
 
@@ -85,7 +73,8 @@ func (s *s3Manager) copyToTempFile(ctx context.Context, r io.Reader) error {
 // LoadRaw loads the file from S3 and returns an io.Reader for the contents.
 func (s *s3Manager) LoadRaw(ctx context.Context) (io.ReadCloser, error) {
 	ctx, span := tracer.Start(ctx, "s3Manager.LoadRaw")
-	defer span.End()
+	var err error
+	defer func() { uotel.EndSpanWithError(span, err) }()
 
 	out, err := s.client.Get(ctx, s.fileName)
 	if err != nil {
@@ -118,7 +107,8 @@ func (s *s3Manager) LoadRaw(ctx context.Context) (io.ReadCloser, error) {
 // LoadC1Z gets a file from the AWS S3 bucket and copies it to a temp file.
 func (s *s3Manager) LoadC1Z(ctx context.Context) (*dotc1z.C1File, error) {
 	ctx, span := tracer.Start(ctx, "s3Manager.LoadC1Z")
-	defer span.End()
+	var err error
+	defer func() { uotel.EndSpanWithError(span, err) }()
 
 	l := ctxzap.Extract(ctx)
 
@@ -144,7 +134,6 @@ func (s *s3Manager) LoadC1Z(ctx context.Context) (*dotc1z.C1File, error) {
 
 	opts := []dotc1z.C1ZOption{
 		dotc1z.WithTmpDir(s.tmpDir),
-		dotc1z.WithPragma("journal_mode", "WAL"),
 	}
 	if len(s.decoderOptions) > 0 {
 		opts = append(opts, dotc1z.WithDecoderOptions(s.decoderOptions...))
@@ -155,7 +144,8 @@ func (s *s3Manager) LoadC1Z(ctx context.Context) (*dotc1z.C1File, error) {
 // SaveC1Z saves a file to the AWS S3 bucket.
 func (s *s3Manager) SaveC1Z(ctx context.Context) error {
 	ctx, span := tracer.Start(ctx, "s3Manager.SaveC1Z")
-	defer span.End()
+	var err error
+	defer func() { uotel.EndSpanWithError(span, err) }()
 
 	f, err := os.Open(s.tmpFile)
 	if err != nil {
@@ -181,9 +171,10 @@ func (s *s3Manager) SaveC1Z(ctx context.Context) error {
 
 func (s *s3Manager) Close(ctx context.Context) error {
 	_, span := tracer.Start(ctx, "s3Manager.Close")
-	defer span.End()
+	var err error
+	defer func() { uotel.EndSpanWithError(span, err) }()
 
-	err := os.Remove(s.tmpFile)
+	err = os.Remove(s.tmpFile)
 	if err != nil {
 		return err
 	}

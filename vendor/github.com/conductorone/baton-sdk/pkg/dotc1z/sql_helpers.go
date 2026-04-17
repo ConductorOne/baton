@@ -18,12 +18,13 @@ import (
 
 	"github.com/conductorone/baton-sdk/pkg/annotations"
 	"github.com/conductorone/baton-sdk/pkg/connectorstore"
+	"github.com/conductorone/baton-sdk/pkg/uotel"
 
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 )
 
 const bulkPutParallelThreshold = 100
-const insertChunkSize = 200
+const insertChunkSize = 1000
 const maxPageSize = 10000
 
 // Use worker pool to limit goroutines.
@@ -143,9 +144,10 @@ func resolveSyncID(ctx context.Context, c *C1File, req listRequest) (string, err
 // It returns a slice of typed proto messages constructed via the provided factory function.
 func listConnectorObjects[T proto.Message](ctx context.Context, c *C1File, tableName string, req listRequest, factory func() T) ([]T, string, error) {
 	ctx, span := tracer.Start(ctx, "C1File.listConnectorObjects")
-	defer span.End()
+	var err error
+	defer func() { uotel.EndSpanWithError(span, err) }()
 
-	err := c.validateDb(ctx)
+	err = c.validateDb(ctx)
 	if err != nil {
 		return nil, "", err
 	}
@@ -522,9 +524,10 @@ func bulkPutConnectorObject[T proto.Message](
 		return nil
 	}
 	ctx, span := tracer.Start(ctx, "C1File.bulkPutConnectorObject")
-	defer span.End()
+	var err error
+	defer func() { uotel.EndSpanWithError(span, err) }()
 
-	err := c.validateSyncDb(ctx)
+	err = c.validateSyncDb(ctx)
 	if err != nil {
 		return err
 	}
@@ -557,9 +560,10 @@ func bulkPutConnectorObjectIfNewer[T proto.Message](
 		return nil
 	}
 	ctx, span := tracer.Start(ctx, "C1File.bulkPutConnectorObjectIfNewer")
-	defer span.End()
+	var err error
+	defer func() { uotel.EndSpanWithError(span, err) }()
 
-	err := c.validateSyncDb(ctx)
+	err = c.validateSyncDb(ctx)
 	if err != nil {
 		return err
 	}
@@ -590,9 +594,10 @@ func bulkPutConnectorObjectIfNewer[T proto.Message](
 
 func (c *C1File) getResourceObject(ctx context.Context, resourceID *v2.ResourceId, m *v2.Resource, syncID string) error {
 	ctx, span := tracer.Start(ctx, "C1File.getResourceObject")
-	defer span.End()
+	var err error
+	defer func() { uotel.EndSpanWithError(span, err) }()
 
-	err := c.validateDb(ctx)
+	err = c.validateDb(ctx)
 	if err != nil {
 		return err
 	}
@@ -651,9 +656,10 @@ func (c *C1File) getResourceObject(ctx context.Context, resourceID *v2.ResourceI
 
 func (c *C1File) getConnectorObject(ctx context.Context, tableName string, id string, syncID string, m proto.Message) error {
 	ctx, span := tracer.Start(ctx, "C1File.getConnectorObject")
-	defer span.End()
+	var err error
+	defer func() { uotel.EndSpanWithError(span, err) }()
 
-	err := c.validateDb(ctx)
+	err = c.validateDb(ctx)
 	if err != nil {
 		return err
 	}

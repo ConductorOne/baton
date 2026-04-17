@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/conductorone/baton-sdk/pkg/dotc1z"
+	"github.com/conductorone/baton-sdk/pkg/uotel"
 )
 
 var tracer = otel.Tracer("baton-sdk/pkg.dotc1z.manager.local")
@@ -20,6 +21,7 @@ type localManager struct {
 	tmpPath        string
 	tmpDir         string
 	decoderOptions []dotc1z.DecoderOption
+	skipCleanup    bool
 }
 
 type Option func(*localManager)
@@ -36,9 +38,16 @@ func WithDecoderOptions(opts ...dotc1z.DecoderOption) Option {
 	}
 }
 
+func WithSkipCleanup(skip bool) Option {
+	return func(o *localManager) {
+		o.skipCleanup = skip
+	}
+}
+
 func (l *localManager) copyFileToTmp(ctx context.Context) error {
 	_, span := tracer.Start(ctx, "localManager.copyFileToTmp")
-	defer span.End()
+	var err error
+	defer func() { uotel.EndSpanWithError(span, err) }()
 
 	tmp, err := os.CreateTemp(l.tmpDir, "sync-*.c1z")
 	if err != nil {
@@ -59,35 +68,13 @@ func (l *localManager) copyFileToTmp(ctx context.Context) error {
 		}
 		defer f.Close()
 
-		// Get source file size for verification
-		sourceStat, err := f.Stat()
-		if err != nil {
-			return fmt.Errorf("failed to stat source file: %w", err)
-		}
-		expectedSize := sourceStat.Size()
-
-		written, err := io.Copy(tmp, f)
+		_, err = io.Copy(tmp, f)
 		if err != nil {
 			return err
 		}
 
-		// CRITICAL: Sync to ensure all data is written before file is used.
-		// This is especially important on ZFS ARC where writes may be cached
-		// and reads can happen before buffers are flushed to disk.
 		if err := tmp.Sync(); err != nil {
 			return fmt.Errorf("failed to sync temp file: %w", err)
-		}
-
-		// Verify file size matches what we wrote (defensive check)
-		stat, err := tmp.Stat()
-		if err != nil {
-			return fmt.Errorf("failed to stat temp file: %w", err)
-		}
-		if stat.Size() != written {
-			return fmt.Errorf("file size mismatch: wrote %d bytes but file is %d bytes", written, stat.Size())
-		}
-		if written != expectedSize {
-			return fmt.Errorf("copy size mismatch: expected %d bytes from source but copied %d bytes", expectedSize, written)
 		}
 	}
 
@@ -97,9 +84,10 @@ func (l *localManager) copyFileToTmp(ctx context.Context) error {
 // LoadRaw returns an io.Reader of the bytes in the c1z file.
 func (l *localManager) LoadRaw(ctx context.Context) (io.ReadCloser, error) {
 	ctx, span := tracer.Start(ctx, "localManager.LoadRaw")
-	defer span.End()
+	var err error
+	defer func() { uotel.EndSpanWithError(span, err) }()
 
-	err := l.copyFileToTmp(ctx)
+	err = l.copyFileToTmp(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -115,11 +103,12 @@ func (l *localManager) LoadRaw(ctx context.Context) (io.ReadCloser, error) {
 // LoadC1Z loads the C1Z file from the local file system.
 func (l *localManager) LoadC1Z(ctx context.Context) (*dotc1z.C1File, error) {
 	ctx, span := tracer.Start(ctx, "localManager.LoadC1Z")
-	defer span.End()
+	var err error
+	defer func() { uotel.EndSpanWithError(span, err) }()
 
 	log := ctxzap.Extract(ctx)
 
-	err := l.copyFileToTmp(ctx)
+	err = l.copyFileToTmp(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -133,10 +122,12 @@ func (l *localManager) LoadC1Z(ctx context.Context) (*dotc1z.C1File, error) {
 
 	opts := []dotc1z.C1ZOption{
 		dotc1z.WithTmpDir(l.tmpDir),
-		dotc1z.WithPragma("journal_mode", "WAL"),
 	}
 	if len(l.decoderOptions) > 0 {
 		opts = append(opts, dotc1z.WithDecoderOptions(l.decoderOptions...))
+	}
+	if l.skipCleanup {
+		opts = append(opts, dotc1z.WithSkipCleanup(true))
 	}
 	return dotc1z.NewC1ZFile(ctx, l.tmpPath, opts...)
 }
@@ -144,7 +135,8 @@ func (l *localManager) LoadC1Z(ctx context.Context) (*dotc1z.C1File, error) {
 // SaveC1Z saves the C1Z file to the local file system.
 func (l *localManager) SaveC1Z(ctx context.Context) error {
 	ctx, span := tracer.Start(ctx, "localManager.SaveC1Z")
-	defer span.End()
+	var err error
+	defer func() { uotel.EndSpanWithError(span, err) }()
 
 	log := ctxzap.Extract(ctx)
 
@@ -192,9 +184,10 @@ func (l *localManager) SaveC1Z(ctx context.Context) error {
 
 func (l *localManager) Close(ctx context.Context) error {
 	_, span := tracer.Start(ctx, "localManager.Close")
-	defer span.End()
+	var err error
+	defer func() { uotel.EndSpanWithError(span, err) }()
 
-	err := os.Remove(l.tmpPath)
+	err = os.Remove(l.tmpPath)
 	if err != nil {
 		return err
 	}

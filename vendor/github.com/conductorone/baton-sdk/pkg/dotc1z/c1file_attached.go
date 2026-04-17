@@ -9,6 +9,7 @@ import (
 
 	reader_v2 "github.com/conductorone/baton-sdk/pb/c1/reader/v2"
 	"github.com/conductorone/baton-sdk/pkg/connectorstore"
+	"github.com/conductorone/baton-sdk/pkg/uotel"
 	"github.com/doug-martin/goqu/v9"
 	"github.com/segmentio/ksuid"
 )
@@ -23,7 +24,8 @@ func (c *C1FileAttached) CompactTable(ctx context.Context, baseSyncID string, ap
 		return errors.New("database has been detached")
 	}
 	ctx, span := tracer.Start(ctx, "C1FileAttached.CompactTable")
-	defer span.End()
+	var err error
+	defer func() { uotel.EndSpanWithError(span, err) }()
 
 	// Get the column structure for this table by querying the schema
 	columns, err := c.getTableColumns(ctx, c.file.rawDb, tableName)
@@ -39,11 +41,12 @@ func (c *C1FileAttached) CompactTable(ctx context.Context, baseSyncID string, ap
 			columnList += ", "
 			selectList += ", "
 		}
-		columnList += col
+		qcol := quoteIdentifier(col)
+		columnList += qcol
 		if col == "sync_id" { //nolint:goconst,nolintlint // ...
-			selectList += "? as sync_id" //nolint:goconst,nolintlint // ...
+			selectList += "? as " + qcol //nolint:goconst,nolintlint // ...
 		} else {
-			selectList += col
+			selectList += qcol
 		}
 	}
 
@@ -102,6 +105,9 @@ func (c *C1FileAttached) getTableColumns(ctx context.Context, q sqlQuerier, tabl
 
 		// Skip the 'id' column as it's auto-increment
 		if name != "id" {
+			if err := validateColumnName(name); err != nil {
+				return nil, err
+			}
 			columns = append(columns, name)
 		}
 	}
@@ -201,13 +207,14 @@ func (c *C1FileAttached) GenerateSyncDiffFromFile(ctx context.Context, oldSyncID
 	}
 
 	ctx, span := tracer.Start(ctx, "C1FileAttached.GenerateSyncDiffFromFile")
-	defer span.End()
+	var err error
+	defer func() { uotel.EndSpanWithError(span, err) }()
 
 	// Verify both source syncs have been backfilled and support diff before
 	// generating derived syncs. If they haven't, the expansion columns in
 	// copied grants may be incomplete.
 	var oldBackfilled, oldDiff int
-	err := c.file.rawDb.QueryRowContext(ctx,
+	err = c.file.rawDb.QueryRowContext(ctx,
 		fmt.Sprintf("SELECT grants_backfilled, supports_diff FROM attached.%s WHERE sync_id = ?", syncRuns.Name()),
 		oldSyncID,
 	).Scan(&oldBackfilled, &oldDiff)
@@ -361,17 +368,18 @@ func (c *C1FileAttached) diffTableFromAttachedTx(ctx context.Context, tx *sql.Tx
 			columnList += ", "
 			selectList += ", "
 		}
-		columnList += col
+		qcol := quoteIdentifier(col)
+		columnList += qcol
 		if col == "sync_id" {
-			selectList += "? as sync_id"
+			selectList += "? as " + qcol
 		} else {
-			selectList += col
+			selectList += qcol
 		}
 	}
 
 	// Insert items from attached (OLD) that don't exist in main (NEW)
 	// oldSyncID is in attached, newSyncID is in main
-	//nolint:gosec // table names are from hardcoded list, not user input
+	//nolint:gosec // table names are from hardcoded list; column names are validated
 	query := fmt.Sprintf(`
 		INSERT INTO main.%s (%s)
 		SELECT %s
@@ -404,11 +412,12 @@ func (c *C1FileAttached) diffTableFromMainTx(ctx context.Context, tx *sql.Tx, ta
 			columnList += ", "
 			selectList += ", "
 		}
-		columnList += col
+		qcol := quoteIdentifier(col)
+		columnList += qcol
 		if col == "sync_id" {
-			selectList += "? as sync_id"
+			selectList += "? as " + qcol
 		} else {
-			selectList += col
+			selectList += qcol
 		}
 	}
 
@@ -428,7 +437,7 @@ func (c *C1FileAttached) diffTableFromMainTx(ctx context.Context, tx *sql.Tx, ta
 		dataCompare = "a.data != m.data"
 	}
 
-	//nolint:gosec // table names are from hardcoded list, not user input
+	//nolint:gosec // table names are from hardcoded list; column names are validated
 	query := fmt.Sprintf(`
 		INSERT INTO main.%s (%s)
 		SELECT %s

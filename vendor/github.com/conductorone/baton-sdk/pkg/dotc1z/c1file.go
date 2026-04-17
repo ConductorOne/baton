@@ -30,6 +30,7 @@ import (
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	reader_v2 "github.com/conductorone/baton-sdk/pb/c1/reader/v2"
 	"github.com/conductorone/baton-sdk/pkg/connectorstore"
+	"github.com/conductorone/baton-sdk/pkg/uotel"
 )
 
 var ErrDbNotOpen = errors.New("c1file: database has not been opened")
@@ -66,7 +67,8 @@ type C1File struct {
 	slowQueryLogFrequency time.Duration
 
 	// Sync cleanup settings
-	syncLimit int
+	syncLimit   int
+	skipCleanup bool
 }
 
 var _ connectorstore.InternalWriter = (*C1File)(nil)
@@ -100,6 +102,13 @@ func WithC1FEncoderConcurrency(concurrency int) C1FOption {
 	}
 }
 
+// WithC1FSkipCleanup skips cleanup of old syncs when set to true.
+func WithC1FSkipCleanup(skip bool) C1FOption {
+	return func(o *C1File) {
+		o.skipCleanup = skip
+	}
+}
+
 // WithC1FSyncCountLimit sets the number of syncs to keep during cleanup.
 // If not set, defaults to 2 (or BATON_KEEP_SYNC_COUNT env var if set).
 func WithC1FSyncCountLimit(limit int) C1FOption {
@@ -111,7 +120,8 @@ func WithC1FSyncCountLimit(limit int) C1FOption {
 // Returns a C1File instance for the given db filepath.
 func NewC1File(ctx context.Context, dbFilePath string, opts ...C1FOption) (*C1File, error) {
 	ctx, span := tracer.Start(ctx, "NewC1File")
-	defer span.End()
+	var err error
+	defer func() { uotel.EndSpanWithError(span, err) }()
 
 	rawDB, err := sql.Open("sqlite", dbFilePath)
 	if err != nil {
@@ -165,6 +175,7 @@ type c1zOptions struct {
 	readOnly           bool
 	encoderConcurrency int
 	syncLimit          int
+	skipCleanup        bool
 }
 
 type C1ZOption func(*c1zOptions)
@@ -206,6 +217,13 @@ func WithEncoderConcurrency(concurrency int) C1ZOption {
 	}
 }
 
+// WithSkipCleanup skips cleanup of old syncs when set to true.
+func WithSkipCleanup(skip bool) C1ZOption {
+	return func(o *c1zOptions) {
+		o.skipCleanup = skip
+	}
+}
+
 // WithSyncLimit sets the number of syncs to keep during cleanup.
 // If not set, defaults to 2 (or BATON_KEEP_SYNC_COUNT env var if set).
 func WithSyncLimit(limit int) C1ZOption {
@@ -217,7 +235,8 @@ func WithSyncLimit(limit int) C1ZOption {
 // Returns a new C1File instance with its state stored at the provided filename.
 func NewC1ZFile(ctx context.Context, outputFilePath string, opts ...C1ZOption) (*C1File, error) {
 	ctx, span := tracer.Start(ctx, "NewC1ZFile")
-	defer span.End()
+	var err error
+	defer func() { uotel.EndSpanWithError(span, err) }()
 
 	options := &c1zOptions{
 		encoderConcurrency: 1,
@@ -240,6 +259,9 @@ func NewC1ZFile(ctx context.Context, outputFilePath string, opts ...C1ZOption) (
 	)
 
 	var c1fopts []C1FOption
+	if options.tmpDir != "" {
+		c1fopts = append(c1fopts, WithC1FTmpDir(options.tmpDir))
+	}
 	for _, pragma := range options.pragmas {
 		c1fopts = append(c1fopts, WithC1FPragma(pragma.name, pragma.value))
 	}
@@ -249,6 +271,9 @@ func NewC1ZFile(ctx context.Context, outputFilePath string, opts ...C1ZOption) (
 	c1fopts = append(c1fopts, WithC1FEncoderConcurrency(options.encoderConcurrency))
 	if options.syncLimit > 0 {
 		c1fopts = append(c1fopts, WithC1FSyncCountLimit(options.syncLimit))
+	}
+	if options.skipCleanup {
+		c1fopts = append(c1fopts, WithC1FSkipCleanup(true))
 	}
 
 	c1File, err := NewC1File(ctx, dbFilePath, c1fopts...)
@@ -403,7 +428,8 @@ func (c *C1File) Close(ctx context.Context) error {
 // Returns the busy, log, and checkpointed values.
 func (c *C1File) truncateWAL(ctx context.Context) (int, int, int, error) {
 	ctx, span := tracer.Start(ctx, "C1File.truncateWAL")
-	defer span.End()
+	var err error
+	defer func() { uotel.EndSpanWithError(span, err) }()
 
 	// Use QueryRowContext to read the (busy, log, checkpointed) result.
 	// ExecContext silently discards these values, making partial
@@ -428,11 +454,12 @@ func (c *C1File) truncateWAL(ctx context.Context) (int, int, int, error) {
 // init ensures that the database has all of the required schema.
 func (c *C1File) init(ctx context.Context) error {
 	ctx, span := tracer.Start(ctx, "C1File.init")
-	defer span.End()
+	var err error
+	defer func() { uotel.EndSpanWithError(span, err) }()
 
 	l := ctxzap.Extract(ctx)
 
-	err := c.validateDb(ctx)
+	err = c.validateDb(ctx)
 	if err != nil {
 		return err
 	}
@@ -494,9 +521,10 @@ func (c *C1File) init(ctx context.Context) error {
 
 func (c *C1File) InitTables(ctx context.Context) error {
 	ctx, span := tracer.Start(ctx, "C1File.InitTables")
-	defer span.End()
+	var err error
+	defer func() { uotel.EndSpanWithError(span, err) }()
 
-	err := c.validateDb(ctx)
+	err = c.validateDb(ctx)
 	if err != nil {
 		return err
 	}
@@ -523,11 +551,11 @@ func (c *C1File) InitTables(ctx context.Context) error {
 // If syncId is empty, it will use the latest sync run of the given type.
 func (c *C1File) Stats(ctx context.Context, syncType connectorstore.SyncType, syncId string) (map[string]int64, error) {
 	ctx, span := tracer.Start(ctx, "C1File.Stats")
-	defer span.End()
+	var err error
+	defer func() { uotel.EndSpanWithError(span, err) }()
 
 	counts := make(map[string]int64)
 
-	var err error
 	if syncId == "" {
 		syncId, err = c.LatestSyncID(ctx, syncType)
 		if err != nil {
@@ -651,9 +679,9 @@ func (c *C1FileAttached) DetachFile(dbName string) (*C1FileAttached, error) {
 // If syncId is empty, it will use the latest sync run of the given type.
 func (c *C1File) GrantStats(ctx context.Context, syncType connectorstore.SyncType, syncId string) (map[string]int64, error) {
 	ctx, span := tracer.Start(ctx, "C1File.GrantStats")
-	defer span.End()
-
 	var err error
+	defer func() { uotel.EndSpanWithError(span, err) }()
+
 	if syncId == "" {
 		syncId, err = c.LatestSyncID(ctx, syncType)
 		if err != nil {

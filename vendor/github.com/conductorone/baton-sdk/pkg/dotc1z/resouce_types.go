@@ -9,6 +9,7 @@ import (
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	reader_v2 "github.com/conductorone/baton-sdk/pb/c1/reader/v2"
 	"github.com/conductorone/baton-sdk/pkg/annotations"
+	"github.com/conductorone/baton-sdk/pkg/uotel"
 )
 
 const resourceTypesTableVersion = "1"
@@ -49,7 +50,8 @@ func (r *resourceTypesTable) Migrations(ctx context.Context, db *goqu.Database) 
 
 func (c *C1File) ListResourceTypes(ctx context.Context, request *v2.ResourceTypesServiceListResourceTypesRequest) (*v2.ResourceTypesServiceListResourceTypesResponse, error) {
 	ctx, span := tracer.Start(ctx, "C1File.ListResourceTypes")
-	defer span.End()
+	var err error
+	defer func() { uotel.EndSpanWithError(span, err) }()
 
 	ret, nextPageToken, err := listConnectorObjects(ctx, c, resourceTypes.Name(), request, func() *v2.ResourceType { return &v2.ResourceType{} })
 	if err != nil {
@@ -64,7 +66,8 @@ func (c *C1File) ListResourceTypes(ctx context.Context, request *v2.ResourceType
 
 func (c *C1File) GetResourceType(ctx context.Context, request *reader_v2.ResourceTypesReaderServiceGetResourceTypeRequest) (*reader_v2.ResourceTypesReaderServiceGetResourceTypeResponse, error) {
 	ctx, span := tracer.Start(ctx, "C1File.GetResourceType")
-	defer span.End()
+	var err error
+	defer func() { uotel.EndSpanWithError(span, err) }()
 
 	ret := &v2.ResourceType{}
 	syncId, err := annotations.GetSyncIdFromAnnotations(request.GetAnnotations())
@@ -83,14 +86,16 @@ func (c *C1File) GetResourceType(ctx context.Context, request *reader_v2.Resourc
 
 func (c *C1File) PutResourceTypes(ctx context.Context, resourceTypesObjs ...*v2.ResourceType) error {
 	ctx, span := tracer.Start(ctx, "C1File.PutResourceTypes")
-	defer span.End()
+	var err error
+	defer func() { uotel.EndSpanWithError(span, err) }()
 
 	return c.putResourceTypesInternal(ctx, bulkPutConnectorObject, resourceTypesObjs...)
 }
 
 func (c *C1File) PutResourceTypesIfNewer(ctx context.Context, resourceTypesObjs ...*v2.ResourceType) error {
 	ctx, span := tracer.Start(ctx, "C1File.PutResourceTypesIfNewer")
-	defer span.End()
+	var err error
+	defer func() { uotel.EndSpanWithError(span, err) }()
 
 	return c.putResourceTypesInternal(ctx, bulkPutConnectorObjectIfNewer, resourceTypesObjs...)
 }
