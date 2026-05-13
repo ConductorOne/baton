@@ -12,14 +12,14 @@ import (
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
-	go_sqlite "github.com/glebarez/go-sqlite"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/segmentio/ksuid"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	sqlite "modernc.org/sqlite/lib"
+	sqlite "modernc.org/sqlite"
+	sqlite3 "modernc.org/sqlite/lib"
 
 	reader_v2 "github.com/conductorone/baton-sdk/pb/c1/reader/v2"
 	"github.com/conductorone/baton-sdk/pkg/connectorstore"
@@ -735,9 +735,9 @@ func wrapSqliteInterruptError(err error) error {
 		return nil
 	}
 
-	sqliteErr := &go_sqlite.Error{}
+	sqliteErr := &sqlite.Error{}
 	ok := errors.As(err, &sqliteErr)
-	if ok && sqliteErr.Code() == sqlite.SQLITE_INTERRUPT {
+	if ok && sqliteErr.Code() == sqlite3.SQLITE_INTERRUPT {
 		return errors.Join(err, context.DeadlineExceeded)
 	}
 

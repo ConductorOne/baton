@@ -25,7 +25,7 @@ import (
 	// and allocates a ton of memory.
 	_ "github.com/doug-martin/goqu/v9/dialect/sqlite3"
 
-	_ "github.com/glebarez/go-sqlite"
+	_ "modernc.org/sqlite"
 
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
 	reader_v2 "github.com/conductorone/baton-sdk/pb/c1/reader/v2"
@@ -69,9 +69,19 @@ type C1File struct {
 	// Sync cleanup settings
 	syncLimit   int
 	skipCleanup bool
+
+	// See WithC1FV2GrantsWriter.
+	v2GrantsWriter bool
 }
 
-var _ connectorstore.InternalWriter = (*C1File)(nil)
+// *C1File satisfies connectorstore.Writer (the connector-facing contract),
+// connectorstore.LatestFinishedSyncIDFetcher (narrow optional capability
+// added in PR #774), and dotc1z.C1ZStore (the internal sync-pipeline
+// contract asserted in c1file_store.go alongside the sub-store assertions).
+var (
+	_ connectorstore.Writer                      = (*C1File)(nil)
+	_ connectorstore.LatestFinishedSyncIDFetcher = (*C1File)(nil)
+)
 
 type C1FOption func(*C1File)
 
@@ -117,6 +127,24 @@ func WithC1FSyncCountLimit(limit int) C1FOption {
 	}
 }
 
+// WithC1FV2GrantsWriter strips Grant.Entitlement and Grant.Principal
+// from the serialized data blob at write time. Readers rebuild them
+// as identity-only stubs (Id + nested Resource.Id) from the grants
+// row's columns. Stubs carry no DisplayName, Annotations, Purpose,
+// Slug, or traits; callers that need those must fetch the Entitlement
+// or Resource directly. Readers accept both shapes regardless of this
+// flag, so old and new rows coexist. Default false.
+//
+// Per-grant escape hatch: see unsafeForSlim. Grants carrying
+// InsertResourceGrants or any ExternalResourceMatch* annotation stay
+// full-blob — those code paths read non-identity fields off the
+// embedded Resource / Principal.
+func WithC1FV2GrantsWriter(enabled bool) C1FOption {
+	return func(o *C1File) {
+		o.v2GrantsWriter = enabled
+	}
+}
+
 // Returns a C1File instance for the given db filepath.
 func NewC1File(ctx context.Context, dbFilePath string, opts ...C1FOption) (*C1File, error) {
 	ctx, span := tracer.Start(ctx, "NewC1File")
@@ -149,6 +177,11 @@ func NewC1File(ctx context.Context, dbFilePath string, opts ...C1FOption) (*C1Fi
 		slowQueryThreshold:    5 * time.Second,
 		slowQueryLogFrequency: 1 * time.Minute,
 		encoderConcurrency:    1,
+		// Smoke default-on for d2 testing — slim-blob writer is opt-in
+		// via WithC1FV2GrantsWriter; this default makes it the default
+		// so c1's sync activity exercises slim writes without plumbing
+		// changes. Revert before merge.
+		v2GrantsWriter: true,
 	}
 
 	for _, opt := range opts {
@@ -176,6 +209,7 @@ type c1zOptions struct {
 	encoderConcurrency int
 	syncLimit          int
 	skipCleanup        bool
+	v2GrantsWriter     bool
 }
 
 type C1ZOption func(*c1zOptions)
@@ -232,6 +266,14 @@ func WithSyncLimit(limit int) C1ZOption {
 	}
 }
 
+// WithV2GrantsWriter toggles the slim-blob writer path for grants.
+// See WithC1FV2GrantsWriter for details.
+func WithV2GrantsWriter(enabled bool) C1ZOption {
+	return func(o *c1zOptions) {
+		o.v2GrantsWriter = enabled
+	}
+}
+
 // Returns a new C1File instance with its state stored at the provided filename.
 func NewC1ZFile(ctx context.Context, outputFilePath string, opts ...C1ZOption) (*C1File, error) {
 	ctx, span := tracer.Start(ctx, "NewC1ZFile")
@@ -240,6 +282,8 @@ func NewC1ZFile(ctx context.Context, outputFilePath string, opts ...C1ZOption) (
 
 	options := &c1zOptions{
 		encoderConcurrency: 1,
+		// Smoke default-on for d2 testing — see same comment in NewC1File.
+		v2GrantsWriter: true,
 	}
 	for _, opt := range opts {
 		opt(options)
@@ -274,6 +318,9 @@ func NewC1ZFile(ctx context.Context, outputFilePath string, opts ...C1ZOption) (
 	}
 	if options.skipCleanup {
 		c1fopts = append(c1fopts, WithC1FSkipCleanup(true))
+	}
+	if options.v2GrantsWriter {
+		c1fopts = append(c1fopts, WithC1FV2GrantsWriter(true))
 	}
 
 	c1File, err := NewC1File(ctx, dbFilePath, c1fopts...)
@@ -480,6 +527,15 @@ func (c *C1File) init(ctx context.Context) error {
 		l.Warn("c1file-init: WAL checkpoint after init failed", zap.Error(err))
 	}
 
+	// Optimize DB. Desired after running migrations to improve performance.
+	_, err = c.db.ExecContext(ctx, "PRAGMA optimize")
+	if err != nil {
+		return err
+	}
+	l.Debug("c1file-init: optimized database",
+		zap.String("db_file_path", c.dbFilePath),
+	)
+
 	if c.readOnly {
 		// Disable journaling in read only mode, since we're not writing to the database.
 		_, err = c.db.ExecContext(ctx, "PRAGMA journal_mode = OFF")
@@ -488,6 +544,20 @@ func (c *C1File) init(ctx context.Context) error {
 		}
 		// Disable synchronous writes in read only mode, since we're not writing to the database.
 		_, err = c.db.ExecContext(ctx, "PRAGMA synchronous = OFF")
+		if err != nil {
+			return err
+		}
+	} else {
+		// Use NORMAL synchronous mode instead of FULL (default).
+		// Normal is faster and only unsafe on old filesystems.
+		_, err = c.db.ExecContext(ctx, "PRAGMA synchronous = NORMAL")
+		if err != nil {
+			return err
+		}
+
+		// Use TRUNCATE journal mode instead of DELETE (default).
+		// User-specified pragmas such as journal_mode=WAL will override this.
+		_, err = c.db.ExecContext(ctx, "PRAGMA journal_mode = TRUNCATE")
 		if err != nil {
 			return err
 		}
@@ -594,15 +664,26 @@ func (c *C1File) Stats(ctx context.Context, syncType connectorstore.SyncType, sy
 		pageToken = resp.GetNextPageToken()
 	}
 	counts["resource_types"] = int64(len(rtStats))
+
+	// Pre-populate every known resource type with 0 so the result map
+	// always carries an entry per resource type, even if the sync has no
+	// rows of that type. The GROUP BY below only emits resource_type_ids
+	// that have at least one row.
 	for _, rt := range rtStats {
-		resourceCount, err := c.db.From(resources.Name()).
-			Where(goqu.C("resource_type_id").Eq(rt.GetId())).
-			Where(goqu.C("sync_id").Eq(syncId)).
-			CountContext(ctx)
-		if err != nil {
-			return nil, err
+		counts[rt.GetId()] = 0
+	}
+	resourceCounts, err := c.countBySyncAndResourceType(ctx, resources.Name(), syncId)
+	if err != nil {
+		return nil, err
+	}
+	for rtID, n := range resourceCounts {
+		// Only surface counts for resource types in the catalog —
+		// matches the prior per-type loop, which only wrote keys it
+		// iterated over. Stray resource_type_ids in the table (which
+		// shouldn't normally exist) are intentionally ignored here.
+		if _, known := counts[rtID]; known {
+			counts[rtID] = n
 		}
-		counts[rt.GetId()] = resourceCount
 	}
 
 	if syncType != connectorstore.SyncTypeResourcesOnly {
@@ -624,6 +705,55 @@ func (c *C1File) Stats(ctx context.Context, syncType connectorstore.SyncType, sy
 	}
 
 	return counts, nil
+}
+
+// countBySyncAndResourceType issues a single GROUP BY query that returns
+// per-resource-type row counts for a sync. It replaces what used to be
+// a per-resource-type loop of N COUNT(*) queries.
+//
+// We chose this over adding a (sync_id, resource_type_id) covering index
+// because grants tables can hold tens of millions of rows and the index
+// maintenance cost on every grant insert isn't worth a stats-call
+// speedup that's a small fraction of overall sync runtime. The single
+// GROUP BY collapses N round-trips through goqu/sql/driver into one
+// without changing the schema or insert hot path.
+//
+// The returned map only contains entries for resource_type_ids that
+// actually appear in the table. Callers that want zero-rows for missing
+// types must pre-populate them; this keeps the helper simple and
+// independent of the resource-type catalog.
+func (c *C1File) countBySyncAndResourceType(
+	ctx context.Context, tableName string, syncID string,
+) (map[string]int64, error) {
+	q := c.db.From(tableName).
+		Where(goqu.C("sync_id").Eq(syncID)).
+		Select(goqu.C("resource_type_id"), goqu.COUNT("*")).
+		GroupBy(goqu.C("resource_type_id"))
+
+	query, args, err := q.ToSQL()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := c.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	out := make(map[string]int64)
+	for rows.Next() {
+		var rtID string
+		var n int64
+		if err := rows.Scan(&rtID, &n); err != nil {
+			return nil, err
+		}
+		out[rtID] = n
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 // validateDb ensures that the database has been opened.
@@ -650,6 +780,50 @@ func (c *C1File) OutputFilepath() (string, error) {
 	}
 	return c.outputFilePath, nil
 }
+
+// CurrentDBSizeBytes returns the current total on-disk size of the underlying
+// uncompressed sqlite database, including the write-ahead log if present.
+// Used by operational tooling (e.g. the grant-expansion progress logger) to
+// observe c1z growth during long in-process writes without waiting for
+// saveC1z to land a new frame.
+//
+// The WAL file holds writes that have not yet been checkpointed into the main
+// database file; with journal_mode=WAL the main file may stay stable for long
+// stretches while the WAL grows into the hundreds of MB. Summing both gives a
+// representative "bytes written so far" figure during active expansion.
+//
+// This is the *uncompressed* size. The post-saveC1z c1z file size (compressed)
+// is smaller; for that, see the `c1z: saved` log line emitted by saveC1z.
+func (c *C1File) CurrentDBSizeBytes() (int64, error) {
+	if c.dbFilePath == "" {
+		return 0, fmt.Errorf("c1file: db file path is empty")
+	}
+	fi, err := os.Stat(c.dbFilePath)
+	if err != nil {
+		return 0, err
+	}
+	total := fi.Size()
+	// Add the WAL sidecar if it exists. `os.ErrNotExist` is expected (no WAL
+	// or journal_mode != WAL). Any *other* error — permission, EIO, stale
+	// handle, etc. — we surface: a silently-underreported WAL would defeat
+	// the growth-visibility purpose of this method (could hide hundreds of
+	// MB of pending writes).
+	switch wal, err := os.Stat(c.dbFilePath + "-wal"); {
+	case err == nil:
+		total += wal.Size()
+	case errors.Is(err, os.ErrNotExist):
+		// no WAL — fine.
+	default:
+		return 0, fmt.Errorf("c1file: stat wal sidecar: %w", err)
+	}
+	return total, nil
+}
+
+// Compile-time assertion that *C1File satisfies the DBSizeProvider capability
+// that ProgressLog.LogExpandProgress type-asserts against. Catches signature
+// drift (e.g. if someone adds a ctx parameter to CurrentDBSizeBytes) at
+// compile time instead of silently turning off the expand-log size fields.
+var _ connectorstore.DBSizeProvider = (*C1File)(nil)
 
 func (c *C1File) AttachFile(other *C1File, dbName string) (*C1FileAttached, error) {
 	_, err := c.db.Exec(`ATTACH DATABASE ? AS ?`, other.dbFilePath, dbName)
@@ -717,18 +891,25 @@ func (c *C1File) GrantStats(ctx context.Context, syncType connectorstore.SyncTyp
 		pageToken = resp.GetNextPageToken()
 	}
 
-	stats := make(map[string]int64)
+	stats := make(map[string]int64, len(allResourceTypes))
+	// Pre-populate zero counts for every known resource type so the
+	// caller always sees one entry per resource type, even when no
+	// grants exist for it in this sync.
+	for _, rt := range allResourceTypes {
+		stats[rt.GetId()] = 0
+	}
 
-	for _, resourceType := range allResourceTypes {
-		grantsCount, err := c.db.From(grants.Name()).
-			Where(goqu.C("sync_id").Eq(syncId)).
-			Where(goqu.C("resource_type_id").Eq(resourceType.GetId())).
-			CountContext(ctx)
-		if err != nil {
-			return nil, err
+	grantCounts, err := c.countBySyncAndResourceType(ctx, grants.Name(), syncId)
+	if err != nil {
+		return nil, err
+	}
+	for rtID, n := range grantCounts {
+		// Match prior per-type loop: only surface resource types that
+		// exist in the catalog. Stray resource_type_ids in the grants
+		// table (which shouldn't normally exist) are ignored.
+		if _, known := stats[rtID]; known {
+			stats[rtID] = n
 		}
-
-		stats[resourceType.GetId()] = grantsCount
 	}
 
 	return stats, nil

@@ -113,6 +113,19 @@ func saveC1z(dbFilePath string, outputFilePath string, encoderConcurrency int) e
 		}
 	}()
 
+	// Capture the decompressed db file size up front. It is used for two
+	// purposes:
+	//   1. Embedded into the zstd frame header as Frame_Content_Size (FCS),
+	//      making the decoded size discoverable to any zstd reader without
+	//      having to decompress the stream.
+	//   2. Logged alongside the resulting compressed size so operators can
+	//      observe the decompressed size of every c1z we produce.
+	dbStat, err := dbFile.Stat()
+	if err != nil {
+		return fmt.Errorf("failed to stat db file: %w", err)
+	}
+	dbSize := dbStat.Size()
+
 	// Write to a temporary file first to ensure atomic writes.
 	// This prevents file corruption if the process crashes mid-write,
 	// since the original file remains intact until the rename succeeds.
@@ -151,25 +164,59 @@ func saveC1z(dbFilePath string, outputFilePath string, encoderConcurrency int) e
 	if encoderConcurrency == 0 {
 		encoderConcurrency = runtime.GOMAXPROCS(0)
 	}
-	c1z, err := zstd.NewWriter(outFile,
-		zstd.WithEncoderConcurrency(encoderConcurrency),
-	)
-	if err != nil {
-		return err
+
+	// Try to use a pooled encoder if concurrency matches the pool's default.
+	// This reduces allocation overhead for the common case.
+	var c1z *zstd.Encoder
+	if encoderConcurrency == pooledEncoderConcurrency {
+		c1z, _ = getEncoder()
+	}
+	if c1z == nil {
+		// Non-default concurrency or pool returned nil: create new encoder.
+		// The writer passed here is replaced by ResetContentSize below, so
+		// io.Discard is only used as a placeholder during construction.
+		var err error
+		c1z, err = zstd.NewWriter(io.Discard,
+			zstd.WithEncoderConcurrency(encoderConcurrency),
+			zstd.WithEncoderLevel(zstd.SpeedFastest),
+		)
+		if err != nil {
+			return err
+		}
 	}
 
-	_, err = io.Copy(c1z, dbFile)
+	// Reset the encoder onto outFile and record the decompressed size in the
+	// zstd Frame_Content_Size field. This is upstream-spec-compatible — old
+	// decoders ignore FCS and continue to stream as today. New decoders (and
+	// the zstd CLI) can observe the decoded size from the frame header
+	// without having to decompress the stream.
+	//
+	// Note: ResetContentSize requires the number of bytes written to equal
+	// the advertised size at Close() time. We enforce this with io.CopyN.
+	c1z.ResetContentSize(outFile, dbSize)
+
+	_, err = io.CopyN(c1z, dbFile, dbSize)
 	if err != nil {
-		return err
+		// Always close encoder to release resources. Don't return to pool - may be in bad state.
+		_ = c1z.Close()
+		return fmt.Errorf("failed to copy db file into encoder: %w", err)
 	}
 
 	err = c1z.Flush()
 	if err != nil {
+		_ = c1z.Close()
 		return fmt.Errorf("failed to flush c1z: %w", err)
 	}
 	err = c1z.Close()
 	if err != nil {
+		// Close failed, don't return to pool.
 		return fmt.Errorf("failed to close c1z: %w", err)
+	}
+
+	// Successfully finished - return encoder to pool if it has pool-compatible settings.
+	// This ensures the pool grows even when initially empty.
+	if encoderConcurrency == pooledEncoderConcurrency {
+		putEncoder(c1z)
 	}
 
 	err = outFile.Sync()
@@ -197,6 +244,19 @@ func saveC1z(dbFilePath string, outputFilePath string, encoderConcurrency int) e
 		return fmt.Errorf("failed to rename temp file to output file: %w", err)
 	}
 	success = true
+
+	// Record the decompressed and compressed sizes for every saved c1z.
+	// Operators rely on this line to track c1z growth per tenant/connector
+	// and to detect bloat before decoders hit the max-decoded-size cap.
+	compressedSize := int64(-1)
+	if outStat, statErr := os.Stat(outputFilePath); statErr == nil {
+		compressedSize = outStat.Size()
+	}
+	zap.L().Info("c1z: saved",
+		zap.String("output_path", outputFilePath),
+		zap.Int64("decompressed_bytes", dbSize),
+		zap.Int64("compressed_bytes", compressedSize),
+	)
 
 	return nil
 }

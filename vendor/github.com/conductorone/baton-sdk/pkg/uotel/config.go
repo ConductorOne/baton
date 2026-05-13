@@ -335,7 +335,7 @@ func getTLSConfig(tlsCertPath, tlsCert string) (*tls.Config, error) {
 	if tlsCertPath == "" && tlsCert == "" {
 		zap.L().Debug("otel: no certificate provided, using system certificate pool")
 		systemPool, err := x509.SystemCertPool()
-		if err != nil {
+		if err != nil || systemPool == nil {
 			return nil, fmt.Errorf("failed to load system certificate pool: %w", err)
 		}
 		return &tls.Config{

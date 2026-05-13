@@ -10,7 +10,6 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	v2 "github.com/conductorone/baton-sdk/pb/c1/connector/v2"
-	"github.com/conductorone/baton-sdk/pkg/connectorstore"
 )
 
 func parseGrantPageToken(pageToken string, tokenType string) (int64, error) {
@@ -21,46 +20,15 @@ func parseGrantPageToken(pageToken string, tokenType string) (int64, error) {
 	return id, nil
 }
 
-// ListGrantsInternal provides a single internal listing entrypoint with row shaping options.
-func (c *C1File) ListGrantsInternal(ctx context.Context, opts connectorstore.GrantListOptions) (*connectorstore.InternalGrantListResponse, error) {
-	switch opts.Mode {
-	case connectorstore.GrantListModeExpansion, connectorstore.GrantListModeExpansionNeedsOnly:
-		defs, nextPageToken, err := c.listExpandableGrantsInternal(ctx, opts)
-		if err != nil {
-			return nil, err
-		}
-		rows := make([]*connectorstore.InternalGrantRow, 0, len(defs))
-		for _, def := range defs {
-			rows = append(rows, &connectorstore.InternalGrantRow{Expansion: def})
-		}
-		return &connectorstore.InternalGrantListResponse{
-			Rows:          rows,
-			NextPageToken: nextPageToken,
-		}, nil
-
-	case connectorstore.GrantListModePayload, connectorstore.GrantListModePayloadWithExpansion:
-		if opts.SyncID != "" {
-			return nil, fmt.Errorf("invalid grant list options: SyncID is not supported for payload modes")
-		}
-		if opts.NeedsExpansionOnly {
-			return nil, fmt.Errorf("invalid grant list options: NeedsExpansionOnly does not support payload modes")
-		}
-
-		if opts.Mode == connectorstore.GrantListModePayloadWithExpansion {
-			return c.listGrantsWithExpansionInternal(ctx, opts)
-		}
-
-		return c.listGrantsPayloadInternal(ctx, opts)
-
-	default:
-		return nil, fmt.Errorf("invalid grant list options: unknown mode %d", opts.Mode)
-	}
-}
-
+// listExpandableGrantsInternal returns a page of grants with expansion
+// metadata populated from the SQL columns directly, without unmarshalling
+// the grant payload. Mode must be grantListModeExpansionNeedsOnly (the
+// only caller is GrantStore.PendingExpansionPage). Consider removing the
+// mode dispatch if no other caller ever appears.
 func (c *C1File) listExpandableGrantsInternal(
 	ctx context.Context,
-	opts connectorstore.GrantListOptions,
-) ([]*connectorstore.ExpandableGrantDef, string, error) {
+	opts grantListOptions,
+) ([]*expandableGrantDef, string, error) {
 	if err := c.validateDb(ctx); err != nil {
 		return nil, "", err
 	}
@@ -82,7 +50,7 @@ func (c *C1File) listExpandableGrantsInternal(
 	)
 	q = q.Where(goqu.C("sync_id").Eq(syncID))
 	q = q.Where(goqu.C("expansion").IsNotNull())
-	if opts.Mode == connectorstore.GrantListModeExpansionNeedsOnly || opts.NeedsExpansionOnly {
+	if opts.Mode == grantListModeExpansionNeedsOnly {
 		q = q.Where(goqu.C("needs_expansion").Eq(1))
 	}
 
@@ -111,7 +79,7 @@ func (c *C1File) listExpandableGrantsInternal(
 	}
 	defer rows.Close()
 
-	defs := make([]*connectorstore.ExpandableGrantDef, 0, pageSize)
+	defs := make([]*expandableGrantDef, 0, pageSize)
 	var (
 		count   uint32
 		lastRow int64
@@ -150,7 +118,7 @@ func (c *C1File) listExpandableGrantsInternal(
 			return nil, "", fmt.Errorf("invalid expansion data for %q: %w", externalID, err)
 		}
 
-		defs = append(defs, &connectorstore.ExpandableGrantDef{
+		defs = append(defs, &expandableGrantDef{
 			RowID:                   rowID,
 			GrantExternalID:         externalID,
 			TargetEntitlementID:     targetEntID,
@@ -173,7 +141,7 @@ func (c *C1File) listExpandableGrantsInternal(
 	return defs, nextPageToken, nil
 }
 
-func (c *C1File) listGrantsWithExpansionInternal(ctx context.Context, opts connectorstore.GrantListOptions) (*connectorstore.InternalGrantListResponse, error) {
+func (c *C1File) listGrantsWithExpansionInternal(ctx context.Context, opts grantListOptions) (*internalGrantListResponse, error) {
 	if err := c.validateDb(ctx); err != nil {
 		return nil, err
 	}
@@ -189,6 +157,8 @@ func (c *C1File) listGrantsWithExpansionInternal(ctx context.Context, opts conne
 			"data",
 			"external_id",
 			"entitlement_id",
+			"resource_type_id",
+			"resource_id",
 			"principal_resource_type_id",
 			"principal_resource_id",
 			"expansion",
@@ -238,10 +208,22 @@ func (c *C1File) listGrantsWithExpansionInternal(ctx context.Context, opts conne
 	}
 
 	var (
-		count   uint32
-		lastRow int64
+		rowID          int64
+		grantData      sql.RawBytes
+		externalIDRaw  sql.RawBytes
+		entIDRaw       sql.RawBytes
+		entRTRaw       sql.RawBytes
+		entRRaw        sql.RawBytes
+		principalRTRaw sql.RawBytes
+		principalRRaw  sql.RawBytes
+		expansionBlob  sql.RawBytes
+		needsExp       int
+		count          uint32
+		lastRow        int64
 	)
-	result := make([]*connectorstore.InternalGrantRow, 0, pageSize)
+	var result []*internalGrantRow
+	var pageGrants []*v2.Grant
+	var pageKeys []grantJoinKeys
 
 	for rows.Next() {
 		count++
@@ -249,23 +231,15 @@ func (c *C1File) listGrantsWithExpansionInternal(ctx context.Context, opts conne
 			break
 		}
 
-		var (
-			rowID         int64
-			grantData     []byte
-			externalID    string
-			entID         string
-			principalRTID string
-			principalRID  string
-			expansionBlob []byte
-			needsExp      int
-		)
 		if err := rows.Scan(
 			&rowID,
 			&grantData,
-			&externalID,
-			&entID,
-			&principalRTID,
-			&principalRID,
+			&externalIDRaw,
+			&entIDRaw,
+			&entRTRaw,
+			&entRRaw,
+			&principalRTRaw,
+			&principalRRaw,
 			&expansionBlob,
 			&needsExp,
 		); err != nil {
@@ -278,17 +252,17 @@ func (c *C1File) listGrantsWithExpansionInternal(ctx context.Context, opts conne
 			return nil, err
 		}
 
-		var expansion *connectorstore.ExpandableGrantDef
+		var expansion *expandableGrantDef
 		if len(expansionBlob) > 0 {
 			ge := &v2.GrantExpandable{}
 			if err := proto.Unmarshal(expansionBlob, ge); err != nil {
-				return nil, fmt.Errorf("failed to unmarshal grant expansion for %s: %w", externalID, err)
+				return nil, fmt.Errorf("failed to unmarshal grant expansion for %s: %w", string(externalIDRaw), err)
 			}
-			expansion = &connectorstore.ExpandableGrantDef{
-				GrantExternalID:         externalID,
-				TargetEntitlementID:     entID,
-				PrincipalResourceTypeID: principalRTID,
-				PrincipalResourceID:     principalRID,
+			expansion = &expandableGrantDef{
+				GrantExternalID:         string(externalIDRaw),
+				TargetEntitlementID:     string(entIDRaw),
+				PrincipalResourceTypeID: string(principalRTRaw),
+				PrincipalResourceID:     string(principalRRaw),
 				SourceEntitlementIDs:    ge.GetEntitlementIds(),
 				Shallow:                 ge.GetShallow(),
 				ResourceTypeIDs:         ge.GetResourceTypeIds(),
@@ -296,13 +270,27 @@ func (c *C1File) listGrantsWithExpansionInternal(ctx context.Context, opts conne
 			}
 		}
 
-		result = append(result, &connectorstore.InternalGrantRow{
+		result = append(result, &internalGrantRow{
 			Grant:     grant,
 			Expansion: expansion,
 		})
+		if grant.GetEntitlement() == nil || grant.GetPrincipal() == nil {
+			pageGrants = append(pageGrants, grant)
+			pageKeys = append(pageKeys, grantJoinKeys{
+				EntitlementID:             string(entIDRaw),
+				EntitlementResourceTypeID: string(entRTRaw),
+				EntitlementResourceID:     string(entRRaw),
+				PrincipalResourceTypeID:   string(principalRTRaw),
+				PrincipalResourceID:       string(principalRRaw),
+			})
+		}
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
+	}
+
+	if len(pageGrants) > 0 {
+		hydrateGrants(pageGrants, pageKeys)
 	}
 
 	nextPageToken := ""
@@ -310,93 +298,7 @@ func (c *C1File) listGrantsWithExpansionInternal(ctx context.Context, opts conne
 		nextPageToken = strconv.FormatInt(lastRow+1, 10)
 	}
 
-	return &connectorstore.InternalGrantListResponse{
-		Rows:          result,
-		NextPageToken: nextPageToken,
-	}, nil
-}
-
-func (c *C1File) listGrantsPayloadInternal(ctx context.Context, opts connectorstore.GrantListOptions) (*connectorstore.InternalGrantListResponse, error) {
-	if err := c.validateDb(ctx); err != nil {
-		return nil, err
-	}
-
-	syncID, err := c.resolveSyncIDForPayloadQuery(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	q := c.db.From(grants.Name()).Prepared(true).Select("id", "data")
-	if opts.Resource != nil {
-		q = q.Where(goqu.C("resource_id").Eq(opts.Resource.GetId().GetResource()))
-		q = q.Where(goqu.C("resource_type_id").Eq(opts.Resource.GetId().GetResourceType()))
-	}
-	if syncID != "" {
-		q = q.Where(goqu.C("sync_id").Eq(syncID))
-	}
-	if opts.PageToken != "" {
-		id, err := parseGrantPageToken(opts.PageToken, "payload")
-		if err != nil {
-			return nil, err
-		}
-		q = q.Where(goqu.C("id").Gte(id))
-	}
-
-	pageSize := opts.PageSize
-	if pageSize > maxPageSize || pageSize == 0 {
-		pageSize = maxPageSize
-	}
-	q = q.Order(goqu.C("id").Asc()).Limit(uint(pageSize + 1))
-
-	query, args, err := q.ToSQL()
-	if err != nil {
-		return nil, err
-	}
-	rows, err := c.db.QueryContext(ctx, query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	unmarshalerOptions := proto.UnmarshalOptions{
-		Merge:          true,
-		DiscardUnknown: true,
-	}
-	result := make([]*connectorstore.InternalGrantRow, 0, pageSize)
-	var (
-		count   uint32
-		lastRow int64
-	)
-	for rows.Next() {
-		count++
-		if count > pageSize {
-			break
-		}
-
-		var (
-			rowID     int64
-			grantData []byte
-		)
-		if err := rows.Scan(&rowID, &grantData); err != nil {
-			return nil, err
-		}
-		lastRow = rowID
-
-		grant := &v2.Grant{}
-		if err := unmarshalerOptions.Unmarshal(grantData, grant); err != nil {
-			return nil, err
-		}
-		result = append(result, &connectorstore.InternalGrantRow{Grant: grant})
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	nextPageToken := ""
-	if count > pageSize {
-		nextPageToken = strconv.FormatInt(lastRow+1, 10)
-	}
-	return &connectorstore.InternalGrantListResponse{
+	return &internalGrantListResponse{
 		Rows:          result,
 		NextPageToken: nextPageToken,
 	}, nil

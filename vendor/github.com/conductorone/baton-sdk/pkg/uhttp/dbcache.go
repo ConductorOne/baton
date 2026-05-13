@@ -20,9 +20,9 @@ import (
 	// return a copy of the default dialect, which is not what we want,
 	// and allocates a ton of memory.
 	_ "github.com/doug-martin/goqu/v9/dialect/sqlite3"
-	_ "github.com/glebarez/go-sqlite"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"go.uber.org/zap"
+	_ "modernc.org/sqlite"
 )
 
 type DBCache struct {

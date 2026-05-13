@@ -2,6 +2,9 @@ package logging
 
 import (
 	"context"
+	"fmt"
+	"strings"
+	"sync"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"go.uber.org/zap"
@@ -15,12 +18,55 @@ const (
 
 type Option func(*zap.Config)
 
+var (
+	activeLevelMu sync.RWMutex
+	activeLevel   *zap.AtomicLevel
+)
+
 func WithLogLevel(level string) Option {
 	return func(c *zap.Config) {
-		ll := zapcore.DebugLevel
-		_ = ll.Set(level)
+		ll, err := ParseLogLevel(level)
+		if err != nil {
+			return
+		}
 		c.Level.SetLevel(ll)
 	}
+}
+
+func ParseLogLevel(level string) (zapcore.Level, error) {
+	level = strings.TrimSpace(level)
+	if level == "" {
+		level = "info"
+	}
+	var parsed zapcore.Level
+	if err := parsed.Set(level); err != nil {
+		return zapcore.InfoLevel, fmt.Errorf("invalid log level %q: %w", level, err)
+	}
+	return parsed, nil
+}
+
+func NormalizeLogLevel(level string) (string, error) {
+	parsed, err := ParseLogLevel(level)
+	if err != nil {
+		return "", err
+	}
+	return parsed.String(), nil
+}
+
+func SetLogLevel(level string) error {
+	parsed, err := ParseLogLevel(level)
+	if err != nil {
+		return err
+	}
+
+	activeLevelMu.RLock()
+	levelHandle := activeLevel
+	activeLevelMu.RUnlock()
+	if levelHandle == nil {
+		return nil
+	}
+	levelHandle.SetLevel(parsed)
+	return nil
 }
 
 func WithLogFormat(format string) Option {
@@ -65,6 +111,9 @@ func Init(ctx context.Context, opts ...Option) (context.Context, error) {
 	if err != nil {
 		return nil, err
 	}
+	activeLevelMu.Lock()
+	activeLevel = &zc.Level
+	activeLevelMu.Unlock()
 	zap.ReplaceGlobals(l)
 
 	l.Debug("Logger created!", zap.String("log_level", zc.Level.String()))

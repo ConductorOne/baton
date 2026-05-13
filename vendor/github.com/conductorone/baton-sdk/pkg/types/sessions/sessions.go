@@ -6,10 +6,10 @@ import (
 
 const MaxKeysPerRequest = 100
 
-// The default gRPC message size limit is 4MB (we subtract 30KB for general overhead, which is overkill).
+// The default gRPC message size limit is 4MB (we subtract 60KB for general overhead, which is overkill).
 // Unfortunately, this layer has to be aware of the size limit to avoid exceeding the size limit
 // because the client does not know the size of the items it requests.
-const MaxSessionStoreSizeLimit = 4163584
+const MaxSessionStoreSizeLimit = 4132864
 
 type SessionStoreKey struct{}
 

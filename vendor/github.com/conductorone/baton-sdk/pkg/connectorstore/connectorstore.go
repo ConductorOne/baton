@@ -51,17 +51,28 @@ type Reader interface {
 	Close(ctx context.Context) error
 }
 
-type InternalWriter interface {
-	Writer
-	// UpsertGrants writes grants with explicit conflict handling semantics.
-	// This is for internal sync workflows that need control over if-newer behavior
-	// and whether expansion columns are preserved.
-	UpsertGrants(ctx context.Context, opts GrantUpsertOptions, grants ...*v2.Grant) error
-	// ListGrantsInternal is the preferred internal listing API for grants.
-	// It returns a single list of rows with optional grant payload and expansion metadata.
-	ListGrantsInternal(ctx context.Context, opts GrantListOptions) (*InternalGrantListResponse, error)
-	// SetSupportsDiff marks the sync as supporting diff operations.
-	SetSupportsDiff(ctx context.Context, syncID string) error
+// LatestFinishedSyncIDFetcher returns the most-recently-finished sync ID of the
+// given type, or empty string if no such sync exists. This is a small optional
+// capability separate from Reader/Writer because not every store implementation
+// can answer it (e.g. gRPC-backed readers have a different flavor via
+// SyncsReaderServiceGetLatestFinishedSync).
+//
+// This interface lives in connectorstore so that producers (e.g. *dotc1z.C1File)
+// and consumers (e.g. pkg/sync) reference a single authoritative declaration,
+// preventing the name/signature drift that occurred between PR #473 and RFC 0002.
+type LatestFinishedSyncIDFetcher interface {
+	LatestFinishedSyncID(ctx context.Context, syncType SyncType) (string, error)
+}
+
+// DBSizeProvider is an optional capability for a store that can report its
+// current uncompressed working-set size (e.g. dotc1z.C1File stat'ing its
+// sqlite file). Consumed by the syncer's ProgressLog to include
+// decompressed_bytes and growth delta in the periodic "Expanding grants"
+// log during long-running grant expansions — the Expander itself is
+// recreated each RunSingleStep by the syncer, so this state cannot live
+// there.
+type DBSizeProvider interface {
+	CurrentDBSizeBytes() (int64, error)
 }
 
 // GrantUpsertMode controls how grant conflicts are resolved during upsert.
@@ -100,67 +111,4 @@ type Writer interface {
 	PutResources(ctx context.Context, resources ...*v2.Resource) error
 	PutEntitlements(ctx context.Context, entitlements ...*v2.Entitlement) error
 	DeleteGrant(ctx context.Context, grantId string) error
-}
-
-// GrantListMode configures which row shape/filter mode ListGrantsInternal uses.
-type GrantListMode int
-
-const (
-	// GrantListModePayload returns grant payload rows only.
-	GrantListModePayload GrantListMode = iota
-	// GrantListModePayloadWithExpansion returns grant payload rows with optional expansion metadata.
-	GrantListModePayloadWithExpansion
-	// GrantListModeExpansion returns expansion metadata rows only.
-	GrantListModeExpansion
-	// GrantListModeExpansionNeedsOnly returns only expansion metadata rows with needs_expansion=1.
-	GrantListModeExpansionNeedsOnly
-)
-
-// GrantListOptions configures ListGrantsInternal - a would be union type.
-type GrantListOptions struct {
-	// Mode controls which row shape/filter is returned.
-	Mode GrantListMode
-
-	// Resource filters payload modes to grants on a specific resource.
-	Resource *v2.Resource
-
-	// ExpandableOnly filters rows to grants with expansion metadata.
-	// Used by payload+expansion mode.
-	ExpandableOnly bool
-	// NeedsExpansionOnly filters rows to needs_expansion=1.
-	// Used by expansion-only modes.
-	NeedsExpansionOnly bool
-
-	// PageToken and PageSize are used for pagination in all modes.
-	// SyncID is used for expansion-only modes.
-	SyncID    string
-	PageToken string
-	PageSize  uint32
-}
-
-// InternalGrantRow is one row from ListGrantsInternal. Fields are optional
-// based on the requested list options.
-type InternalGrantRow struct {
-	Grant     *v2.Grant
-	Expansion *ExpandableGrantDef
-}
-
-// InternalGrantListResponse contains one row list plus a shared next page token.
-type InternalGrantListResponse struct {
-	Rows          []*InternalGrantRow
-	NextPageToken string
-}
-
-// ExpandableGrantDef is a lightweight representation of an expandable grant row,
-// using queryable columns instead of unmarshalling the full grant proto.
-type ExpandableGrantDef struct {
-	RowID                   int64
-	GrantExternalID         string
-	TargetEntitlementID     string
-	PrincipalResourceTypeID string
-	PrincipalResourceID     string
-	SourceEntitlementIDs    []string
-	Shallow                 bool
-	ResourceTypeIDs         []string
-	NeedsExpansion          bool
 }

@@ -75,6 +75,11 @@ func applyBag(ctx context.Context, opt ...sessions.SessionStoreOption) (*session
 
 // Get implements types.SessionCache.
 func (c *C1File) Get(ctx context.Context, key string, opt ...sessions.SessionStoreOption) ([]byte, bool, error) {
+	err := c.validateDb(ctx)
+	if err != nil {
+		return nil, false, err
+	}
+
 	bag, err := applyBag(ctx, opt...)
 	if err != nil {
 		return nil, false, fmt.Errorf("error applying session option: %w", err)
@@ -116,6 +121,11 @@ func (c *C1File) Get(ctx context.Context, key string, opt ...sessions.SessionSto
 
 // Set implements types.SessionStore.
 func (c *C1File) Set(ctx context.Context, key string, value []byte, opt ...sessions.SessionStoreOption) error {
+	err := c.validateDb(ctx)
+	if err != nil {
+		return err
+	}
+
 	bag, err := applyBag(ctx, opt...)
 	if err != nil {
 		return fmt.Errorf("error applying session option: %w", err)
@@ -154,6 +164,11 @@ func (c *C1File) SetMany(ctx context.Context, values map[string][]byte, opt ...s
 		return nil
 	}
 
+	err = c.validateDb(ctx)
+	if err != nil {
+		return err
+	}
+
 	// Build batch insert
 	var rows []interface{}
 	for key, value := range values {
@@ -183,6 +198,11 @@ func (c *C1File) SetMany(ctx context.Context, values map[string][]byte, opt ...s
 
 // Delete implements types.SessionStore.
 func (c *C1File) Delete(ctx context.Context, key string, opt ...sessions.SessionStoreOption) error {
+	err := c.validateDb(ctx)
+	if err != nil {
+		return err
+	}
+
 	bag, err := applyBag(ctx, opt...)
 	if err != nil {
 		return fmt.Errorf("error applying session option: %w", err)
@@ -207,6 +227,11 @@ func (c *C1File) Delete(ctx context.Context, key string, opt ...sessions.Session
 
 // Clear implements types.SessionStore.
 func (c *C1File) Clear(ctx context.Context, opt ...sessions.SessionStoreOption) error {
+	err := c.validateDb(ctx)
+	if err != nil {
+		return err
+	}
+
 	bag, err := applyBag(ctx, opt...)
 	if err != nil {
 		return fmt.Errorf("error applying session option: %w", err)
@@ -235,6 +260,11 @@ func (c *C1File) Clear(ctx context.Context, opt ...sessions.SessionStoreOption) 
 
 // GetMany implements types.SessionStore.
 func (c *C1File) GetMany(ctx context.Context, keys []string, opt ...sessions.SessionStoreOption) (map[string][]byte, []string, error) {
+	err := c.validateDb(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	bag, err := applyBag(ctx, opt...)
 	if err != nil {
 		return nil, nil, fmt.Errorf("session-get-many: error applying session option: %w", err)
@@ -360,6 +390,11 @@ func (c *C1File) GetAll(ctx context.Context, pageToken string, opt ...sessions.S
 }
 
 func (c *C1File) getAllChunk(ctx context.Context, pageToken string, sizeLimit int, bag *sessions.SessionStoreBag) (map[string][]byte, string, int, error) {
+	err := c.validateDb(ctx)
+	if err != nil {
+		return nil, "", 0, err
+	}
+
 	q := c.db.From(sessionStore.Name()).Prepared(true).
 		Select("key", "value").
 		Where(goqu.C("sync_id").Eq(bag.SyncID)).
