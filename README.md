@@ -1,3 +1,6 @@
+## Project status
+
+This repository has been retired. Active Baton development has moved to [ConductorOne/baton-sdk](https://github.com/ConductorOne/baton-sdk). Please use `baton-sdk` for current Baton SDK code, issues, and releases.
 
 ![Baton Logo](./docs/images/baton-logo.png)
 
